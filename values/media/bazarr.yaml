@@ -22,8 +22,6 @@ ingress:
       - secretName: bazarr-tls
         hosts: [bazarr.streamixs.com]
 
-persistence:
-persistence:
   config:
     enabled: true
     storageClass: <STORAGE_CLASS>
