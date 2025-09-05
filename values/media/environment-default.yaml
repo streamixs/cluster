@@ -1,0 +1,5 @@
+media:
+  jellyfin:
+    enabled: true
+  plex:
+    enabled: false

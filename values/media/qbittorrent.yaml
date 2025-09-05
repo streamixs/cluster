@@ -1,0 +1,147 @@
+image:
+  repository: lscr.io/linuxserver/qbittorrent
+  tag: 4.6.5
+  pullPolicy: IfNotPresent
+
+controllers:
+  main:
+    annotations:
+      reloader.stakater.com/auto: "true"
+    containers:
+      main:
+        env:
+          PUID: <PUID>
+          PGID: <PGID>
+          TZ: Europe/Paris
+          WEBUI_PORT: "8080"
+        probes:
+          liveness:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /
+                port: 8080
+              initialDelaySeconds: 20
+              periodSeconds: 10
+          readiness:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /
+                port: 8080
+              initialDelaySeconds: 10
+              periodSeconds: 10
+      gluetun:
+        image:
+          repository: qmcgaw/gluetun
+          tag: v3.39.0
+        securityContext:
+          capabilities:
+            add:
+              - NET_ADMIN
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+        envFrom:
+          - secretRef:
+              name: gluetun-vpn-secret
+        env:
+          VPN_SERVICE_PROVIDER: <VPN_PROVIDER>
+          TZ: Europe/Paris
+        probes:
+          liveness:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /v1/openvpn/health
+                port: 8000
+              initialDelaySeconds: 20
+              periodSeconds: 10
+          readiness:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /v1/openvpn/health
+                port: 8000
+              initialDelaySeconds: 10
+              periodSeconds: 10
+    pod:
+      labels:
+        vpn.tunnel: required
+      securityContext:
+        sysctls:
+          - name: net.ipv4.conf.all.src_valid_mark
+            value: "1"
+      dnsPolicy: ClusterFirst
+      dnsConfig:
+        nameservers: ["1.1.1.1", "8.8.8.8"]
+
+service:
+  main:
+    ports:
+      http:
+        port: 8080
+
+ingress:
+  main:
+    enabled: true
+    hosts:
+      - host: qbittorrent.streamixs.com
+        paths:
+          - path: /
+            pathType: Prefix
+            service:
+              name: main
+              port: http
+    tls:
+      - secretName: qbittorrent-tls
+        hosts:
+          - qbittorrent.streamixs.com
+
+persistence:
+  config:
+    enabled: true
+    mountPath: /config
+    storageClass: <STORAGE_CLASS>
+    accessMode: ReadWriteOnce
+    size: 5Gi
+  downloads:
+    enabled: true
+    type: pvc
+    mountPath: /downloads
+    storageClass: <STORAGE_CLASS>
+    accessMode: ReadWriteOnce
+    size: 500Gi
+  media:
+    enabled: true
+    type: pvc
+    mountPath: /media
+    storageClass: <STORAGE_CLASS>
+    accessMode: ReadWriteMany
+    size: 1Ti
+
+nodeSelector: {}
+affinity: {}
+tolerations: []
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8080"
+
+serviceMonitor:
+  enabled: true
+  endpoints:
+    - port: http
+      interval: 30s
+
+defaultPodOptions:
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+
+dnsConfig: {}
+

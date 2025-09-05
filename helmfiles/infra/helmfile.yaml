@@ -1,0 +1,107 @@
+helmDefaults:
+  timeout: 15m
+  atomic: true
+  wait: true
+
+repositories:
+  - name: ingress-nginx
+    url: https://kubernetes.github.io/ingress-nginx
+  - name: jetstack
+    url: https://charts.jetstack.io
+  - name: bitnami
+    url: https://charts.bitnami.com/bitnami
+  - name: prometheus-community
+    url: https://prometheus-community.github.io/helm-charts
+  - name: grafana
+    url: https://grafana.github.io/helm-charts
+  - name: sealed-secrets
+    url: https://bitnami-labs.github.io/sealed-secrets
+  - name: vmware-tanzu
+    url: https://vmware-tanzu.github.io/helm-charts
+
+releases:
+  - name: sealed-secrets
+    namespace: kube-system
+    chart: sealed-secrets/sealed-secrets
+    version: 2.16.1
+    values:
+      - ../../values/infra/sealed-secrets.yaml
+
+  - name: cert-manager
+    namespace: cert-manager
+    chart: jetstack/cert-manager
+    version: v1.14.5
+    createNamespace: true
+    values:
+      - ../../values/infra/cert-manager.yaml
+    needs:
+      - kube-system/sealed-secrets
+
+  - name: external-dns
+    namespace: infra
+    chart: bitnami/external-dns
+    version: 8.5.1
+    createNamespace: true
+    values:
+      - ../../values/infra/external-dns.yaml
+    needs:
+      - cert-manager/cert-manager
+
+  - name: ingress-nginx
+    namespace: ingress-nginx
+    chart: ingress-nginx/ingress-nginx
+    version: 4.11.3
+    createNamespace: true
+    values:
+      - ../../values/infra/ingress-nginx.yaml
+    needs:
+      - infra/external-dns
+
+  - name: kube-prometheus-stack
+    namespace: monitoring
+    chart: prometheus-community/kube-prometheus-stack
+    version: 61.7.0
+    createNamespace: true
+    values:
+      - ../../values/infra/monitoring.yaml
+    needs:
+      - ingress-nginx/ingress-nginx
+
+  - name: prometheus-blackbox-exporter
+    namespace: monitoring
+    chart: prometheus-community/prometheus-blackbox-exporter
+    version: 8.16.0
+    values:
+      - ../../values/infra/blackbox-exporter.yaml
+    needs:
+      - monitoring/kube-prometheus-stack
+
+  - name: loki
+    namespace: logging
+    chart: grafana/loki
+    version: 5.39.0
+    createNamespace: true
+    values:
+      - ../../values/infra/loki.yaml
+    needs:
+      - monitoring/kube-prometheus-stack
+
+  - name: promtail
+    namespace: logging
+    chart: grafana/promtail
+    version: 6.15.5
+    values:
+      - ../../values/infra/promtail.yaml
+    needs:
+      - logging/loki
+
+  - name: velero
+    namespace: velero
+    chart: vmware-tanzu/velero
+    version: 7.1.5
+    createNamespace: true
+    values:
+      - ../../values/infra/velero.yaml
+    needs:
+      - monitoring/kube-prometheus-stack
+

@@ -1,0 +1,63 @@
+image:
+  repository: lscr.io/linuxserver/prowlarr
+  tag: 1.27.0
+
+service:
+  main:
+    ports:
+      http:
+        port: 9696
+
+ingress:
+  main:
+    hosts:
+      - host: prowlarr.streamixs.com
+        paths:
+          - path: /
+            pathType: Prefix
+            service:
+              name: main
+              port: http
+    tls:
+      - secretName: prowlarr-tls
+        hosts: [prowlarr.streamixs.com]
+
+persistence:
+  config:
+    enabled: true
+    storageClass: <STORAGE_CLASS>
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    mountPath: /config
+
+controllers:
+  main:
+    containers:
+      main:
+        env:
+          PUID: <PUID>
+          PGID: <PGID>
+          TZ: Europe/Paris
+        probes:
+          liveness:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /
+                port: 9696
+              initialDelaySeconds: 30
+          readiness:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /
+                port: 9696
+              initialDelaySeconds: 15
+
+serviceMonitor:
+  enabled: true
+  endpoints:
+    - port: http
+      interval: 30s

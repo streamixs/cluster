@@ -1,0 +1,67 @@
+defaultRules:
+  create: true
+  rules:
+    etcd: false
+    kubeScheduler: false
+
+grafana:
+  enabled: true
+  adminPassword: "<REPLACE_ME_STRONG_PASSWORD>"
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      kubernetes.io/tls-acme: "true"
+      external-dns.alpha.kubernetes.io/target: ingress.streamixs.com
+    hosts:
+      - grafana.streamixs.com
+    tls:
+      - secretName: grafana-tls
+        hosts:
+          - grafana.streamixs.com
+
+prometheus:
+  prometheusSpec:
+    retention: 15d
+    resources:
+      requests:
+        cpu: 200m
+        memory: 1Gi
+      limits:
+        cpu: 1
+        memory: 3Gi
+    additionalScrapeConfigs:
+      - job_name: blackbox-media-https
+        metrics_path: /probe
+        params:
+          module: [http_2xx]
+        static_configs:
+          - targets:
+              - https://sonarr.streamixs.com/
+              - https://radarr.streamixs.com/
+              - https://lidarr.streamixs.com/
+              - https://readarr.streamixs.com/
+              - https://prowlarr.streamixs.com/
+              - https://bazarr.streamixs.com/
+              - https://qbittorrent.streamixs.com/
+              - https://overseerr.streamixs.com/
+              - https://jellyfin.streamixs.com/
+              - https://plex.streamixs.com/
+        relabel_configs:
+          - source_labels: [__address__]
+            target_label: __param_target
+          - source_labels: [__param_target]
+            target_label: instance
+          - target_label: __address__
+            replacement: prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
+
+alertmanager:
+  enabled: true
+
+nodeExporter:
+  enabled: true
+
+kubeStateMetrics:
+  enabled: true
+

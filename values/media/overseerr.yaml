@@ -1,0 +1,62 @@
+image:
+  repository: sctx/overseerr
+  tag: 1.33.2
+
+service:
+  main:
+    ports:
+      http:
+        port: 5055
+
+ingress:
+  main:
+    hosts:
+      - host: overseerr.streamixs.com
+        paths:
+          - path: /
+            pathType: Prefix
+            service:
+              name: main
+              port: http
+    tls:
+      - secretName: overseerr-tls
+        hosts: [overseerr.streamixs.com]
+
+persistence:
+  config:
+    enabled: true
+    storageClass: <STORAGE_CLASS>
+    accessMode: ReadWriteOnce
+    size: 2Gi
+    mountPath: /app/config
+
+controllers:
+  main:
+    containers:
+      main:
+        env:
+          LOG_LEVEL: info
+          TZ: Europe/Paris
+        probes:
+          liveness:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /
+                port: 5055
+              initialDelaySeconds: 30
+          readiness:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /
+                port: 5055
+              initialDelaySeconds: 15
+
+serviceMonitor:
+  enabled: true
+  endpoints:
+    - port: http
+      interval: 30s

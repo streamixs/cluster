@@ -1,0 +1,145 @@
+helmDefaults:
+  timeout: 20m
+  atomic: true
+  wait: true
+
+repositories:
+  - name: bjw-s
+    url: https://bjw-s.github.io/helm-charts
+
+environments:
+  default:
+    values:
+      - ../../values/media/environment-default.yaml
+
+releases:
+  - name: sonarr
+    namespace: media
+    chart: bjw-s/app-template
+    version: 3.7.2
+    createNamespace: true
+    values:
+      - ../../values/media/globals.yaml
+      - ../../values/media/sonarr.yaml
+    needs:
+      - media/qbittorrent
+      - media/prowlarr
+
+  - name: radarr
+    namespace: media
+    chart: bjw-s/app-template
+    version: 3.7.2
+    values:
+      - ../../values/media/globals.yaml
+      - ../../values/media/radarr.yaml
+    needs:
+      - media/qbittorrent
+      - media/prowlarr
+
+  - name: lidarr
+    namespace: media
+    chart: bjw-s/app-template
+    version: 3.7.2
+    values:
+      - ../../values/media/globals.yaml
+      - ../../values/media/lidarr.yaml
+    needs:
+      - media/qbittorrent
+      - media/prowlarr
+
+  - name: readarr
+    namespace: media
+    chart: bjw-s/app-template
+    version: 3.7.2
+    values:
+      - ../../values/media/globals.yaml
+      - ../../values/media/readarr.yaml
+    needs:
+      - media/qbittorrent
+      - media/prowlarr
+
+  - name: bazarr
+    namespace: media
+    chart: bjw-s/app-template
+    version: 3.7.2
+    values:
+      - ../../values/media/globals.yaml
+      - ../../values/media/bazarr.yaml
+    needs:
+      - media/sonarr
+      - media/radarr
+
+  - name: prowlarr
+    namespace: media
+    chart: bjw-s/app-template
+    version: 3.7.2
+    values:
+      - ../../values/media/globals.yaml
+      - ../../values/media/prowlarr.yaml
+
+  - name: qbittorrent
+    namespace: media
+    chart: bjw-s/app-template
+    version: 3.7.2
+    values:
+      - ../../values/media/globals.yaml
+      - ../../values/media/qbittorrent.yaml
+
+  - name: sabnzbd
+    namespace: media
+    chart: bjw-s/app-template
+    version: 3.7.2
+    values:
+      - ../../values/media/globals.yaml
+      - ../../values/media/sabnzbd.yaml
+
+  - name: jellyfin
+    namespace: media
+    chart: bjw-s/app-template
+    version: 3.7.2
+    installed: {{ .Environment.Values.media.jellyfin.enabled | default true }}
+    values:
+      - ../../values/media/globals.yaml
+      - ../../values/media/jellyfin.yaml
+
+  - name: plex
+    namespace: media
+    chart: bjw-s/app-template
+    version: 3.7.2
+    installed: {{ .Environment.Values.media.plex.enabled | default false }}
+    values:
+      - ../../values/media/globals.yaml
+      - ../../values/media/plex.yaml
+
+  - name: overseerr
+    namespace: media
+    chart: bjw-s/app-template
+    version: 3.7.2
+    values:
+      - ../../values/media/globals.yaml
+      - ../../values/media/overseerr.yaml
+    needs:
+      - media/plex
+      - media/jellyfin
+
+  - name: recyclarr
+    namespace: media
+    chart: bjw-s/app-template
+    version: 3.7.2
+    values:
+      - ../../values/media/globals.yaml
+      - ../../values/media/recyclarr.yaml
+    needs:
+      - media/sonarr
+      - media/radarr
+
+  - name: tautulli
+    namespace: media
+    chart: bjw-s/app-template
+    version: 3.7.2
+    values:
+      - ../../values/media/globals.yaml
+      - ../../values/media/tautulli.yaml
+    needs:
+      - media/plex
+

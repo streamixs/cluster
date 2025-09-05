@@ -1,0 +1,25 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: media-app-availability
+  namespace: monitoring
+spec:
+  groups:
+    - name: media.rules
+      rules:
+        - alert: MediaAppDown
+          expr: up{namespace="media"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Media app down"
+            description: "{{ $labels.job }} in namespace media is down for 5m"
+        - alert: MediaIngressProbeFailed
+          expr: probe_success{job="blackbox-media-https"} == 0
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Public endpoint probe failed"
+            description: "Blackbox probe failed for {{ $labels.instance }}"

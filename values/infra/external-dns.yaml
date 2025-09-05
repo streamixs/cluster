@@ -1,0 +1,45 @@
+provider: cloudflare
+interval: 1m
+policy: sync
+txtOwnerId: media-automation
+registry: txt
+domainFilters:
+  - streamixs.com
+sources:
+  - ingress
+  - service
+  - crd
+serviceMonitor:
+  enabled: true
+podSecurityContext:
+  fsGroup: 65534
+containerSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+  runAsGroup: 65534
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: ["ALL"]
+
+extraArgs:
+  - --events
+  - --crd-source-apiversion=v1
+  - --crd-source-kind=DNSEndpoint
+  - --cloudflare-dns-records-per-page=1000
+  - --managed-record-types=A,AAAA,CNAME,TXT
+
+env:
+  - name: CF_API_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: cloudflare-api-token
+        key: api-token
+
+rbac:
+  create: true
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "7979"
+

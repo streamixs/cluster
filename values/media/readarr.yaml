@@ -1,0 +1,77 @@
+image:
+  repository: lscr.io/linuxserver/readarr
+  tag: 0.3.28
+
+service:
+  main:
+    ports:
+      http:
+        port: 8787
+
+ingress:
+  main:
+    hosts:
+      - host: readarr.streamixs.com
+        paths:
+          - path: /
+            pathType: Prefix
+            service:
+              name: main
+              port: http
+    tls:
+      - secretName: readarr-tls
+        hosts: [readarr.streamixs.com]
+
+persistence:
+  config:
+    enabled: true
+    storageClass: <STORAGE_CLASS>
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    mountPath: /config
+  downloads:
+    enabled: true
+    type: pvc
+    storageClass: <STORAGE_CLASS>
+    size: 200Gi
+    accessMode: ReadWriteOnce
+    mountPath: /downloads
+  media:
+    enabled: true
+    type: pvc
+    storageClass: <STORAGE_CLASS>
+    size: 1Ti
+    accessMode: ReadWriteMany
+    mountPath: /media
+
+controllers:
+  main:
+    containers:
+      main:
+        env:
+          PUID: <PUID>
+          PGID: <PGID>
+          TZ: Europe/Paris
+        probes:
+          liveness:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /
+                port: 8787
+              initialDelaySeconds: 30
+          readiness:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /
+                port: 8787
+              initialDelaySeconds: 15
+
+serviceMonitor:
+  enabled: true
+  endpoints:
+    - port: http
+      interval: 30s

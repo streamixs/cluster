@@ -1,0 +1,24 @@
+loki:
+  auth_enabled: false
+  commonConfig:
+    replication_factor: 1
+  storage:
+    type: filesystem
+  server:
+    log_level: info
+
+singleBinary:
+  replicas: 1
+
+monitoring:
+  serviceMonitor:
+    enabled: true
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 200m
+    memory: 512Mi
+

@@ -1,0 +1,73 @@
+controllers:
+  main:
+    pod:
+      securityContext:
+        runAsUser: <PUID>
+        runAsGroup: <PGID>
+        fsGroup: <PGID>
+        fsGroupChangePolicy: "OnRootMismatch"
+        seccompProfile:
+          type: RuntimeDefault
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels: {}
+    containers:
+      main:
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 1
+            memory: 1Gi
+
+defaultPodOptions:
+  dnsConfig:
+    options:
+      - name: ndots
+        value: "2"
+  enableServiceLinks: false
+
+serviceAccount:
+  create: true
+
+ingress:
+  main:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      kubernetes.io/tls-acme: "true"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/proxy-body-size: "64m"
+      nginx.ingress.kubernetes.io/server-snippet: |
+        add_header X-Frame-Options "DENY" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "same-origin" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+    tls:
+      - secretName: <APP>-tls
+        hosts:
+          - <APP>.streamixs.com
+
+persistenceCommon:
+  storageClass: <STORAGE_CLASS>
+  accessModes:
+    - ReadWriteOnce
+  sizeConfig: 5Gi
+  sizeDownloads: 200Gi
+  sizeMedia: 1Ti
+
+env:
+  TZ: Europe/Paris
+

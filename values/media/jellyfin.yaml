@@ -1,0 +1,83 @@
+image:
+  repository: lscr.io/linuxserver/jellyfin
+  tag: 10.9.9
+
+service:
+  main:
+    ports:
+      http:
+        port: 8096
+
+ingress:
+  main:
+    hosts:
+      - host: jellyfin.streamixs.com
+        paths:
+          - path: /
+            pathType: Prefix
+            service:
+              name: main
+              port: http
+    tls:
+      - secretName: jellyfin-tls
+        hosts: [jellyfin.streamixs.com]
+
+persistence:
+  config:
+    enabled: true
+    storageClass: <STORAGE_CLASS>
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    mountPath: /config
+  cache:
+    enabled: true
+    storageClass: <STORAGE_CLASS>
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    mountPath: /cache
+  media:
+    enabled: true
+    type: pvc
+    storageClass: <STORAGE_CLASS>
+    accessMode: ReadWriteMany
+    size: 2Ti
+    mountPath: /media
+
+controllers:
+  main:
+    containers:
+      main:
+        env:
+          PUID: <PUID>
+          PGID: <PGID>
+          TZ: Europe/Paris
+        resources:
+          requests:
+            cpu: 200m
+            memory: 1Gi
+          limits:
+            cpu: "2"
+            memory: 4Gi
+        probes:
+          liveness:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /health
+                port: 8096
+              initialDelaySeconds: 30
+          readiness:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /health
+                port: 8096
+              initialDelaySeconds: 15
+
+serviceMonitor:
+  enabled: true
+  endpoints:
+    - port: http
+      interval: 30s

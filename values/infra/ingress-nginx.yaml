@@ -1,0 +1,43 @@
+controller:
+  replicaCount: 2
+  electionID: ingress-controller-leader
+  admissionWebhooks:
+    enabled: true
+    patch:
+      enabled: true
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  podSecurityContext:
+    fsGroup: 101
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    runAsNonRoot: true
+    runAsUser: 101
+    runAsGroup: 101
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop: ["ALL"]
+  service:
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: ingress.streamixs.com
+  config:
+    use-forwarded-headers: "true"
+    enable-real-ip: "true"
+    hsts: "true"
+    hsts-max-age: "63072000"
+    hsts-include-subdomains: "true"
+    ssl-redirect: "true"
+    server-tokens: "false"
+    proxy-body-size: 128m
+  ingressClassResource:
+    name: nginx
+    controllerValue: k8s.io/ingress-nginx
+    default: true
+
+defaultBackend:
+  enabled: true
+

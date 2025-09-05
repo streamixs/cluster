@@ -1,0 +1,51 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: media-infra
+  namespace: argocd
+spec:
+  project: media-automation
+  source:
+    repoURL: <GIT_REPO_URL>
+    targetRevision: main
+    path: .
+    plugin:
+      name: argocd-vault-plugin-helmfile
+      env:
+        - name: HELMFILE_GLOBAL_OPTIONS
+          value: "-e default"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: media-stack
+  namespace: argocd
+spec:
+  project: media-automation
+  source:
+    repoURL: <GIT_REPO_URL>
+    targetRevision: main
+    path: .
+    plugin:
+      name: argocd-vault-plugin-helmfile
+      env:
+        - name: HELMFILE_GLOBAL_OPTIONS
+          value: "-e default"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: media
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
