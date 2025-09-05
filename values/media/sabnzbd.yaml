@@ -32,9 +32,9 @@ persistence:
   downloads:
     enabled: true
     type: pvc
-    storageClass: <STORAGE_CLASS>
+    storageClass: nas-rwx
     size: 500Gi
-    accessMode: ReadWriteOnce
+    accessMode: ReadWriteMany
     mountPath: /downloads
 
 controllers:

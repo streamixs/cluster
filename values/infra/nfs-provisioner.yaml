@@ -1,0 +1,33 @@
+nfs:
+  server: <NAS_VPN_IP>
+  path: /export/k8s
+
+storageClass:
+  create: true
+  name: nas-rwx
+  defaultClass: false
+  reclaimPolicy: Retain
+  allowVolumeExpansion: true
+  onDelete: retain
+  archiveOnDelete: false
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+podSecurityContext:
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+priorityClassName: ""
+

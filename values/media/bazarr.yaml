@@ -23,12 +23,20 @@ ingress:
         hosts: [bazarr.streamixs.com]
 
 persistence:
+persistence:
   config:
     enabled: true
     storageClass: <STORAGE_CLASS>
     accessMode: ReadWriteOnce
     size: 2Gi
     mountPath: /config
+  media:
+    enabled: true
+    type: pvc
+    storageClass: nas-rwx
+    accessMode: ReadWriteMany
+    size: 1Ti
+    mountPath: /media
 
 controllers:
   main:

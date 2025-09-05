@@ -29,6 +29,13 @@ persistence:
     accessMode: ReadWriteOnce
     size: 2Gi
     mountPath: /app/config
+  media:
+    enabled: true
+    type: pvc
+    storageClass: nas-rwx
+    accessMode: ReadWriteMany
+    size: 1Ti
+    mountPath: /media
 
 controllers:
   main:

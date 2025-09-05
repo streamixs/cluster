@@ -29,6 +29,13 @@ persistence:
     accessMode: ReadWriteOnce
     size: 5Gi
     mountPath: /config
+  downloads:
+    enabled: true
+    type: pvc
+    storageClass: nas-rwx
+    accessMode: ReadWriteMany
+    size: 50Gi
+    mountPath: /downloads
 
 controllers:
   main:
