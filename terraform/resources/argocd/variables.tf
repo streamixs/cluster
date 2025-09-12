@@ -10,4 +10,8 @@ variable "chart_version" {
   default     = "8.3.7"
 }
 
-
+variable "values_file" {
+  description = "Path to the values file for Argo CD Helm chart"
+  type        = string
+  default     = "${path.module}/argocd-values.yaml"
+}

@@ -17,7 +17,7 @@ resource "helm_release" "argocd" {
   version          = var.chart_version
 
   values = [
-    file("${path.module}/argocd-values.yaml")
+    file(var.values_file)
   ]
 
   depends_on = [
