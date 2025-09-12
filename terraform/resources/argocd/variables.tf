@@ -13,5 +13,5 @@ variable "chart_version" {
 variable "values_file" {
   description = "Path to the values file for Argo CD Helm chart"
   type        = string
-  default     = "${path.module}/argocd-values.yaml"
+  default     = "resources/argocd/argocd-values.yaml"
 }
