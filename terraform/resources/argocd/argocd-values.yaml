@@ -9,5 +9,5 @@ configs:
   params:
     server.insecure: false
   cm:
-    kustomize.buildOptions: "--enable-alpha-features --enable-exec --enable-helm --load-restrictor LoadRestrictionsNone"
+    kustomize.buildOptions: "--enable-alpha-features --enable-helm --load-restrictor LoadRestrictionsRootOnly"
     application.instanceLabelKey: "app.kubernetes.io/instance"
