@@ -1,0 +1,13 @@
+crds:
+  install: true
+
+server:
+  service:
+    type: ClusterIP
+
+configs:
+  params:
+    server.insecure: false
+  cm:
+    kustomize.buildOptions: "--enable-alpha-features --enable-exec --enable-helm --load-restrictor LoadRestrictionsNone"
+    application.instanceLabelKey: "app.kubernetes.io/instance"
