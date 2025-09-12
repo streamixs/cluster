@@ -19,8 +19,11 @@ resource "helm_release" "argocd" {
   values = [
     file("${path.module}/argocd-values.yaml")
   ]
+
+  depends_on = [
+    kubernetes_namespace.argocd
+  ]
 }
 
-// removed kubectl resource; rely on kubernetes provider to read secret via data source
 
 
