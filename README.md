@@ -4,6 +4,7 @@ Short docs and navigation. See module READMEs for details.
 
 ### Modules
 - Argo CD: [`terraform/resources/argocd/README.md`](terraform/resources/argocd/README.md)
+- Argo Rollouts [`terraform/resources/argo-rollouts/README.md`](terraform/resources/argo-rollouts/README.md)
 
 ### Get started
 ```bash
