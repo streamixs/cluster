@@ -1,0 +1,6 @@
+# Copy this file to terraform.tfvars and adjust values
+
+# Path to kubeconfig used by helm/kubernetes providers
+kubeconfig = "~/.kube/config"
+
+

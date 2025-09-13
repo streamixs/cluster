@@ -9,13 +9,20 @@ Short docs and navigation. See module READMEs for details.
 ```bash
 cd terraform
 terraform init
+cp terraform.tfvars.example terraform.tfvars  # edit kubeconfig path if needed
 terraform apply
 ```
 
 ### Providers
 Kubernetes and Helm are configured via `terraform/provider.tf`.
-Set kubeconfig path with:
+Set kubeconfig path via Terraform variable (recommended):
+1) Copy and edit tfvars:
 ```bash
-export TF_VAR_kubeconfig=~/.kube/config
+cp terraform.tfvars.example terraform.tfvars
+$EDITOR terraform.tfvars
+```
+2) Or pass on CLI:
+```bash
+terraform apply -var 'kubeconfig=/path/to/config'
 ```
 

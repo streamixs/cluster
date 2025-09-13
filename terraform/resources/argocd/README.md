@@ -15,6 +15,7 @@ Installs Argo CD into a Kubernetes cluster via the official Helm chart.
 From the root `cluster/terraform` directory:
 ```bash
 terraform init
+cp terraform.tfvars.example terraform.tfvars  # edit kubeconfig path if needed
 terraform apply
 ```
 
