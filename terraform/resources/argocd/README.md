@@ -12,7 +12,7 @@ Installs Argo CD into a Kubernetes cluster via the official Helm chart.
 - `values_file` (string, default `resources/argocd/argocd-values.yaml`)
 
 ### Install
-From the root `cluster/terraform` directory:
+From the root `terraform` directory:
 ```bash
 terraform init
 cp terraform.tfvars.example terraform.tfvars  # edit kubeconfig path if needed
