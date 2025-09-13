@@ -19,7 +19,7 @@ terraform apply
 ```
 
 ### Outputs
-- `argocd_admin_password`: Base64-encoded initial admin password from the Secret.
+- `argocd_admin_password`: initial admin password from the Secret (plain text).
 
 ```bash
 terraform output -raw argocd_admin_password

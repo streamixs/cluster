@@ -3,7 +3,7 @@
 Short docs and navigation. See module READMEs for details.
 
 ### Modules
-- Argo CD: `terraform/resources/argocd/README.md`
+- Argo CD: [`terraform/resources/argocd/README.md`](terraform/resources/argocd/README.md)
 
 ### Get started
 ```bash
