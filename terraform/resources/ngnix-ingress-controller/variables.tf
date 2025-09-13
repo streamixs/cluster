@@ -1,7 +1,7 @@
 variable "namespace" {
   description = "Namespace where Nginx Ingress Controller will be installed"
   type        = string
-  default     = "ngnix-ingress-controller"
+  default     = "nginx-ingress-controller"
 }
 
 variable "chart_version" {
@@ -13,5 +13,5 @@ variable "chart_version" {
 variable "values_file" {
   description = "Path to the values file for Nginx Ingress Controller Helm chart"
   type        = string
-  default     = "resources/ngnix-ingress-controller/ngnix-ingress-controller-values.yaml"
+  default     = "resources/nginx-ingress-controller/nginx-ingress-controller-values.yaml"
 }

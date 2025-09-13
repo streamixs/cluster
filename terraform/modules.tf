@@ -6,6 +6,6 @@ module "argo-rollouts" {
   source = "./resources/argo-rollouts"
 
 }
-module "ngnix-ingress-controller" {
-  source = "./resources/ngnix-ingress-controller"
+module "nginx-ingress-controller" {
+  source = "./resources/nginx-ingress-controller"
 }

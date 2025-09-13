@@ -2,17 +2,17 @@ terraform {
   required_version = ">= 1.3.0"
 }
 
-resource "kubernetes_namespace" "ngnix-ingress-controller" {
+resource "kubernetes_namespace" "nginx-ingress-controller" {
   metadata {
     name = var.namespace
   }
 }
 
-resource "helm_release" "ngnix-ingress-controller" {
-  name             = "ngnix-ingress-controller"
+resource "helm_release" "nginx-ingress-controller" {
+  name             = "nginx-ingress-controller"
   repository       = "https://kubernetes.github.io/ingress-nginx"
   chart            = "ingress-nginx"
-  namespace        = kubernetes_namespace.ngnix-ingress-controller.metadata[0].name
+  namespace        = kubernetes_namespace.nginx-ingress-controller.metadata[0].name
   create_namespace = false
   version          = var.chart_version
 
@@ -21,6 +21,6 @@ resource "helm_release" "ngnix-ingress-controller" {
   ]
 
   depends_on = [
-    kubernetes_namespace.ngnix-ingress-controller
+    kubernetes_namespace.nginx-ingress-controller
   ]
 }
