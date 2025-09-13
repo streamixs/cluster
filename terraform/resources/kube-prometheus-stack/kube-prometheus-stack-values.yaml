@@ -27,7 +27,7 @@ grafana:
         datasource: Prometheus
       argo-rollouts:
         gnetId: 16017
-        revision:
+        revision: 16
         datasource: Prometheus
 
 prometheus:
