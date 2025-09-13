@@ -1,0 +1,19 @@
+controller:
+  ingressClassResource:
+    enabled: true
+    name: nginx
+
+  service:
+    type: LoadBalancer
+
+  metrics:
+    enabled: true
+    port: 10254
+    service:
+      type: ClusterIP
+
+  serviceMonitor:
+    enabled: true
+    namespace: monitoring
+    interval: 30s
+    labels: {}
