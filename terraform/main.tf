@@ -15,3 +15,7 @@ terraform {
 module "argocd" {
   source = "./resources/argocd"
 }
+
+module "argo-rollouts" {
+  source = "./resources/argo-rollouts"
+}
