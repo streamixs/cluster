@@ -6,6 +6,10 @@ Short docs and navigation. See module READMEs for details.
 - Argo CD: [`terraform/resources/argocd/README.md`](terraform/resources/argocd/README.md)
 - Argo Rollouts: [`terraform/resources/argo-rollouts/README.md`](terraform/resources/argo-rollouts/README.md)
 - Nginx Ingress Controller: [`terraform/resources/nginx-ingress-controller/README.md`](terraform/resources/nginx-ingress-controller/README.md)
+- kube-prometheus-stack: [`terraform/resources/kube-prometheus-stack/README.md`](terraform/resources/kube-prometheus-stack/README.md)
+
+### GitOps manifests
+- Argo CD manifests: [`argocd/README.md`](argocd/README.md)
 
 ### Get started
 ```bash
