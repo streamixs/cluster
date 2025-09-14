@@ -9,6 +9,7 @@ generators:
 resources:
   - issuers/letsencrypt-production.yaml
   - issuers/letsencrypt.yaml
+  - certificates/streamixs-com.yaml
 
 helmCharts:
   - name: cert-manager
