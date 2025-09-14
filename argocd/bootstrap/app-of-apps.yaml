@@ -33,7 +33,7 @@ spec:
           - PruneLast=true
           - ServerSideApply=true
           - ApplyOutOfSyncOnly=true
-          -  --enable-helm
+          - --enable-helm
           - --load-restrictor=LoadRestrictionsNone
         retry:
           limit: 3
