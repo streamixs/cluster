@@ -1,6 +1,6 @@
 controller:
   extraArgs:
-    default-ssl-certificate: "kube-system/streamixs-staging-tls"
+    default-ssl-certificate: "kube-system/streamixs-com-staging-tls"
   scope:
     enabled: false
   service:
