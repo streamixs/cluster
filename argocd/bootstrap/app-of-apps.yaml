@@ -9,7 +9,7 @@ spec:
   generators:
     - git:
         repoURL: https://github.com/streamixs/cluster
-        revision: feature/str-20-refactor-basculer-la-plateforme-k8s-sous-argo-cd-gitops
+        revision: develop
         directories:
           - path: argocd/apps/*
   template:
@@ -19,7 +19,7 @@ spec:
       project: platform
       source:
         repoURL: https://github.com/streamixs/cluster
-        targetRevision: feature/str-20-refactor-basculer-la-plateforme-k8s-sous-argo-cd-gitops
+        targetRevision: develop
         path: argocd/apps/{{path.basename}}
       destination:
         server: https://kubernetes.default.svc
