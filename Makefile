@@ -1,4 +1,4 @@
-AGE_KEY_FILE = ../age.agekey
+AGE_KEY_FILE = .config/age.agekey
 AGE_KEY_SECRET = sops-age
 AGE_KEY_NAMESPACE = argocd
 

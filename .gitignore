@@ -10,3 +10,4 @@
 **/*.tfplan.lock.hcl.backup
 **/*.tfplan.lock.hcl.backup.backup
 **/*.tfplan.lock.hcl.backup.backup.backup
+.config
