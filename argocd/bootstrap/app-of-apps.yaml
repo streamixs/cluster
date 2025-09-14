@@ -1,34 +1,43 @@
 apiVersion: argoproj.io/v1alpha1
-kind: Application
+kind: ApplicationSet
 metadata:
-  name: bootstrap
+  name: argocd-app-of-apps
   namespace: argocd
   labels:
     env: dev
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
 spec:
-  project: platform
-  source:
-    repoURL: https://github.com/streamixs/cluster
-    targetRevision: develop
-    path: argocd/apps
-    directory:
-      recurse: true
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: argocd
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-      - PruneLast=true
-      - ApplyOutOfSyncOnly=true
-    retry:
-      limit: 3
-      backoff:
-        duration: 5s
-        factor: 2
-        maxDuration: 3m
+  generators:
+    - git:
+        repoURL: https://github.com/streamixs/cluster
+        revision: develop
+        directories:
+          - path: argocd/apps/*
+  template:
+    metadata:
+      name: "{{path.basename}}"
+    spec:
+      project: platform
+      source:
+        repoURL: https://github.com/streamixs/cluster
+        targetRevision: develop
+        path: argocd/apps/{{path.basename}}
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{path.basename}}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - PruneLast=true
+          - ServerSideApply=true
+          - ApplyOutOfSyncOnly=true
+          - --enable-helm
+          - --load-restrictor=LoadRestrictionsNone
+        retry:
+          limit: 3
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m

@@ -9,5 +9,42 @@ configs:
   params:
     server.insecure: false
   cm:
-    kustomize.buildOptions: "--enable-alpha-features --enable-helm --load-restrictor LoadRestrictionsRootOnly"
-    application.instanceLabelKey: "app.kubernetes.io/instance"
+    kustomize.buildOptions: "--enable-alpha-plugins --enable-exec --enable-helm --load-restrictor LoadRestrictionsNone"
+    application.instanceLabelKey: "argocd.argoproj.io/instance"
+
+repoServer:
+  # Use init containers to configure custom tooling
+  # https://argoproj.github.io/argo-cd/operator-manual/custom_tools/
+  
+  volumes:
+    - name: custom-tools
+      emptyDir: {}
+    - name: sops-age
+      secret:
+        secretName: sops-age
+
+  initContainers:
+    - name: install-ksops
+      image: viaductoss/ksops:v4.3.3
+      command: ["/bin/sh", "-c"]
+      args:
+        - echo "Installing KSOPS...";
+          mv ksops /custom-tools/;
+          mv kustomize /custom-tools/;
+          echo "Done.";
+      volumeMounts:
+        - mountPath: /custom-tools
+          name: custom-tools
+  volumeMounts:
+    - mountPath: /usr/local/bin/kustomize
+      name: custom-tools
+      subPath: kustomize
+    - mountPath: /usr/local/bin/ksops
+      name: custom-tools
+      subPath: ksops
+    - mountPath: /etc/sops/age
+      name: sops-age
+      readOnly: true
+  env:
+    - name: SOPS_AGE_KEY_FILE
+      value: /etc/sops/age/keys.txt

@@ -2,21 +2,25 @@
 
 Short docs and navigation. See module READMEs for details.
 
-### Modules
+### Terraform modules (install only)
 - Argo CD: [`terraform/resources/argocd/README.md`](terraform/resources/argocd/README.md)
-- Argo Rollouts: [`terraform/resources/argo-rollouts/README.md`](terraform/resources/argo-rollouts/README.md)
-- Nginx Ingress Controller: [`terraform/resources/nginx-ingress-controller/README.md`](terraform/resources/nginx-ingress-controller/README.md)
-- kube-prometheus-stack: [`terraform/resources/kube-prometheus-stack/README.md`](terraform/resources/kube-prometheus-stack/README.md)
 
-### GitOps manifests
+### GitOps manifests (apps managed by Argo CD)
 - Argo CD manifests: [`argocd/README.md`](argocd/README.md)
+- Apps: [`argocd/apps/`](argocd/apps/) → Argo Rollouts, cert-manager, ingress-nginx
 
 ### Get started
 ```bash
+# 1) Install Argo CD with Terraform
 cd terraform
 terraform init
 cp terraform.tfvars.example terraform.tfvars  # edit kubeconfig path if needed
 terraform apply
+
+# 2) Bootstrap Argo CD (projects + app-of-apps)
+cd ..
+kubectl apply -f argocd/projects/platform.yaml
+kubectl apply -f argocd/bootstrap/app-of-apps.yaml
 ```
 
 ### Providers
@@ -31,4 +35,8 @@ $EDITOR terraform.tfvars
 ```bash
 terraform apply -var 'kubeconfig=/path/to/config'
 ```
+
+### Notes
+- Terraform now installs only Argo CD. All platform apps are reconciled by Argo CD from `argocd/apps/`.
+- The bootstrap `targetRevision`/branch is defined in `argocd/bootstrap/app-of-apps.yaml`. Update it before bootstrapping.
 
