@@ -15,3 +15,9 @@ variable "values_file" {
   type        = string
   default     = "resources/argocd/argocd-values.yaml"
 }
+
+variable "sops_age_key_file" {
+  description = "Path to the sops age key file"
+  type        = string
+  default     = "../.config/age.agekey"
+}
