@@ -34,4 +34,13 @@ resource "kubernetes_secret" "sops-age" {
   data = {
     "keys.txt" = file("${var.sops_age_key_file}")
   }
+  lifecycle {
+    precondition {
+      condition     = fileexists(var.sops_age_key_file)
+      error_message = "Sops age key file does not exist"
+    }
+  }
+
+  depends_on = [ kubernetes_namespace.argocd ]
 }
+
