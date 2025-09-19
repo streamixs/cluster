@@ -24,3 +24,14 @@ resource "helm_release" "argocd" {
     kubernetes_namespace.argocd
   ]
 }
+
+resource "kubernetes_secret" "sops-age" {
+  metadata {
+    name      = "sops-age"
+    namespace = kubernetes_namespace.argocd.metadata[0].name
+  }
+
+  data = {
+    "keys.txt" = file("${var.sops_age_key_file}")
+  }
+}
