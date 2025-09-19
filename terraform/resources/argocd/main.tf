@@ -37,7 +37,7 @@ resource "kubernetes_secret" "sops-age" {
   lifecycle {
     precondition {
       condition     = fileexists(var.sops_age_key_file)
-      error_message = "Sops age key file does not exist"
+      error_message = "SOPS age key file does not exist at path: ${var.sops_age_key_file}"
     }
   }
 
