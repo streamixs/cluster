@@ -32,4 +32,4 @@
 
   gateway:
     service:
-      type: LoadBalancer
+      type: ClusterIP
