@@ -6,6 +6,7 @@ Arborescence des applications gérées par Argo CD (ApplicationSet). Chaque sous
 - `argo-rollouts/`: installe Argo Rollouts via manifest upstream
 - `cert-manager/`: installe cert-manager + Issuers/Certificates (namespace `kube-system`)
 - `ingress-nginx/`: installe l'ingress controller (namespace `kube-system`)
+- `loki/`: installe loki (namespace `loki`)
 
 ### Ajouter une nouvelle application
 1) Créer un dossier `argocd/apps/<app-name>` avec l’un des modèles:
