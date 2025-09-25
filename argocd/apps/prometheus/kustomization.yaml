@@ -12,4 +12,4 @@ helmCharts:
     version: 77.11.0
 
 resources:
-  - ../base/grafana
+  - ../../base/grafana
