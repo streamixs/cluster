@@ -11,6 +11,3 @@ helmCharts:
     valuesFile: values.yaml
     version: 77.11.0
     includeCRDs: true
-
-resources:
-  - ../../base/grafana

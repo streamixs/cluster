@@ -1,0 +1,12 @@
+grafana:
+  ingress:
+    true: true
+    hosts:
+      - grafana.streamixs.com
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+      nginx.ingress.kubernetes.io/auth-type: basic
+      nginx.ingress.kubernetes.io/auth-secret: streamixs-com-staging-tls
+      nginx.ingress.kubernetes.io/auth-realm: "Authentication Required"
