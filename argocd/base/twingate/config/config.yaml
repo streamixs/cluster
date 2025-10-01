@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: twingate-connector
+  namespace: twingate
+data:
+  TWINGATE_NETWORK: "streamixs-dev"
+  TWINGATE_URL: "https://streamixs.twingate.com"
