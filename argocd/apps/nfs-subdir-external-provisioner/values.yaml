@@ -1,5 +1,5 @@
 nfs:
-  server: 10.0.0.50         # <-- your NAS IP/DNS
+  server: 54.36.178.170     # <-- your NAS IP/DNS
   path: /export/k8s         # <-- exported NFS path
 
 
