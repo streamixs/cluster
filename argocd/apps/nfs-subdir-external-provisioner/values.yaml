@@ -1,8 +1,6 @@
 nfs:
   server: 54.36.178.170     # <-- your NAS IP/DNS
   path: /export/k8s         # <-- exported NFS path
-  mountOptions:
-    - port=2000
 
 storageClass:
   create: true
