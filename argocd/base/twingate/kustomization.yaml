@@ -10,4 +10,3 @@ resources:
   - deployment.yaml
   - service.yaml
   - config/config.yaml
-  - secret/secret.yaml
