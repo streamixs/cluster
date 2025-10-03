@@ -18,3 +18,12 @@ jobs:
         run: pip install --disable-pip-version-check --no-cache-dir yamllint
       - name: Run yamllint on cluster
         run: yamllint -c .yamllint.yaml .
+  kubeconform:
+    name: Kubeconform validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: docker://ghcr.io/yannh/kubeconform:latest
+        with:
+          entrypoint: '/kubeconform'
+          args: "-summary -output json kubeconfigs/"
