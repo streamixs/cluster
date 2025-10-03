@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: prowlarr
-          image: prowlarr/prowlarr:latest
+          image: hotio/prowlarr:release
           imagePullPolicy: Always
           resources:
             requests:
