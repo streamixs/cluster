@@ -6,9 +6,13 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-production"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
 spec:
-  ingressClassName: nginx
+  ingressClassName: ingress-nginx
+  tls:
+    - hosts:
+        - argocd.streamixs.com
+      secretName: streamixs-com-production-tls
   rules:
     - host: argocd.streamixs.com
       http:
