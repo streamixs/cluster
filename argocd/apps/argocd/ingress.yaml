@@ -4,15 +4,12 @@ metadata:
   name: argocd-server-ingress
   namespace: argocd
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-production"
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    # optionnel: évite de logger les 200 de healthchecks
+    nginx.ingress.kubernetes.io/enable-access-log: "true"
 spec:
-  ingressClassName: nginx
-  tls:
-    - hosts:
-        - argocd.streamixs.com
-      secretName: streamixs-com-production-tls
+  ingressClassName: nginx   # remplace par 'ingress-nginx' si c'est le nom réel
   rules:
     - host: argocd.streamixs.com
       http:
@@ -23,4 +20,4 @@ spec:
               service:
                 name: argocd-server
                 port:
-                  number: 80
+                  number: 443
