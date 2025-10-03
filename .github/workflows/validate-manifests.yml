@@ -1,0 +1,62 @@
+name: Lint and validate Kubernetes/Argo CD manifests
+
+on:
+  pull_request:
+    paths:
+      - 'cluster/**'
+      - '.github/workflows/**'
+      - 'cluster/.yamllint.yaml'
+  workflow_dispatch:
+
+jobs:
+  yamllint:
+    name: YAML lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install yamllint
+        run: pip install --disable-pip-version-check --no-cache-dir yamllint
+      - name: Run yamllint on cluster
+        run: yamllint -c cluster/.yamllint.yaml cluster
+
+  kubeconform:
+    name: kubeconform validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install kubeconform
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="0.6.7"
+          curl -sSL -o kubeconform.tar.gz https://github.com/yannh/kubeconform/releases/download/v${VERSION}/kubeconform-linux-amd64.tar.gz
+          tar -xzf kubeconform.tar.gz
+          sudo mv kubeconform /usr/local/bin/
+          kubeconform -v
+      - name: Validate Argo CD/Kubernetes manifests
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Collect YAML files that are actual Kubernetes resources (exclude Helm/Kustomize config files)
+          mapfile -d '' files < <(find cluster/argocd -type f \( -name '*.yaml' -o -name '*.yml' \) \
+            ! -iname 'values.yaml' \
+            ! -iname 'kustomization.yaml' \
+            -print0)
+
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No Kubernetes manifests found under cluster/argocd to validate."
+            exit 0
+          fi
+
+          echo "Validating ${#files[@]} manifest file(s) with kubeconform..."
+          kubeconform -strict -summary \
+            -schema-location default \
+            -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.Resource}}_{{.Version}}.json' \
+            "${files[@]}"
+
