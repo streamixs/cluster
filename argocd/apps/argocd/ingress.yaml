@@ -7,7 +7,9 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt-staging
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
 spec:
+  ingressClassName: nginx
   rules:
     - host: argocd.streamixs.com
       http:
@@ -18,4 +20,4 @@ spec:
               service:
                 name: argocd-server
                 port:
-                  name: https
+                  number: 443
