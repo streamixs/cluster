@@ -1,0 +1,20 @@
+name: Lint and validate Kubernetes/Argo CD manifests
+
+on:
+  pull_request
+
+jobs:
+  yamllint:
+    name: YAML lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install yamllint
+        run: pip install --disable-pip-version-check --no-cache-dir yamllint
+      - name: Run yamllint on cluster
+        run: yamllint -c .yamllint.yaml .

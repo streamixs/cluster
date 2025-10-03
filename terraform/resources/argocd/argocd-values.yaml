@@ -15,7 +15,6 @@ configs:
 repoServer:
   # Use init containers to configure custom tooling
   # https://argoproj.github.io/argo-cd/operator-manual/custom_tools/
-  
   volumes:
     - name: custom-tools
       emptyDir: {}
