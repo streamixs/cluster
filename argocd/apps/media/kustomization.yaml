@@ -6,3 +6,4 @@ namespace: media
 resources:
   - ../../base/media-pvc
   - ../../base/prowlarr
+  - ../../base/sonarr
