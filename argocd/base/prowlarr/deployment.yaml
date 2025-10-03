@@ -25,9 +25,9 @@ spec:
             - containerPort: 9696
           env:
             - name: PUID
-              value: "1000"
+              value: "65534"
             - name: PGID
-              value: "1000"
+              value: "65534"
             - name: UMASK
               value: "002"
             - name: TZ
