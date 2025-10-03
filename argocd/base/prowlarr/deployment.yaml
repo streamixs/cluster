@@ -13,10 +13,9 @@ spec:
       labels:
         app: prowlarr
     spec:
+      # NE PAS forcer runAsUser/Group ici : s6 a besoin de root
       securityContext:
-        runAsUser: 1000
-        runAsGroup: 1000
-        fsGroup: 1000
+        fsGroup: 1000                   # ok de garder, pas obligatoire
         fsGroupChangePolicy: "OnRootMismatch"
       containers:
         - name: prowlarr
