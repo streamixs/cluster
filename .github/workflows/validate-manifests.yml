@@ -1,5 +1,9 @@
 name: Lint and validate Kubernetes/Argo CD manifests
 
+defaults:
+  run:
+    working-directory: cluster
+
 on:
   pull_request:
     paths:
@@ -22,7 +26,7 @@ jobs:
       - name: Install yamllint
         run: pip install --disable-pip-version-check --no-cache-dir yamllint
       - name: Run yamllint on cluster
-        run: yamllint -c cluster/.yamllint.yaml cluster
+        run: yamllint -c .yamllint.yaml .
 
   kubeconform:
     name: kubeconform validation
@@ -44,13 +48,13 @@ jobs:
         run: |
           set -euo pipefail
           # Collect YAML files that are actual Kubernetes resources (exclude Helm/Kustomize config files)
-          mapfile -d '' files < <(find cluster/argocd -type f \( -name '*.yaml' -o -name '*.yml' \) \
+          mapfile -d '' files < <(find argocd -type f \( -name '*.yaml' -o -name '*.yml' \) \
             ! -iname 'values.yaml' \
             ! -iname 'kustomization.yaml' \
             -print0)
 
           if [ "${#files[@]}" -eq 0 ]; then
-            echo "No Kubernetes manifests found under cluster/argocd to validate."
+            echo "No Kubernetes manifests found under argocd to validate."
             exit 0
           fi
 
