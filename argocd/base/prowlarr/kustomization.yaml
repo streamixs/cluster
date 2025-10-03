@@ -4,5 +4,6 @@ kind: Kustomization
 namespace: media
 
 resources:
-  - ../../base/media-pvc
-  - ../../base/prowlarr
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml

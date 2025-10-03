@@ -6,3 +6,6 @@ namespace: media
 resources:
   - download-pvc.yaml
   - media-pvc.yaml
+  - prowlarr-pvc.yaml
+  - radarr-pvc.yaml
+  - sonarr-pvc.yaml
