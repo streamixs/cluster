@@ -9,3 +9,5 @@ rules:
   indentation:
     spaces: 2
     indent-sequences: consistent
+ignore: |
+  argocd/base/cert-manager/issuers/secret-cf-token.yaml
