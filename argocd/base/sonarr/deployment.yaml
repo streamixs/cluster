@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sonarr
+  namespace: media
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sonarr
+  template:
+    metadata:
+      labels:
+        app: sonarr
+    spec:
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: "OnRootMismatch"
+      containers:
+        - name: sonarr
+          image: ghcr.io/hotio/sonarr:release
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8989
+          env:
+            - name: PUID
+              value: "65534"
+            - name: PGID
+              value: "65534"
+            - name: UMASK
+              value: "002"
+            - name: TZ
+              value: "Europe/Paris"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          volumeMounts:
+            - name: sonarr-pvc
+              mountPath: /config
+            - name: media-pvc
+              mountPath: /media
+            - name: download-pvc
+              mountPath: /downloads
+      volumes:
+        - name: sonarr-pvc
+          persistentVolumeClaim:
+            claimName: sonarr-pvc
