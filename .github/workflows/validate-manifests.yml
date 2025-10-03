@@ -17,4 +17,4 @@ jobs:
       - name: Install yamllint
         run: pip install --disable-pip-version-check --no-cache-dir yamllint
       - name: Run yamllint on cluster
-        run: yamllint -c .yamllint.yaml .
+        run: yamllint .
