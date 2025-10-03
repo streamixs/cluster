@@ -7,7 +7,7 @@ server:
 
 configs:
   params:
-    server.insecure: false
+    server.insecure: true
   cm:
     kustomize.buildOptions: "--enable-alpha-plugins --enable-exec --enable-helm --load-restrictor LoadRestrictionsNone"
     application.instanceLabelKey: "argocd.argoproj.io/instance"

@@ -4,9 +4,9 @@ metadata:
   name: streamixs-com
   namespace: kube-system
 spec:
-  secretName: streamixs-com-staging-tls
+  secretName: streamixs-com-production-tls
   issuerRef:
-    name: letsencrypt-staging
+    name: letsencrypt-production
     kind: ClusterIssuer
   commonName: "*.streamixs.com"
   dnsNames:

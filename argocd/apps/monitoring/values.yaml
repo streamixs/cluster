@@ -3,7 +3,7 @@ grafana:
     enabled: true
     ingressClassName: nginx
     annotations:
-      cert-manager.io/cluster-issuer: letsencrypt-staging
+      cert-manager.io/cluster-issuer: letsencrypt-production
       nginx.ingress.kubernetes.io/ssl-redirect: "true"
       nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     hosts:
@@ -11,6 +11,6 @@ grafana:
     path: /
     pathType: Prefix
     tls:
-      - secretName: streamixs-com-staging-tls
+      - secretName: streamixs-com-production-tls
         hosts:
           - grafana.streamixs.com
