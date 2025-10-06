@@ -22,6 +22,20 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 7878
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 7878
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 7878
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
           env:
             - name: PUID
               value: "65534"
