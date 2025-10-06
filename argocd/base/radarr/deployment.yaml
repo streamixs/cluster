@@ -21,7 +21,8 @@ spec:
           image: ghcr.io/hotio/radarr:release
           imagePullPolicy: Always
           ports:
-            - containerPort: 7878
+            - name: http
+              containerPort: 7878
           livenessProbe:
             httpGet:
               path: /
