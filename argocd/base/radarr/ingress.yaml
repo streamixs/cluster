@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: prowlarr-ingress
+  name: radarr-ingress
   namespace: media
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-production
@@ -10,16 +10,16 @@ metadata:
 spec:
   ingressClassName: nginx
   tls:
-    - hosts: [prowlarr.streamixs.com]
-      secretName: prowlarr-streamixs-com-production-tls
+    - hosts: [radarr.streamixs.com]
+      secretName: radarr-streamixs-com-production-tls
   rules:
-    - host: prowlarr.streamixs.com
+    - host: radarr.streamixs.com
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: prowlarr
+                name: radarr
                 port:
-                  number: 9696
+                  number: 7878
