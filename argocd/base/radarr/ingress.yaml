@@ -11,7 +11,7 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts: [radarr.streamixs.com]
-      secretName: streamixs-com-production-tls
+      secretName: radarr-streamixs-com-production-tls
   rules:
     - host: radarr.streamixs.com
       http:
