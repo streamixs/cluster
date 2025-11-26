@@ -1,27 +1,42 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sonarr
+  name: qbittorrent
   namespace: media
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: sonarr
+      app: qbittorrent
   template:
     metadata:
       labels:
-        app: sonarr
+        app: qbittorrent
     spec:
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: "OnRootMismatch"
       containers:
-        - name: sonarr
-          image: ghcr.io/hotio/sonarr:release
+        - name: qbittorrent
+          image: ghcr.io/hotio/qbittorrent:latest
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 8989
+            - name: http
+              containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
           env:
             - name: PUID
               value: "65534"
@@ -39,16 +54,16 @@ spec:
               cpu: "500m"
               memory: "512Mi"
           volumeMounts:
-            - name: sonarr-pvc
+            - name: qbittorrent-pvc
               mountPath: /config
             - name: media-pvc
               mountPath: /media
             - name: download-pvc
               mountPath: /downloads
       volumes:
-        - name: sonarr-pvc
+        - name: qbittorrent-pvc
           persistentVolumeClaim:
-            claimName: sonarr-pvc
+            claimName: qbittorrent-pvc
         - name: media-pvc
           persistentVolumeClaim:
             claimName: media-pvc

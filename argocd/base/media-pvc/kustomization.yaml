@@ -9,3 +9,4 @@ resources:
   - prowlarr-pvc.yaml
   - radarr-pvc.yaml
   - sonarr-pvc.yaml
+  - qbittorrent-pvc.yaml
