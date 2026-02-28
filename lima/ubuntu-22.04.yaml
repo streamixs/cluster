@@ -1,0 +1,11 @@
+arch: "aarch64"
+cpus: 2
+memory: "4GiB"
+disk: "20GiB"
+networks:
+  - lima: user-v2
+mounts:
+  - location: "~"
+base: template:_images/ubuntu-22.04
+ssh:
+  loadDotSSHPubKeys: true

@@ -1,0 +1,11 @@
+---
+- name: Déployer Calico
+  hosts: masters
+  become: yes
+  tasks:
+    - name: Installer Calico
+      shell: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+      register: calico_install
+      retries: 3
+      delay: 10
+      until: calico_install is not failed
