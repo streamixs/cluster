@@ -20,39 +20,6 @@ storageClasses:
       controller-expand-secret:
 
 driver:
+  existingConfigSecret: truenas-csi-driver-config
   config:
     driver: freenas-nfs
-    instance_id:
-    httpConnection:
-      protocol: http
-      host: 192.168.1.5
-      port: 80
-      # API key injected from K8s secret truenas-api-key (managed by KSOPS)
-      apiKey:
-      allowInsecure: true
-    httpConnection.apiKeySecretRef:
-      name: truenas-api-key
-      key: api-key
-    sshConnection:
-      host: 192.168.1.5
-      port: 22
-      username: root
-      # Use SSH key or password — SSH is used for dataset operations
-      password: ""
-      privateKey: ""
-    zfs:
-      datasetParentName: applications/dev
-      detachedSnapshotsDatasetParentName: applications/dev/snapshots
-      datasetProperties:
-        "org.freenas:description": "{{ parameters.[csi.storage.k8s.io/pvc/namespace] }}/{{ parameters.[csi.storage.k8s.io/pvc/name] }}"
-      datasetEnableQuotas: true
-      datasetEnableReservation: false
-    nfs:
-      shareHost: 192.168.1.5
-      shareAlldirs: false
-      shareAllowedHosts: []
-      shareAllowedNetworks: []
-      shareMaprootUser: root
-      shareMaprootGroup: root
-      shareMapallUser: ""
-      shareMapallGroup: ""
