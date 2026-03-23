@@ -1,0 +1,12 @@
+machine:
+  network:
+    nameservers:
+      - 1.1.1.1
+      - 8.8.8.8
+  kernel:
+    modules:
+      - name: nfs
+      - name: nfsd
+  time:
+    servers:
+      - time.cloudflare.com
