@@ -3,5 +3,8 @@ kind: Kustomization
 
 namespace: democratic-csi
 
+resources:
+  - namespace.yaml
+
 generators:
   - generators/secret-generator.yaml
