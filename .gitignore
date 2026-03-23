@@ -1,13 +1,13 @@
+# Terraform
 **/.terraform
-**/.terraform.lock.hcl
 **/.terraform.lock.hcl
 **/*.tfvars
 **/*.tfstate
 **/*.tfstate.backup
 **/*.tfplan
-**/*.tfplan.backup
-**/*.tfplan.lock.hcl
-**/*.tfplan.lock.hcl.backup
-**/*.tfplan.lock.hcl.backup.backup
-**/*.tfplan.lock.hcl.backup.backup.backup
+
+# Secrets
 .config
+
+# Talos generated configs (contain secrets in plain text)
+talos/*/clusterconfig/

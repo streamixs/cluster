@@ -1,42 +1,50 @@
 ## Cluster
 
-Short docs and navigation. See module READMEs for details.
+Kubernetes cluster powered by **Talos Linux** + **ArgoCD** GitOps.
 
-### Terraform modules (install only)
-- Argo CD: [`terraform/resources/argocd/README.md`](terraform/resources/argocd/README.md)
+### Architecture
 
-### GitOps manifests (apps managed by Argo CD)
-- Argo CD manifests: [`argocd/README.md`](argocd/README.md)
-- Apps: [`argocd/apps/`](argocd/apps/) → Argo Rollouts, cert-manager, ingress-nginx
-
-### Get started
-```bash
-# 1) Install Argo CD with Terraform
-cd terraform
-terraform init
-cp terraform.tfvars.example terraform.tfvars  # edit kubeconfig path if needed
-terraform apply
-
-# 2) Bootstrap Argo CD (projects + app-of-apps)
-cd ..
-kubectl apply -f argocd/projects/platform.yaml
-kubectl apply -f argocd/bootstrap/app-of-apps.yaml
+```
+Talos Linux (OS) → Cilium (CNI) → ArgoCD (GitOps) → Apps
 ```
 
-### Providers
-Kubernetes and Helm are configured via `terraform/provider.tf`.
-Set kubeconfig path via Terraform variable (recommended):
-1) Copy and edit tfvars:
+| Env | Infra | Control Planes | Workers |
+|-----|-------|---------------|---------|
+| dev | Docker (talosctl) | 1 | 1 |
+| prod | Mini PCs (bare metal) | 3 | N |
+
+### Prerequisites
+
 ```bash
-cp terraform.tfvars.example terraform.tfvars
-$EDITOR terraform.tfvars
-```
-2) Or pass on CLI:
-```bash
-terraform apply -var 'kubeconfig=/path/to/config'
+brew install siderolabs/tap/talosctl budimanjojo/tap/talhelper helm
 ```
 
-### Notes
-- Terraform now installs only Argo CD. All platform apps are reconciled by Argo CD from `argocd/apps/`.
-- The bootstrap `targetRevision`/branch is defined in `argocd/bootstrap/app-of-apps.yaml`. Update it before bootstrapping.
+### Quick start (dev)
 
+```bash
+make bootstrap        # cluster + cilium + argocd
+make status           # nodes + pods
+make destroy          # teardown
+```
+
+### Prod
+
+```bash
+make talos-gen-secret ENV=prod   # generate + encrypt secrets
+make talos-gen ENV=prod          # generate machine configs
+# Then apply configs manually with talosctl
+make cilium ENV=prod
+make argocd ENV=prod
+```
+
+### Structure
+
+- `talos/` — Talos machine configs (dev + prod)
+- `terraform/` — ArgoCD Helm install
+- `argocd/apps/` — Applications managed by ArgoCD
+- `argocd/base/` — Kustomize bases (media, cert-manager, etc.)
+- `argocd/bootstrap/` — App-of-Apps + projects
+
+### Secrets
+
+Managed with SOPS + Age. Key at `.config/age.agekey` (gitignored).

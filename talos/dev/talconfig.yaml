@@ -1,0 +1,53 @@
+---
+clusterName: streamixs-dev
+talosVersion: v1.12.0
+kubernetesVersion: v1.32.0
+endpoint: https://10.5.0.2:6443
+
+allowSchedulingOnControlPlanes: true
+
+cniConfig:
+  name: none
+
+nodes:
+  - hostname: dev-cp-01
+    controlPlane: true
+    ipAddress: 10.5.0.2
+    installDisk: /dev/vda
+
+  - hostname: dev-worker-01
+    controlPlane: false
+    ipAddress: 10.5.0.3
+    installDisk: /dev/vda
+
+controlPlane:
+  patches:
+    - |-
+      machine:
+        network:
+          nameservers:
+            - 1.1.1.1
+            - 8.8.8.8
+        kernel:
+          modules:
+            - name: nfs
+            - name: nfsd
+        time:
+          servers:
+            - time.cloudflare.com
+
+worker:
+  patches:
+    - |-
+      machine:
+        network:
+          nameservers:
+            - 1.1.1.1
+            - 8.8.8.8
+        kernel:
+          modules:
+            - name: nfs
+            - name: nfsd
+        time:
+          servers:
+            - time.cloudflare.com
