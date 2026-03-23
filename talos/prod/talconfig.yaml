@@ -1,0 +1,74 @@
+---
+clusterName: streamixs
+talosVersion: v1.12.0
+kubernetesVersion: v1.32.0
+# VIP ou IP du load balancer devant les control-planes
+# A configurer quand le hardware sera pret
+endpoint: https://192.168.1.100:6443
+
+allowSchedulingOnControlPlanes: false
+
+cniConfig:
+  name: none
+
+nodes:
+  # --- Control Planes (3x mini PCs) ---
+  - hostname: cp-01
+    controlPlane: true
+    ipAddress: 192.168.1.10   # PLACEHOLDER - adapter a l'IP reelle
+    installDisk: /dev/sda     # PLACEHOLDER - verifier avec lsblk
+
+  - hostname: cp-02
+    controlPlane: true
+    ipAddress: 192.168.1.11   # PLACEHOLDER
+    installDisk: /dev/sda
+
+  - hostname: cp-03
+    controlPlane: true
+    ipAddress: 192.168.1.12   # PLACEHOLDER
+    installDisk: /dev/sda
+
+  # --- Workers (ajouter quand le hardware arrive) ---
+  # - hostname: worker-01
+  #   controlPlane: false
+  #   ipAddress: 192.168.1.20
+  #   installDisk: /dev/sda
+  # - hostname: worker-02
+  #   controlPlane: false
+  #   ipAddress: 192.168.1.21
+  #   installDisk: /dev/sda
+
+controlPlane:
+  patches:
+    - |-
+      cluster:
+        proxy:
+          disabled: true
+      machine:
+        network:
+          nameservers:
+            - 1.1.1.1
+            - 8.8.8.8
+        kernel:
+          modules:
+            - name: nfs
+            - name: nfsd
+        time:
+          servers:
+            - time.cloudflare.com
+
+worker:
+  patches:
+    - |-
+      machine:
+        network:
+          nameservers:
+            - 1.1.1.1
+            - 8.8.8.8
+        kernel:
+          modules:
+            - name: nfs
+            - name: nfsd
+        time:
+          servers:
+            - time.cloudflare.com
