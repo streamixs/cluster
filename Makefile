@@ -25,7 +25,12 @@ ifeq ($(ENV),dev)
 	@echo "==> Creation du cluster dev (Docker)..."
 	talosctl cluster create docker \
 		--name $(CLUSTER_NAME) \
-		--workers 1
+		--workers 2 \
+		--kubernetes-version v1.35.0 \
+		--image ghcr.io/siderolabs/talos:v1.12.0 \
+		--memory-controlplanes 4096 \
+		--memory-workers 4096 \
+		--config-patch @$(TALOS_DIR)/patch.yaml
 	@echo "==> Recuperation du kubeconfig..."
 	@API_PORT=$$(docker port $(CLUSTER_NAME)-controlplane-1 6443/tcp | cut -d: -f2) && \
 		talosctl kubeconfig $(KUBECONFIG) --nodes 10.5.0.2 --force && \
@@ -45,14 +50,22 @@ else
 endif
 
 # ============================================================
-# Cilium (CNI) - prod uniquement
+# Cilium (CNI)
 # ============================================================
 
-cilium: ## Installer Cilium via Helm (prod uniquement)
+cilium: ## Installer Cilium via Helm (remplace flannel en dev)
 	@echo "==> Installation de Cilium..."
 	helm repo add cilium https://helm.cilium.io/ 2>/dev/null || true
 	helm repo update cilium
-	helm install cilium cilium/cilium \
+ifeq ($(ENV),dev)
+	@echo "==> Suppression de flannel (CNI par defaut)..."
+	-kubectl --kubeconfig $(KUBECONFIG) delete daemonset -n kube-system kube-flannel 2>/dev/null
+	-kubectl --kubeconfig $(KUBECONFIG) delete configmap -n kube-system kube-flannel-cfg 2>/dev/null
+	-kubectl --kubeconfig $(KUBECONFIG) delete serviceaccount -n kube-system flannel 2>/dev/null
+	-kubectl --kubeconfig $(KUBECONFIG) delete clusterrole flannel 2>/dev/null
+	-kubectl --kubeconfig $(KUBECONFIG) delete clusterrolebinding flannel 2>/dev/null
+endif
+	helm upgrade --install cilium cilium/cilium \
 		--namespace kube-system \
 		--kubeconfig $(KUBECONFIG) \
 		--version 1.17.1 \

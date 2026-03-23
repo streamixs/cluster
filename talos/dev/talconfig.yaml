@@ -6,8 +6,8 @@ endpoint: https://10.5.0.2:6443
 
 allowSchedulingOnControlPlanes: true
 
-cniConfig:
-  name: none
+# CNI: flannel au boot (remplace par Cilium via make cilium)
+# En prod, cniConfig: none car Cilium est installe manuellement avant le bootstrap
 
 nodes:
   - hostname: dev-cp-01
@@ -18,6 +18,11 @@ nodes:
   - hostname: dev-worker-01
     controlPlane: false
     ipAddress: 10.5.0.3
+    installDisk: /dev/vda
+
+  - hostname: dev-worker-02
+    controlPlane: false
+    ipAddress: 10.5.0.4
     installDisk: /dev/vda
 
 controlPlane:
