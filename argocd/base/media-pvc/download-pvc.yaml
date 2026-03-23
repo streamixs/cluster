@@ -9,4 +9,5 @@ spec:
   resources:
     requests:
       storage: 300Gi
-  storageClassName: nfs-client
+  storageClassName: ""
+  volumeName: download-pv

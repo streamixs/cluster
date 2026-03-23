@@ -45,6 +45,25 @@ make argocd ENV=prod
 - `argocd/base/` — Kustomize bases (media, cert-manager, etc.)
 - `argocd/bootstrap/` — App-of-Apps + projects
 
+### Storage (TrueNAS)
+
+NFS storage via **democratic-csi** + TrueNAS (192.168.1.5).
+
+Datasets a creer sur TrueNAS :
+
+```
+main/{dev,prod}/media        # films, series (PV statique, ReadWriteMany)
+main/{dev,prod}/downloads    # telechargements (PV statique, ReadWriteMany)
+applications/{dev,prod}      # parent pour democratic-csi (datasets auto par PVC)
+```
+
+Setup TrueNAS :
+1. Creer les datasets ci-dessus
+2. Activer le service NFS (Network > NFS)
+3. Creer les shares NFS pour `main/dev/media` et `main/dev/downloads`
+4. Creer une API key (Credentials > API Keys > Add)
+5. Mettre la cle dans `argocd/apps/democratic-csi/values.yaml` (`driver.config.httpConnection.apiKey`)
+
 ### Secrets
 
 Managed with SOPS + Age. Key at `.config/age.agekey` (gitignored).
