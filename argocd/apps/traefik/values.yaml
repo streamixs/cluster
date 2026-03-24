@@ -1,0 +1,28 @@
+service:
+  type: LoadBalancer
+
+providers:
+  kubernetesIngress:
+    enabled: false
+  kubernetesCRD:
+    enabled: true
+    allowCrossNamespace: true
+
+ingressRoute:
+  dashboard:
+    enabled: false
+
+ports:
+  web:
+    redirectTo:
+      port: websecure
+      priority: 10
+  websecure:
+    tls:
+      enabled: true
+
+logs:
+  general:
+    level: INFO
+  access:
+    enabled: true

@@ -1,0 +1,15 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: radarr
+  namespace: media
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`radarr.streamixs.com`)
+      kind: Rule
+      services:
+        - name: radarr
+          port: 7878
+  tls: {}

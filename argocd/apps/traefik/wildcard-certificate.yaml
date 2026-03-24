@@ -1,12 +1,12 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: streamixs-com
-  namespace: kube-system
+  name: streamixs-com-wildcard
+  namespace: traefik
 spec:
-  secretName: streamixs-com-staging-tls
+  secretName: streamixs-com-production-tls
   issuerRef:
-    name: letsencrypt-staging
+    name: letsencrypt-production
     kind: ClusterIssuer
   commonName: "*.streamixs.com"
   dnsNames:

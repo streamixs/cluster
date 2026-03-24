@@ -9,7 +9,7 @@ spec:
   description: Platform components managed by Argo CD
   sourceRepos:
     - https://github.com/streamixs/cluster
-    - https://kubernetes.github.io/ingress-nginx
+    - https://traefik.github.io/charts
     - https://charts.jetstack.io
     - https://metallb.github.io/metallb
     - https://prometheus-community.github.io/helm-charts
