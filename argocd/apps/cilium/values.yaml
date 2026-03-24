@@ -1,4 +1,4 @@
-kubeProxyReplacement: true
+kubeProxyReplacement: false
 
 k8sServiceHost: localhost
 k8sServicePort: 7445
@@ -29,6 +29,12 @@ cgroup:
   autoMount:
     enabled: false
   hostRoot: /sys/fs/cgroup
+
+l2announcements:
+  enabled: true
+
+externalIPs:
+  enabled: true
 
 hubble:
   relay:

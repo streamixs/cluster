@@ -11,3 +11,4 @@ rules:
     indent-sequences: consistent
 ignore: |
   argocd/base/cert-manager/issuers/secret-cf-token.yaml
+  argocd/base/democratic-csi/secrets/truenas-api-key.yaml
