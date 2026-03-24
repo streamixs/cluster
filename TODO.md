@@ -17,5 +17,5 @@
 
 - [ ] ArgoCD targetRevision : passer de `develop` a `main`
 - [ ] Grafana persistence : PVC pour dashboards
-- [ ] NFS IP en variable (externaliser `54.36.178.170`)
+- [x] ~~NFS IP en variable~~ — remplace par democratic-csi + TrueNAS
 - [ ] Evaluer Cilium IngressController pour remplacer ingress-nginx

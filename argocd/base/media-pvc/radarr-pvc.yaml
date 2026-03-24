@@ -5,8 +5,8 @@ metadata:
   namespace: media
 spec:
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   resources:
     requests:
-      storage: 20Gi
-  storageClassName: nfs-client
+      storage: 5Gi
+  storageClassName: truenas-nfs

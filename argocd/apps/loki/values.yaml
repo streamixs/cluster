@@ -22,13 +22,19 @@ deploymentMode: SimpleScalable
 
 backend:
   replicas: 1
+  persistence:
+    storageClass: truenas-nfs
 read:
   replicas: 1
 write:
   replicas: 1
+  persistence:
+    storageClass: truenas-nfs
 
 minio:
   enabled: true
+  persistence:
+    storageClass: truenas-nfs
 
 gateway:
   service:

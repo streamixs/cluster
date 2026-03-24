@@ -4,8 +4,13 @@ kind: Kustomization
 namespace: media
 
 resources:
-  - download-pvc.yaml
+  # Static PVs (NFS direct mount on TrueNAS)
+  - media-pv.yaml
+  - download-pv.yaml
+  # PVCs bound to static PVs
   - media-pvc.yaml
+  - download-pvc.yaml
+  # PVCs provisioned by democratic-csi (app configs)
   - prowlarr-pvc.yaml
   - radarr-pvc.yaml
   - sonarr-pvc.yaml
