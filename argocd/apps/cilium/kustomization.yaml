@@ -3,6 +3,9 @@ kind: Kustomization
 
 namespace: kube-system
 
+resources:
+  - ../../base/cilium
+
 helmCharts:
   - name: cilium
     namespace: kube-system
