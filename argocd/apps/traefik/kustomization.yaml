@@ -4,9 +4,7 @@ kind: Kustomization
 namespace: traefik
 
 resources:
-  - tlsstore-default.yaml
   - wildcard-certificate.yaml
-  - middleware-redirect-https.yaml
 
 helmCharts:
   - name: traefik
