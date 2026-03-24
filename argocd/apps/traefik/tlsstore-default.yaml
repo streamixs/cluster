@@ -5,4 +5,4 @@ metadata:
   namespace: traefik
 spec:
   defaultCertificate:
-    secretName: streamixs-com-production-tls
+    secretName: streamixs-com-staging-tls
