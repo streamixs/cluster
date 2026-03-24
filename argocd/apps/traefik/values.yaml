@@ -14,34 +14,22 @@ ingressRoute:
 
 ports:
   web:
-    middlewares:
-      - traefik-redirect-https@kubernetescrd
+    redirections:
+      entryPoint:
+        to: websecure
+        scheme: https
+        permanent: true
   websecure:
     tls:
       enabled: true
+
+tlsStore:
+  default:
+    defaultCertificate:
+      secretName: streamixs-com-staging-tls
 
 logs:
   general:
     level: INFO
   access:
     enabled: true
-
-extraObjects:
-  - apiVersion: traefik.io/v1alpha1
-    kind: Middleware
-    metadata:
-      name: redirect-https
-      namespace: traefik
-    spec:
-      redirectScheme:
-        scheme: https
-        permanent: true
-
-  - apiVersion: traefik.io/v1alpha1
-    kind: TLSStore
-    metadata:
-      name: default
-      namespace: traefik
-    spec:
-      defaultCertificate:
-        secretName: streamixs-com-staging-tls
