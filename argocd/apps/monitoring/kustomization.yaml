@@ -3,6 +3,9 @@ kind: Kustomization
 
 namespace: monitoring
 
+resources:
+  - ingressroute-grafana.yaml
+
 helmCharts:
   - name: kube-prometheus-stack
     namespace: monitoring

@@ -6,4 +6,4 @@ namespace: media
 resources:
   - deployment.yaml
   - service.yaml
-  - ingress.yaml
+  - ingressroute.yaml

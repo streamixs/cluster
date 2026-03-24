@@ -1,0 +1,33 @@
+service:
+  type: LoadBalancer
+
+providers:
+  kubernetesIngress:
+    enabled: false
+  kubernetesCRD:
+    enabled: true
+    allowCrossNamespace: true
+
+ingressRoute:
+  dashboard:
+    enabled: false
+
+ports:
+  web:
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+
+tlsStore:
+  default:
+    defaultCertificate:
+      secretName: streamixs-com-staging-tls
+
+logs:
+  general:
+    level: INFO
+  access:
+    enabled: true

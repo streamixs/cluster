@@ -1,7 +1,0 @@
-controller:
-  extraArgs:
-    default-ssl-certificate: "kube-system/streamixs-com-staging-tls"
-  scope:
-    enabled: false
-  service:
-    type: LoadBalancer
