@@ -14,14 +14,12 @@ ingressRoute:
 
 ports:
   web:
-    redirections:
-      entryPoint:
-        to: websecure
-        scheme: https
-        permanent: true
-  websecure:
-    tls:
-      enabled: true
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
 
 tlsStore:
   default:
