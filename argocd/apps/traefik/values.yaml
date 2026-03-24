@@ -14,9 +14,8 @@ ingressRoute:
 
 ports:
   web:
-    redirectTo:
-      port: websecure
-      priority: 10
+    middlewares:
+      - traefik-redirect-https@kubernetescrd
   websecure:
     tls:
       enabled: true
