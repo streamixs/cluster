@@ -1,0 +1,16 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: pocket-id-db
+  namespace: pocket-id
+spec:
+  instances: 1
+
+  bootstrap:
+    initdb:
+      database: pocket-id
+      owner: pocket-id
+
+  storage:
+    size: 5Gi
+    storageClass: truenas-nfs

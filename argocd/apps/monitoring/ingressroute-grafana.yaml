@@ -9,6 +9,9 @@ spec:
   routes:
     - match: Host(`grafana.streamixs.com`)
       kind: Rule
+      middlewares:
+        - name: pocket-id-auth
+          namespace: pocket-id
       services:
         - name: kube-prometheus-stack-grafana
           port: 80

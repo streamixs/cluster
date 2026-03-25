@@ -1,18 +1,18 @@
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
-  name: qbittorrent
-  namespace: media
+  name: forward-auth-callback
+  namespace: pocket-id
 spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`qbittorrent.streamixs.com`)
+    - match: Host(`auth.streamixs.com`) && PathPrefix(`/_oauth`)
       kind: Rule
       middlewares:
         - name: pocket-id-auth
           namespace: pocket-id
       services:
-        - name: qbittorrent
-          port: 8080
+        - name: traefik-forward-auth
+          port: 4181
   tls: {}

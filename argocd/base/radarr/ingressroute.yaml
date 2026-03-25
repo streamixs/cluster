@@ -9,6 +9,9 @@ spec:
   routes:
     - match: Host(`radarr.streamixs.com`)
       kind: Rule
+      middlewares:
+        - name: pocket-id-auth
+          namespace: pocket-id
       services:
         - name: radarr
           port: 7878
