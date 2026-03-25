@@ -9,6 +9,9 @@ spec:
   routes:
     - match: Host(`qbittorrent.streamixs.com`)
       kind: Rule
+      middlewares:
+        - name: pocket-id-auth
+          namespace: pocket-id
       services:
         - name: qbittorrent
           port: 8080

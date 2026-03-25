@@ -9,6 +9,9 @@ spec:
   routes:
     - match: Host(`prowlarr.streamixs.com`)
       kind: Rule
+      middlewares:
+        - name: pocket-id-auth
+          namespace: pocket-id
       services:
         - name: prowlarr
           port: 9696
