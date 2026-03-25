@@ -18,7 +18,7 @@ spec:
         fsGroupChangePolicy: "OnRootMismatch"
       containers:
         - name: qbittorrent
-          image: ghcr.io/hotio/qbittorrent:latest
+          image: ghcr.io/hotio/qbittorrent:release-5.1.4
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
