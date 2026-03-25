@@ -56,7 +56,7 @@ spec:
             - name: AUTH_HOST
               value: "auth.streamixs.com"
             - name: COOKIE_DOMAIN
-              value: ".streamixs.com"
+              value: "streamixs.com"
             - name: INSECURE_COOKIE
               value: "false"
             - name: LOG_LEVEL
