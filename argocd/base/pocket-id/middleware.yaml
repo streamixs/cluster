@@ -5,6 +5,6 @@ metadata:
   namespace: pocket-id
 spec:
   forwardAuth:
-    address: http://pocket-id.pocket-id.svc.cluster.local:1411/api/oidc/authorize
+    address: http://traefik-forward-auth.pocket-id.svc.cluster.local:4181
     authResponseHeaders:
       - X-Forwarded-User

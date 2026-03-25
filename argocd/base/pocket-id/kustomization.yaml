@@ -9,6 +9,9 @@ resources:
   - service.yaml
   - ingressroute.yaml
   - middleware.yaml
+  - forward-auth-deployment.yaml
+  - forward-auth-service.yaml
+  - forward-auth-ingressroute.yaml
 
 generators:
   - generators/secret-generator.yaml
