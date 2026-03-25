@@ -1,0 +1,10 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: pocket-id-auth
+  namespace: pocket-id
+spec:
+  forwardAuth:
+    address: http://pocket-id.pocket-id.svc.cluster.local:1411/api/oidc/authorize
+    authResponseHeaders:
+      - X-Forwarded-User
