@@ -13,13 +13,12 @@ spec:
       labels:
         app: prowlarr
     spec:
-      # NE PAS forcer runAsUser/Group ici : s6 a besoin de root
       securityContext:
-        fsGroup: 1000                   # ok de garder, pas obligatoire
+        fsGroup: 1000
         fsGroupChangePolicy: "OnRootMismatch"
       containers:
         - name: prowlarr
-          image: ghcr.io/hotio/prowlarr:2.3.4
+          image: lscr.io/linuxserver/prowlarr:2.3.4
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 9696
