@@ -18,3 +18,36 @@ jobs:
         run: pip install --disable-pip-version-check --no-cache-dir yamllint
       - name: Run yamllint on cluster
         run: yamllint -c .yamllint.yaml .
+
+  sops-check:
+    name: SOPS secrets check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Check for plaintext secrets
+        run: |
+          status=0
+          for f in $(find . -path '*/secrets/*.yaml' ! -name '*.example.yaml'); do
+            if ! grep -q '^sops:' "$f"; then
+              echo "ERROR: $f is NOT encrypted with SOPS"
+              status=1
+            fi
+          done
+          if [ $status -eq 0 ]; then
+            echo "All secrets are properly encrypted"
+          fi
+          exit $status
+
+  gitleaks:
+    name: Gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
