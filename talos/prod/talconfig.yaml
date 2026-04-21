@@ -1,36 +1,38 @@
 ---
 clusterName: streamixs
-talosVersion: v1.12.0
-kubernetesVersion: v1.32.0
-# VIP ou IP du load balancer devant les control-planes
-# A configurer quand le hardware sera pret
-endpoint: https://192.168.1.30:6443
+talosVersion: v1.12.6
+kubernetesVersion: v1.35.3
 
+endpoint: https://192.168.1.30:6443
 allowSchedulingOnControlPlanes: false
 
 cniConfig:
   name: none
 
 nodes:
-  # --- Control Planes (3x mini PCs) ---
   - hostname: kube-master-01
     controlPlane: true
-    ipAddress: 192.168.1.30 # PLACEHOLDER - adapter a l'IP reelle
-    installDisk: /dev/sda # PLACEHOLDER - verifier avec lsblk
+    ipAddress: 192.168.1.30
+    installDisk: /dev/sda
+    talosImageURL: factory.talos.dev/installer/ce4c980550dd2ab1b17bbf2b08801c7eb59418eafe8f279833297925d67c7515
 
-  # --- Workers (ajouter quand le hardware arrive) ---
   - hostname: kube-worker-01
     controlPlane: false
     ipAddress: 192.168.1.40
     installDisk: /dev/nvme0n1
+    talosImageURL: factory.talos.dev/installer/4ea1b20f73a7b3eac7faac4a02193470a85d0e2c441af474ddfd2de2e8da4dc7
+
   - hostname: kube-worker-02
     controlPlane: false
     ipAddress: 192.168.1.41
     installDisk: /dev/nvme0n1
+    talosImageURL: factory.talos.dev/installer/4ea1b20f73a7b3eac7faac4a02193470a85d0e2c441af474ddfd2de2e8da4dc7
+
   - hostname: kube-worker-03
     controlPlane: false
     ipAddress: 192.168.1.42
     installDisk: /dev/nvme0n1
+    talosImageURL: factory.talos.dev/installer/4ea1b20f73a7b3eac7faac4a02193470a85d0e2c441af474ddfd2de2e8da4dc7
 
 controlPlane:
   patches:
@@ -41,12 +43,8 @@ controlPlane:
       machine:
         network:
           nameservers:
+            - 192.168.1.3
             - 1.1.1.1
-            - 8.8.8.8
-        kernel:
-          modules:
-            - name: nfs
-            - name: nfsd
         time:
           servers:
             - time.cloudflare.com
@@ -57,12 +55,21 @@ worker:
       machine:
         network:
           nameservers:
+            - 192.168.1.3
             - 1.1.1.1
-            - 8.8.8.8
-        kernel:
-          modules:
-            - name: nfs
-            - name: nfsd
         time:
           servers:
             - time.cloudflare.com
+    - |-
+      machine:
+        sysctls:
+          vm.nr_hugepages: "1024"
+        kubelet:
+          extraMounts:
+            - destination: /var/lib/longhorn
+              type: bind
+              source: /var/lib/longhorn
+              options:
+                - bind
+                - rshared
+                - rw

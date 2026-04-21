@@ -2,6 +2,8 @@ ENV ?= dev
 TALOS_DIR := talos/$(ENV)
 TF_DIR := terraform
 CLUSTER_NAME := streamixs-$(ENV)
+TALOS_VERSION ?= v1.12.6
+K8S_VERSION   ?= v1.32.0
 
 # Kubeconfig par environnement
 ifeq ($(ENV),dev)
@@ -9,6 +11,17 @@ ifeq ($(ENV),dev)
 else
   KUBECONFIG := $(HOME)/.talos/kubeconfig-prod
 endif
+
+
+# ============================================================
+# Nodes (extraits de talconfig.yaml via yq)
+# ============================================================
+# Evalue une seule fois par invocation (:= au lieu de =)
+TALCONFIG     := $(TALOS_DIR)/talconfig.yaml
+ALL_NODES     := $(shell yq -r '.nodes[].ipAddress' $(TALCONFIG) 2>/dev/null | tr '\n' ',' | sed 's/,$$//')
+CP_NODES      := $(shell yq -r '.nodes[] | select(.controlPlane == true)  | .ipAddress' $(TALCONFIG) 2>/dev/null | tr '\n' ',' | sed 's/,$$//')
+WORKER_NODES  := $(shell yq -r '.nodes[] | select(.controlPlane == false) | .ipAddress' $(TALCONFIG) 2>/dev/null | tr '\n' ',' | sed 's/,$$//')
+FIRST_CP      := $(shell yq -r '[.nodes[] | select(.controlPlane == true)][0].ipAddress' $(TALCONFIG) 2>/dev/null)
 
 # ============================================================
 # Bootstrap complet
@@ -130,4 +143,63 @@ destroy-argocd: ## Detruire uniquement ArgoCD (Terraform)
 help: ## Afficher cette aide
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-.PHONY: bootstrap cluster cilium argocd talos-gen talos-gen-secret status destroy destroy-argocd help
+# ============================================================
+# Upgrades
+# ============================================================
+
+k8s-upgrade-check: ## Dry-run upgrade Kubernetes (K8S_VERSION=v1.x.x)
+ifeq ($(ENV),dev)
+	@echo "ERREUR: upgrade K8s non supporte sur cluster dev (Docker)"
+	@exit 1
+endif
+	@echo "==> Dry-run upgrade Kubernetes vers $(K8S_VERSION)..."
+	talosctl upgrade-k8s --nodes $(FIRST_CP) --to $(subst v,,$(K8S_VERSION)) --dry-run
+
+k8s-upgrade: ## Upgrade Kubernetes (faire k8s-upgrade-check avant)
+ifeq ($(ENV),dev)
+	@echo "ERREUR: upgrade K8s non supporte sur cluster dev (Docker)"
+	@exit 1
+endif
+	@echo "==> Upgrade Kubernetes vers $(K8S_VERSION) (CP: $(FIRST_CP))..."
+	@read -p "As-tu lance 'make k8s-upgrade-check' avant ? Continuer ? [y/N] " ok && [ "$$ok" = "y" ] || exit 1
+	talosctl upgrade-k8s --nodes $(FIRST_CP) --to $(subst v,,$(K8S_VERSION))
+
+talos-upgrade-check: ## Dry-run upgrade Talos sur le premier CP (TALOS_VERSION=v1.x.x)
+ifeq ($(ENV),dev)
+	@echo "ERREUR: upgrade Talos non supporte sur cluster dev (Docker)"
+	@exit 1
+endif
+	@echo "==> Dry-run upgrade Talos vers $(TALOS_VERSION) sur $(FIRST_CP)..."
+	talosctl upgrade --nodes $(FIRST_CP) \
+		--image ghcr.io/siderolabs/installer:$(TALOS_VERSION) \
+		--preserve=true --dry-run
+
+talos-upgrade: ## Upgrade Talos node par node (faire talos-upgrade-check avant)
+ifeq ($(ENV),dev)
+	@echo "ERREUR: upgrade Talos non supporte sur cluster dev (Docker)"
+	@exit 1
+endif
+	@echo "==> Upgrade Talos vers $(TALOS_VERSION) sur : $(ALL_NODES)"
+	@echo "    N'oublie pas: talosVersion a $(TALOS_VERSION) dans $(TALCONFIG) + make talos-gen"
+	@read -p "Continuer ? [y/N] " ok && [ "$$ok" = "y" ] || exit 1
+	@for node in $$(echo $(ALL_NODES) | tr ',' ' '); do \
+		echo "==> Upgrade $$node..."; \
+		talosctl upgrade --nodes $$node \
+			--image ghcr.io/siderolabs/installer:$(TALOS_VERSION) \
+			--preserve=true --wait || exit 1; \
+	done
+	@echo "==> Upgrade Talos termine."
+
+etcd-backup: ## Snapshot etcd (a faire avant tout upgrade)
+ifeq ($(ENV),dev)
+	@echo "ERREUR: etcd-backup non supporte sur cluster dev"
+	@exit 1
+endif
+	@mkdir -p backups
+	@SNAP=backups/etcd-$(ENV)-$$(date +%Y%m%d-%H%M%S).snapshot && \
+		talosctl etcd snapshot $$SNAP --nodes $(FIRST_CP) && \
+		echo "==> Snapshot: $$SNAP"
+
+
+.PHONY: bootstrap cluster cilium argocd talos-gen talos-gen-secret status destroy destroy-argocd help \
+        k8s-upgrade-check k8s-upgrade talos-upgrade-check talos-upgrade etcd-backup
