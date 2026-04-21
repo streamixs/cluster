@@ -54,19 +54,18 @@ spec:
               cpu: "500m"
               memory: "512Mi"
           volumeMounts:
-            - name: radarr-pvc
+            - name: config
               mountPath: /config
-            - name: media-pvc
-              mountPath: /media
-            - name: download-pvc
+            - name: media
+              mountPath: /movies
+              subPath: movies
+            - name: media
               mountPath: /downloads
+              subPath: downloads
       volumes:
-        - name: radarr-pvc
+        - name: config
           persistentVolumeClaim:
             claimName: radarr-pvc
-        - name: media-pvc
+        - name: media
           persistentVolumeClaim:
             claimName: media-pvc
-        - name: download-pvc
-          persistentVolumeClaim:
-            claimName: download-pvc

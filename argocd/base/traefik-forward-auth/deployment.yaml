@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: traefik-forward-auth
-  namespace: pocket-id
 spec:
   replicas: 1
   selector:
@@ -33,9 +32,9 @@ spec:
             - name: PROVIDERS_GENERIC_OAUTH_AUTH_URL
               value: "https://auth.streamixs.com/authorize"
             - name: PROVIDERS_GENERIC_OAUTH_TOKEN_URL
-              value: "http://pocket-id.pocket-id.svc.cluster.local:1411/api/oidc/token"
+              value: "https://auth.streamixs.com/api/oidc/token"
             - name: PROVIDERS_GENERIC_OAUTH_USER_URL
-              value: "http://pocket-id.pocket-id.svc.cluster.local:1411/api/oidc/userinfo"
+              value: "https://auth.streamixs.com/api/oidc/userinfo"
             - name: PROVIDERS_GENERIC_OAUTH_SCOPE
               value: "openid email profile"
             - name: PROVIDERS_GENERIC_OAUTH_CLIENT_ID
@@ -54,7 +53,7 @@ spec:
                   name: forward-auth-secret
                   key: cookie-secret
             - name: AUTH_HOST
-              value: "auth.streamixs.com"
+              value: "oauth.streamixs.com"
             - name: COOKIE_DOMAIN
               value: "streamixs.com"
             - name: INSECURE_COOKIE

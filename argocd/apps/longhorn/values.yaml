@@ -1,0 +1,9 @@
+defaultSettings:
+  defaultReplicaCount: 2
+  storageMinimalAvailablePercentage: 10
+  nodeDownPodDeletionPolicy: delete-both-statefulset-and-deployment-pod
+
+persistence:
+  defaultClass: true
+  defaultClassReplicaCount: 2
+  reclaimPolicy: Retain

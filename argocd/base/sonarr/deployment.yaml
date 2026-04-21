@@ -39,19 +39,18 @@ spec:
               cpu: "500m"
               memory: "512Mi"
           volumeMounts:
-            - name: sonarr-pvc
+            - name: config
               mountPath: /config
-            - name: media-pvc
-              mountPath: /media
-            - name: download-pvc
+            - name: media
+              mountPath: /tv
+              subPath: tv
+            - name: media
               mountPath: /downloads
+              subPath: downloads
       volumes:
-        - name: sonarr-pvc
+        - name: config
           persistentVolumeClaim:
             claimName: sonarr-pvc
-        - name: media-pvc
+        - name: media
           persistentVolumeClaim:
             claimName: media-pvc
-        - name: download-pvc
-          persistentVolumeClaim:
-            claimName: download-pvc

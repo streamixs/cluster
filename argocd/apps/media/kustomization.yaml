@@ -9,3 +9,5 @@ resources:
   - ../../base/sonarr
   - ../../base/radarr
   - ../../base/qbittorrent
+  - ../../base/plex
+  - ../../base/jellyseerr
