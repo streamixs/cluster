@@ -53,7 +53,7 @@ spec:
                   name: forward-auth-secret
                   key: cookie-secret
             - name: AUTH_HOST
-              value: "auth.streamixs.com"
+              value: "oauth.streamixs.com"
             - name: COOKIE_DOMAIN
               value: "streamixs.com"
             - name: INSECURE_COOKIE

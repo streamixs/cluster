@@ -6,7 +6,6 @@ resources:
   - service.yaml
   - middleware.yaml
   - ingressroute.yaml
-  - pocket-id-proxy.yaml
 
 generators:
   - generators/secret-generator.yaml
