@@ -6,3 +6,6 @@ resources:
   - deployment.yaml
   - service.yaml
   - ingressroute.yaml
+
+generators:
+  - generators/secret-generator.yaml
