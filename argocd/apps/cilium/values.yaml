@@ -30,6 +30,10 @@ cgroup:
     enabled: false
   hostRoot: /sys/fs/cgroup
 
+devices:
+  - eno+
+  - ens+
+
 l2announcements:
   enabled: true
 
