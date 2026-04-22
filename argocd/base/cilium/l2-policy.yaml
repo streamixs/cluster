@@ -6,4 +6,5 @@ spec:
   loadBalancerIPs: true
   interfaces:
     - ^eth[0-9]+
-    - ^en[0-9]+
+    - ^eno[0-9]+
+    - ^ens[0-9]+
