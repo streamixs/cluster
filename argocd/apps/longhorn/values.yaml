@@ -1,6 +1,9 @@
 preUpgradeChecker:
   jobEnabled: false
 
+global:
+  priorityClass: ""
+
 defaultSettings:
   defaultReplicaCount: 2
   storageMinimalAvailablePercentage: 10
