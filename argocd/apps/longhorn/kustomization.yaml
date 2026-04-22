@@ -14,3 +14,6 @@ helmCharts:
     version: 1.7.2
     valuesFile: values.yaml
     includeCRDs: true
+
+patches:
+  - path: patch-uninstall-hook.yaml
