@@ -4,4 +4,5 @@ kind: Kustomization
 namespace: auth
 
 resources:
+  - namespace.yaml
   - ../../base/traefik-forward-auth
