@@ -1,10 +1,14 @@
-# Terraform
+# Terraform — local state files contain secrets in plaintext, use remote backend in prod
 **/.terraform
 **/.terraform.lock.hcl
 **/*.tfvars
 **/*.tfstate
 **/*.tfstate.backup
 **/*.tfplan
+# Belt-and-suspenders explicit entries
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/terraform.tfvars
 
 # Secrets
 .config
