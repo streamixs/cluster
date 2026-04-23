@@ -2,8 +2,8 @@ creation_rules:
   - path_regex: '\.sops\.yaml$'
     key_groups:
       - age:
-          - 'age1v5xqeh0yg2qp2adtje8crzrut467mrsjnh4cax7cu8xghrnvm54qg0fyde'
-  - unencrypted_regex: '^(apiVersion|metadata|kind|type)$'
+          - "age1zzjmvz6lyvndk6fgxlnhtd6q4pwfjmjqt65hdzdsfef8x8tdvgxst2pvev"
+  - unencrypted_regex: "^(apiVersion|metadata|kind|type)$"
     key_groups:
       - age:
-          - 'age1v5xqeh0yg2qp2adtje8crzrut467mrsjnh4cax7cu8xghrnvm54qg0fyde'
+          - "age1zzjmvz6lyvndk6fgxlnhtd6q4pwfjmjqt65hdzdsfef8x8tdvgxst2pvev"
