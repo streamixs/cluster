@@ -34,6 +34,11 @@ NEW_PUBLIC_KEY=$(grep "^# public key:" "${NEW_KEY_FILE}" | awk '{print $NF}')
 echo "    New public key: ${NEW_PUBLIC_KEY}"
 
 OLD_PUBLIC_KEY=$(grep "^# public key:" "${CURRENT_KEY}" | awk '{print $NF}')
+[[ "${OLD_PUBLIC_KEY}" =~ ^age1[a-z0-9]{58}$ ]] || {
+  echo "ERROR: could not extract a valid age public key from ${CURRENT_KEY}"
+  echo "       Got: '${OLD_PUBLIC_KEY}'"
+  exit 1
+}
 echo "    Old public key: ${OLD_PUBLIC_KEY}"
 
 # Detect SOPS-encrypted files by the ENC[AES256_GCM marker, regardless of extension.
@@ -52,8 +57,17 @@ else
 
   # Update .sops.yaml BEFORE re-keying so that updatekeys uses the new recipient.
   echo "==> Updating .sops.yaml with new public key..."
+  grep -q "${OLD_PUBLIC_KEY}" "${REPO_ROOT}/.sops.yaml" || {
+    echo "ERROR: old public key not found in .sops.yaml — file may already be updated or corrupted."
+    echo "       Check .sops.yaml manually before retrying."
+    exit 1
+  }
   sed -i.bak "s|${OLD_PUBLIC_KEY}|${NEW_PUBLIC_KEY}|g" "${REPO_ROOT}/.sops.yaml"
   rm -f "${REPO_ROOT}/.sops.yaml.bak"
+  grep -q "${NEW_PUBLIC_KEY}" "${REPO_ROOT}/.sops.yaml" || {
+    echo "ERROR: .sops.yaml update failed — new key not found after sed."
+    exit 1
+  }
 
   # sops updatekeys reads recipients from .sops.yaml and re-encrypts.
   # Decryption uses the current (old) key; encryption uses the new key from .sops.yaml.
