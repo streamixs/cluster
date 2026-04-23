@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # Rotate the SOPS age key:
 #   1. Generate a new age keypair
-#   2. Re-encrypt all .sops.yaml files with the new key
+#   2. Re-encrypt all SOPS-encrypted files with the new key (detected by content,
+#      not extension — files like secret-cf-token.yaml use a plain .yaml extension)
 #   3. Update .sops.yaml with the new public key
 #   4. Update the sops-age Kubernetes secret in the cluster
 #
-# Requires: age, sops, kubectl
+# Requires: age, sops, kubectl, grep
 set -euo pipefail
 
 NAMESPACE=${ARGOCD_NAMESPACE:-argocd}
@@ -25,17 +26,26 @@ age-keygen -o "${NEW_KEY_FILE}"
 NEW_PUBLIC_KEY=$(grep "^# public key:" "${NEW_KEY_FILE}" | awk '{print $NF}')
 echo "    New public key: ${NEW_PUBLIC_KEY}"
 
-SOPS_FILES=$(find "${REPO_ROOT}" -name "*.sops.yaml" -o -name "*.sops.yml" 2>/dev/null)
-if [[ -z "${SOPS_FILES}" ]]; then
+OLD_PUBLIC_KEY=$(grep "^# public key:" "${REPO_ROOT}/.config/age.agekey" | awk '{print $NF}')
+
+# Detect SOPS-encrypted files by the ENC[AES256_GCM marker, regardless of extension.
+# This covers plain .yaml files (e.g. secret-cf-token.yaml) and .sops.yaml files alike.
+mapfile -t SOPS_FILES < <(grep -rl 'ENC\[AES256_GCM' "${REPO_ROOT}" \
+  --include="*.yaml" --include="*.yml" --include="*.json" --include="*.env" 2>/dev/null)
+
+if [[ ${#SOPS_FILES[@]} -eq 0 ]]; then
   echo "No SOPS-encrypted files found."
 else
-  echo "==> Re-encrypting SOPS files..."
-  for f in ${SOPS_FILES}; do
-    echo "    ${f}"
+  echo "==> Found ${#SOPS_FILES[@]} SOPS-encrypted file(s):"
+  printf '    %s\n' "${SOPS_FILES[@]}"
+  echo ""
+  echo "==> Re-encrypting with new key (add new, remove old)..."
+  for f in "${SOPS_FILES[@]}"; do
+    echo "    rotating: ${f}"
     SOPS_AGE_KEY_FILE="${REPO_ROOT}/.config/age.agekey" \
       sops rotate --add-age "${NEW_PUBLIC_KEY}" --in-place "${f}"
     SOPS_AGE_KEY_FILE="${NEW_KEY_FILE}" \
-      sops rotate --remove-age "$(grep "^# public key:" "${REPO_ROOT}/.config/age.agekey" | awk '{print $NF}')" --in-place "${f}" 2>/dev/null || true
+      sops rotate --remove-age "${OLD_PUBLIC_KEY}" --in-place "${f}"
   done
 fi
 
