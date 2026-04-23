@@ -30,7 +30,11 @@ OLD_PUBLIC_KEY=$(grep "^# public key:" "${REPO_ROOT}/.config/age.agekey" | awk '
 
 # Detect SOPS-encrypted files by the ENC[AES256_GCM marker, regardless of extension.
 # This covers plain .yaml files (e.g. secret-cf-token.yaml) and .sops.yaml files alike.
-mapfile -t SOPS_FILES < <(grep -rl 'ENC\[AES256_GCM' "${REPO_ROOT}" \
+# Uses while+read instead of mapfile for bash 3.2 compatibility (macOS default shell).
+SOPS_FILES=()
+while IFS= read -r f; do
+  SOPS_FILES+=("${f}")
+done < <(grep -rl 'ENC\[AES256_GCM' "${REPO_ROOT}" \
   --include="*.yaml" --include="*.yml" --include="*.json" --include="*.env" 2>/dev/null)
 
 if [[ ${#SOPS_FILES[@]} -eq 0 ]]; then
