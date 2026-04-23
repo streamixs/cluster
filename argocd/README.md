@@ -3,7 +3,7 @@
 Bootstrap et projets Argo CD pour l’environnement `dev`.
 
 ### Contenu
-- `bootstrap/app-of-apps.yaml`: Application Argo CD "app-of-apps" pointant vers `argocd/apps` sur la branche `develop`.
+- `bootstrap/app-of-apps.yaml`: Application Argo CD "app-of-apps" pointant vers `argocd/apps` sur la branche `main`.
 - `projects/platform.yaml`: Projet `platform` autorisant les sources Helm/repos nécessaires.
 - `apps/`: dossiers/fichiers d’applications synchronisées (référencés par le bootstrap).
 
@@ -25,7 +25,7 @@ Argo CD synchronise le contenu de `argocd/apps/*`. Chaque sous-dossier devient u
 
 ### Promotion / Multi-envs
 - Dupliquer `bootstrap/app-of-apps-<env>.yaml` et `projects/platform-<env>.yaml` en ajustant labels/env, `targetRevision`, `path`.
-- Utiliser des branches par environnement (`develop`, `staging`, `main`) ou des overlays Kustomize/valeurs Helm.
+- Utiliser des branches par environnement (`main`, `staging`) ou des overlays Kustomize/valeurs Helm.
 
 ### Applications gérées
 - `argo-rollouts`: installé via manifest upstream, namespace = `argo-rollouts`

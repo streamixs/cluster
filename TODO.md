@@ -51,7 +51,7 @@
 
 ## P3 — Amelioration
 
-- [ ] ArgoCD targetRevision : passer de `develop` a `main`
+- [x] ArgoCD targetRevision : passer de `develop` a `main`
 - [ ] Grafana persistence : PVC pour dashboards
 - [x] ~~NFS IP en variable~~ — remplace par democratic-csi + TrueNAS
 - [x] ~~Evaluer Cilium IngressController pour remplacer ingress-nginx~~ — migre vers Traefik (PR #67)
