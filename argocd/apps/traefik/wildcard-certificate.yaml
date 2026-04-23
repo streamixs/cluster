@@ -4,9 +4,9 @@ metadata:
   name: streamixs-com-wildcard
   namespace: traefik
 spec:
-  secretName: streamixs-com-staging-tls
+  secretName: streamixs-com-tls
   issuerRef:
-    name: letsencrypt-staging
+    name: letsencrypt-production
     kind: ClusterIssuer
   commonName: "*.streamixs.com"
   dnsNames:

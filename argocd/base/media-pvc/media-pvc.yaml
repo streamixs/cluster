@@ -8,6 +8,6 @@ spec:
     - ReadWriteMany
   resources:
     requests:
-      storage: 1000Gi
+      storage: 9Ti
   storageClassName: ""
   volumeName: media-pv

@@ -14,3 +14,6 @@ ignore: |
   argocd/base/democratic-csi/secrets/truenas-api-key.yaml
   argocd/base/pocket-id/secrets/pocket-id-secret.yaml
   argocd/base/pocket-id/secrets/forward-auth-secret.yaml
+  argocd/base/plex/secrets/plex-secret.yaml
+  argocd/base/traefik-forward-auth/secrets/forward-auth-secret.yaml
+  talos/prod/talsecret.sops.yaml

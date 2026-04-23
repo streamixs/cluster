@@ -10,8 +10,8 @@ spec:
     - match: Host(`qbittorrent.streamixs.com`)
       kind: Rule
       middlewares:
-        - name: pocket-id-auth
-          namespace: pocket-id
+        - name: forward-auth
+          namespace: auth
       services:
         - name: qbittorrent
           port: 8080

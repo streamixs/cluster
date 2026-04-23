@@ -5,6 +5,8 @@ metadata:
   namespace: media
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: qbittorrent
@@ -51,22 +53,18 @@ spec:
               cpu: "100m"
               memory: "256Mi"
             limits:
-              cpu: "500m"
-              memory: "512Mi"
+              cpu: "2000m"
+              memory: "2Gi"
           volumeMounts:
-            - name: qbittorrent-pvc
+            - name: config
               mountPath: /config
-            - name: media-pvc
-              mountPath: /media
-            - name: download-pvc
+            - name: media
               mountPath: /downloads
+              subPath: downloads
       volumes:
-        - name: qbittorrent-pvc
+        - name: config
           persistentVolumeClaim:
             claimName: qbittorrent-pvc
-        - name: media-pvc
+        - name: media
           persistentVolumeClaim:
             claimName: media-pvc
-        - name: download-pvc
-          persistentVolumeClaim:
-            claimName: download-pvc

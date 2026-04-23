@@ -10,8 +10,8 @@ spec:
     - match: Host(`sonarr.streamixs.com`)
       kind: Rule
       middlewares:
-        - name: pocket-id-auth
-          namespace: pocket-id
+        - name: forward-auth
+          namespace: auth
       services:
         - name: sonarr
           port: 8989
