@@ -65,7 +65,7 @@ SOPS + Age encryption. The age key lives at `.config/age.agekey` (gitignored). K
 
 ### Key Config Details
 
-- ArgoCD currently targets the `develop` branch (to be changed to `main`)
+- ArgoCD targets the `main` branch
 - Dev kubeconfig: `~/.talos/kubeconfig-dev`, Prod: `~/.talos/kubeconfig-prod`
 - All ingresses use `*.streamixs.com` wildcard cert via cert-manager + Cloudflare DNS01
 - NFS provisioner points to `54.36.178.170:/export/k8s` (hardcoded)
