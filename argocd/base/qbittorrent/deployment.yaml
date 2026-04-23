@@ -20,7 +20,7 @@ spec:
         fsGroupChangePolicy: "OnRootMismatch"
       containers:
         - name: qbittorrent
-          image: lscr.io/linuxserver/qbittorrent:5.1.4
+          image: lscr.io/linuxserver/qbittorrent:5.1.4-r3-ls451
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
