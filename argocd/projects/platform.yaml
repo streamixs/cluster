@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: platform
+  namespace: argocd
+  labels:
+    env: dev
+spec:
+  description: Platform components managed by Argo CD
+  sourceRepos:
+    - https://github.com/streamixs/cluster
+    - https://traefik.github.io/charts
+    - https://charts.jetstack.io
+    - https://metallb.github.io/metallb
+    - https://prometheus-community.github.io/helm-charts
+    - https://argoproj.github.io/argo-helm
+    - https://helm.cilium.io/
+    - https://charts.longhorn.io
+    - https://cloudnative-pg.github.io/charts
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: "*"
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
