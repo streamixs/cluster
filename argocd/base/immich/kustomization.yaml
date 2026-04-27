@@ -5,6 +5,7 @@ namespace: immich
 
 resources:
   - namespace.yaml
+  - immich-library-pv.yaml
   - immich-library-pvc.yaml
   - ingressroute.yaml
   - postgres

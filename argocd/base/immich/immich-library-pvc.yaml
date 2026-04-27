@@ -5,8 +5,9 @@ metadata:
   namespace: immich
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
-      storage: 50Gi
-  storageClassName: longhorn
+      storage: 2Ti
+  storageClassName: ""
+  volumeName: immich-library-pv
