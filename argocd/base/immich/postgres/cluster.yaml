@@ -14,7 +14,11 @@ spec:
     initdb:
       database: immich
       owner: immich
-      postInitTemplateSQL:
+      postInitApplicationSQL:
+        - CREATE EXTENSION IF NOT EXISTS cube CASCADE;
+        - CREATE EXTENSION IF NOT EXISTS earthdistance CASCADE;
+        - CREATE EXTENSION IF NOT EXISTS pg_trgm;
+        - CREATE EXTENSION IF NOT EXISTS unaccent;
         - CREATE EXTENSION IF NOT EXISTS vchord CASCADE;
   storage:
     size: 10Gi
