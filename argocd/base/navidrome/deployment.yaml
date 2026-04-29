@@ -42,8 +42,8 @@ spec:
               value: "Europe/Paris"
             - name: ND_LOGLEVEL
               value: "info"
-            - name: ND_SCANSCHEDULE
-              value: "1h"
+            - name: ND_SCANNER_SCHEDULE
+              value: "@every 1h"
             - name: ND_SESSIONTIMEOUT
               value: "24h"
             - name: ND_BASEURL
