@@ -14,5 +14,5 @@ spec:
           namespace: auth
       services:
         - name: mixarr
-          port: 3010
+          port: 3000
   tls: {}

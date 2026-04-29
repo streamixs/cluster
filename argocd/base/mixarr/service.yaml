@@ -8,5 +8,5 @@ spec:
   selector:
     app: mixarr
   ports:
-    - port: 3010
-      targetPort: 3010
+    - port: 3000
+      targetPort: 3000
