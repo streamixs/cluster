@@ -20,6 +20,10 @@ ports:
           to: websecure
           scheme: https
           permanent: true
+  websecure:
+    transport:
+      respondingTimeouts:
+        readTimeout: "0s"
 
 tlsStore:
   default:
