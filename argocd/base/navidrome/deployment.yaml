@@ -77,7 +77,6 @@ spec:
             - name: media
               mountPath: /music
               subPath: music
-              readOnly: true
       volumes:
         - name: data
           persistentVolumeClaim:
