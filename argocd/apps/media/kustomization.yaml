@@ -11,3 +11,6 @@ resources:
   - ../../base/qbittorrent
   - ../../base/plex
   - ../../base/jellyseerr
+  - ../../base/lidarr
+  - ../../base/navidrome
+  - ../../base/mixarr

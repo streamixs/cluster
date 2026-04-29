@@ -10,3 +10,6 @@ resources:
   - sonarr-pvc.yaml
   - prowlarr-pvc.yaml
   - qbittorrent-pvc.yaml
+  - lidarr-pvc.yaml
+  - navidrome-pvc.yaml
+  - mixarr-pvc.yaml
