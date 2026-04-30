@@ -14,3 +14,4 @@ resources:
   - ../../base/lidarr
   - ../../base/navidrome
   - ../../base/mixarr
+  - ../../base/tautulli

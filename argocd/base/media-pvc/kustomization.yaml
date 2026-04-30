@@ -13,3 +13,4 @@ resources:
   - lidarr-pvc.yaml
   - navidrome-pvc.yaml
   - mixarr-pvc.yaml
+  - tautulli-pvc.yaml
