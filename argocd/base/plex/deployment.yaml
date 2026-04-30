@@ -62,6 +62,9 @@ spec:
             - name: media
               mountPath: /tv
               subPath: tv
+            - name: media
+              mountPath: /music
+              subPath: music
       volumes:
         - name: config
           persistentVolumeClaim:
