@@ -26,12 +26,10 @@ spec:
             - name: http
               containerPort: 8080
             - name: bt-tcp
-              containerPort: 6881
-              hostPort: 6881
+              containerPort: 30881
               protocol: TCP
             - name: bt-udp
-              containerPort: 6881
-              hostPort: 6881
+              containerPort: 30881
               protocol: UDP
           livenessProbe:
             httpGet:
