@@ -14,3 +14,4 @@ resources:
   - navidrome-pvc.yaml
   - mixarr-pvc.yaml
   - tautulli-pvc.yaml
+  - qui-pvc.yaml
