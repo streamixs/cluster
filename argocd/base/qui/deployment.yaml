@@ -42,8 +42,6 @@ spec:
           env:
             - name: TZ
               value: "Europe/Paris"
-            - name: QUI__BASE_URL
-              value: "https://qui.streamixs.com"
           resources:
             requests:
               cpu: "50m"
