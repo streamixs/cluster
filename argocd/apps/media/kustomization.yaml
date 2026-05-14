@@ -16,3 +16,4 @@ resources:
   - ../../base/mixarr
   - ../../base/tautulli
   - ../../base/qui
+  - ../../base/qbittorrent-seed

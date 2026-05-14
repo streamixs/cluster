@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qbittorrent-seed
+  namespace: media
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: qbittorrent-seed
+  template:
+    metadata:
+      labels:
+        app: qbittorrent-seed
+    spec:
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: "OnRootMismatch"
+      containers:
+        - name: qbittorrent-seed
+          image: lscr.io/linuxserver/qbittorrent:5.1.4-r3-ls451
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: bt-tcp
+              containerPort: 30882
+              protocol: TCP
+            - name: bt-udp
+              containerPort: 30882
+              protocol: UDP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+          env:
+            - name: PUID
+              value: "65534"
+            - name: PGID
+              value: "65534"
+            - name: UMASK
+              value: "002"
+            - name: TZ
+              value: "Europe/Paris"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              memory: "4Gi"
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: media
+              mountPath: /downloads
+              subPath: seed-c411
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: qbittorrent-seed-pvc
+        - name: media
+          persistentVolumeClaim:
+            claimName: media-pvc
