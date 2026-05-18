@@ -12,7 +12,6 @@ resources:
   - ../../base/plex
   - ../../base/jellyseerr
   - ../../base/lidarr
-  - ../../base/navidrome
   - ../../base/mixarr
   - ../../base/tautulli
   - ../../base/qui

@@ -12,7 +12,6 @@ resources:
   - qbittorrent-pvc.yaml
   - qbittorrent-seed-pvc.yaml
   - lidarr-pvc.yaml
-  - navidrome-pvc.yaml
   - mixarr-pvc.yaml
   - tautulli-pvc.yaml
   - qui-pvc.yaml
