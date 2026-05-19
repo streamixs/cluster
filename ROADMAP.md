@@ -30,9 +30,9 @@ Action : Velero + S3 (MinIO sur TrueNAS) + verif crons.
 `argocd/bootstrap/app-of-apps.yaml` : `revision: feat/media-music-stack`.
 Le TODO disait pourtant "develop -> main". A fixer immediatement.
 
-### 4. Tags d'images flottants
-- `ghcr.io/autobrr/qui:latest` (critique)
-- `thomseddon/traefik-forward-auth:2` (mineur)
+### 4. ~~Tags d'images flottants~~ (fix avec Renovate)
+- ~~`ghcr.io/autobrr/qui:latest`~~ -> `v1.18.0`
+- ~~`thomseddon/traefik-forward-auth:2`~~ -> `2.3.0`
 
 ### 5. Probes manquantes
 Manque liveness/readiness sur : `prowlarr`, `sonarr`, `lidarr`, `tautulli`, `traefik-forward-auth`.
@@ -66,8 +66,8 @@ Cilium installe mais aucune segmentation. Un pod compromis peut taper partout.
 ## A ajouter (par ROI decroissant)
 
 ### Priorite haute
-1. **Stack monitoring** : kube-prometheus-stack + loki-stack + promtail
-2. **Renovate Bot** : auto-PR pour images + Helm charts (auto-merge patches)
+1. ~~**Stack monitoring** : kube-prometheus-stack + loki-stack + promtail~~ (fait #87)
+2. ~~**Renovate Bot** : auto-PR pour images + Helm charts (auto-merge patches)~~ (config `.github/renovate.json5`)
 3. **CI validation** : `kustomize build` + `kubeconform` sur chaque app
 4. **Velero** + S3 (MinIO TrueNAS) pour backup manifests + PV snapshots
 5. **NetworkPolicies de base** : deny-all par namespace + allow explicit
@@ -94,8 +94,8 @@ Cilium installe mais aucune segmentation. Un pod compromis peut taper partout.
 
 ## Top 5 actions immediates
 
-1. Fixer `app-of-apps.yaml` -> `revision: main`
-2. Deployer kube-prometheus-stack
-3. Pin `qui:latest` -> version concrete
-4. Renovate Bot
+1. ~~Fixer `app-of-apps.yaml` -> `revision: main`~~ (#83, develop pour l'instant)
+2. ~~Deployer kube-prometheus-stack~~ (#87)
+3. ~~Pin `qui:latest` -> version concrete~~ (v1.18.0)
+4. ~~Renovate Bot~~ (`.github/renovate.json5`)
 5. Strategie de backup (Velero ou cron Longhorn snapshots minimum)
