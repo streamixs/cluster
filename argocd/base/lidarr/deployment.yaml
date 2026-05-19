@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: qbittorrent
+  name: lidarr
   namespace: media
 spec:
   replicas: 1
@@ -9,42 +9,21 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      app: qbittorrent
+      app: lidarr
   template:
     metadata:
       labels:
-        app: qbittorrent
+        app: lidarr
     spec:
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: "OnRootMismatch"
       containers:
-        - name: qbittorrent
-          image: lscr.io/linuxserver/qbittorrent:5.1.4-r3-ls451
+        - name: lidarr
+          image: lscr.io/linuxserver/lidarr:3.1.0.4875-ls25
           imagePullPolicy: IfNotPresent
           ports:
-            - name: http
-              containerPort: 8080
-            - name: bt-tcp
-              containerPort: 30881
-              protocol: TCP
-            - name: bt-udp
-              containerPort: 30881
-              protocol: UDP
-          livenessProbe:
-            httpGet:
-              path: /
-              port: 8080
-            initialDelaySeconds: 30
-            periodSeconds: 30
-            timeoutSeconds: 5
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 8080
-            initialDelaySeconds: 30
-            periodSeconds: 30
-            timeoutSeconds: 5
+            - containerPort: 8686
           env:
             - name: PUID
               value: "65534"
@@ -59,17 +38,21 @@ spec:
               cpu: "100m"
               memory: "256Mi"
             limits:
-              memory: "4Gi"
+              cpu: "500m"
+              memory: "512Mi"
           volumeMounts:
             - name: config
               mountPath: /config
+            - name: media
+              mountPath: /music
+              subPath: music
             - name: media
               mountPath: /downloads
               subPath: downloads
       volumes:
         - name: config
           persistentVolumeClaim:
-            claimName: qbittorrent-pvc
+            claimName: lidarr-pvc
         - name: media
           persistentVolumeClaim:
             claimName: media-pvc

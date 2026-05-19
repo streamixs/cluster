@@ -11,3 +11,8 @@ resources:
   - ../../base/qbittorrent
   - ../../base/plex
   - ../../base/jellyseerr
+  - ../../base/lidarr
+  - ../../base/mixarr
+  - ../../base/tautulli
+  - ../../base/qui
+  - ../../base/qbittorrent-seed
