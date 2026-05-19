@@ -47,7 +47,13 @@ yamllint -c .yamllint.yaml .
 
 ArgoCD uses an **ApplicationSet** (`argocd/bootstrap/app-of-apps.yaml`) that auto-discovers applications by scanning `argocd/apps/*` directories. Each subdirectory becomes an ArgoCD Application automatically. The namespace defaults to the directory name.
 
-> Note: l'ApplicationSet pointe actuellement sur la branche `feat/media-music-stack`. A migrer vers `main` (cf. ROADMAP.md).
+### Branch model (trunk-based)
+
+- **`main`** est la seule branche long-running. ArgoCD lit `main`. Renovate ouvre ses PRs vers `main`.
+- Toute modif passe par une PR : `feat/*`, `fix/*`, `chore/*`, `renovate/*` → `main` (squash-merge).
+- **Conventional Commits obligatoires** (`feat:`, `fix:`, `chore:`, `BREAKING CHANGE:` dans le footer) — c'est release-please qui lit ces préfixes pour bumper la version.
+- **release-please** (workflow `.github/workflows/release-please.yml`) maintient une "Release PR" permanente sur `main`. Quand on la merge, elle bumpe `.release-please-manifest.json`, met à jour `CHANGELOG.md`, crée le tag `vX.Y.Z` et la GitHub Release automatiquement.
+- Plus de branche `develop` : trunk-based, tout converge sur `main`.
 
 ### Directory Conventions
 
@@ -125,7 +131,7 @@ Toutes les UI sensibles (ArgoCD, Sonarr, Radarr, Prowlarr, qBittorrent, etc.) pa
 
 ### Key Config Details
 
-- ArgoCD : branche cible `feat/media-music-stack` (a migrer vers `main`)
+- ArgoCD : branche cible `main`
 - Dev kubeconfig : `~/.talos/kubeconfig-dev`
 - Prod kubeconfig : `~/.talos/kubeconfig-prod`
 - Tous les ingresses utilisent le wildcard `*.streamixs.com` (cert-manager + Cloudflare DNS01)

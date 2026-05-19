@@ -8,7 +8,7 @@
     ":timezone(Europe/Paris)",
   ],
 
-  baseBranches: ["develop"],
+  // baseBranches non specifie => default = main (trunk-based).
   labels: ["renovate"],
   assignees: ["code-ex0"],
 
@@ -17,7 +17,7 @@
   rebaseWhen: "behind-base-branch",
 
   // GitHub native auto-merge — exige "Allow auto-merge" activé dans la
-  // branch protection de develop. Sinon Renovate fait un merge classique.
+  // branch protection de main. Sinon Renovate fait un merge classique.
   platformAutomerge: true,
 
   packageRules: [
@@ -67,6 +67,14 @@
       matchUpdateTypes: ["major"],
       automerge: false,
       addLabels: ["major-update"],
+    },
+    {
+      // Renovate utilise `chore(deps):` par defaut, masque par release-please.
+      // Les CVE et bumps de securite passent en `fix(deps):` pour apparaitre
+      // dans le CHANGELOG sous "Bug Fixes" et trigger un bump patch.
+      matchDepTypes: ["dependencies"],
+      matchPackageNames: ["*"],
+      semanticCommitType: "chore",
     },
   ],
 

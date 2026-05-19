@@ -68,14 +68,31 @@ Setup TrueNAS :
 
 Managed with SOPS + Age. Key at `.config/age.agekey` (gitignored).
 
+### Workflow (trunk-based)
+
+- **`main`** est la seule branche long-running. ArgoCD lit `main`.
+- Tout passe par PR (feature, fix, chore, Renovate) → squash-merge sur `main`.
+- **Conventional Commits requis** dans les titres de PR : `feat:`, `fix:`, `chore:`, `feat!:` (breaking), etc.
+
+### Releases (automatique)
+
+[release-please](https://github.com/googleapis/release-please) maintient une *Release PR* permanente. Elle accumule les commits depuis le dernier tag :
+
+- `feat:` → bump **minor**
+- `fix:` / `perf:` → bump **patch**
+- `feat!:` ou `BREAKING CHANGE:` → bump **major**
+
+Quand tu merges la Release PR, release-please crée automatiquement le tag `vX.Y.Z`, met à jour `CHANGELOG.md` et publie une GitHub Release. Pas de tagging manuel.
+
 ### Dependency updates
 
-[Renovate Bot](https://www.mend.io/renovate/) ouvre des PRs ciblant `develop` pour bumper les images Docker, les charts Helm (`kustomize.helmCharts`) et les actions GitHub. Config dans [`.github/renovate.json5`](.github/renovate.json5).
+[Renovate Bot](https://www.mend.io/renovate/) ouvre des PRs ciblant `main` pour bumper les images Docker, les charts Helm (`kustomize.helmCharts`), les actions GitHub et la version de gitleaks. Config dans [`.github/renovate.json5`](.github/renovate.json5).
 
-- **Patches** (`x.y.Z`) : auto-merge active si la branch protection de `develop` autorise l'auto-merge GitHub.
+- **Patches** (`x.y.Z`) : auto-merge active si la branch protection de `main` autorise l'auto-merge GitHub.
 - **Minor / major** : PR a valider manuellement.
-- **Talos / Kubernetes / installer Sidero** : exclus de Renovate, upgrade pilote via `make k8s-upgrade-check` + `make etcd-backup`.
+- **Talos / Kubernetes / installer Sidero** : exclus, upgrade pilote via `make k8s-upgrade-check` + `make etcd-backup`.
 - **Schedule** : nuits de semaine (apres 22h) + weekends, fuseau Europe/Paris.
+- Les bumps Renovate sont prefixes `chore(deps):` donc masques du CHANGELOG (volonte deliberee pour pas le polluer).
 
 Une *Dependency Dashboard* (issue auto-creee par Renovate) liste les PRs en cours et les bumps en attente.
 
