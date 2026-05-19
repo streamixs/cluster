@@ -1,0 +1,27 @@
+daemonset:
+  enabled: true
+
+config:
+  clients:
+    - url: http://loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push
+      tenant_id: ""
+  snippets:
+    pipelineStages:
+      - cri: {}
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+serviceMonitor:
+  enabled: true
+
+tolerations:
+  - effect: NoSchedule
+    operator: Exists
+  - effect: NoExecute
+    operator: Exists
