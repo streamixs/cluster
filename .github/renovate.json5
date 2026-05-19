@@ -70,13 +70,28 @@
     },
   ],
 
+  // Manager kubernetes: pas active par defaut, on opt-in sur argocd/base
+  // pour que Renovate detecte les `image:` dans les Deployments / StatefulSets.
+  kubernetes: {
+    managerFilePatterns: ["/^argocd/base/.+\\.ya?ml$/"],
+  },
+
   customManagers: [
     {
       // Gitleaks epingle via variable shell annotee dans secret-scan.yml
       customType: "regex",
-      fileMatch: ["^\\.github/workflows/secret-scan\\.ya?ml$"],
+      managerFilePatterns: ["/^\\.github/workflows/secret-scan\\.ya?ml$/"],
       matchStrings: [
         "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+)\\s+GITLEAKS_VERSION:\\s*(?<currentValue>[\\d.]+)",
+      ],
+    },
+    {
+      // Tag pin annote dans Helm values (ex: argocd/base/immich/values.yaml).
+      // Pattern: ligne `# renovate: datasource=X depName=Y` suivie de `tag: vX.Y.Z`.
+      customType: "regex",
+      managerFilePatterns: ["/(^|/)values\\.ya?ml$/"],
+      matchStrings: [
+        "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+)( versioning=(?<versioning>\\S+))?\\s+tag:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?",
       ],
     },
   ],
