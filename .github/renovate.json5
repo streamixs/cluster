@@ -1,0 +1,92 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+
+  extends: [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":timezone(Europe/Paris)",
+  ],
+
+  baseBranches: ["develop"],
+  labels: ["renovate"],
+  assignees: ["code-ex0"],
+
+  prHourlyLimit: 4,
+  prConcurrentLimit: 10,
+  rebaseWhen: "behind-base-branch",
+
+  // GitHub native auto-merge — exige "Allow auto-merge" activé dans la
+  // branch protection de develop. Sinon Renovate fait un merge classique.
+  platformAutomerge: true,
+
+  packageRules: [
+    {
+      // Auto-merge patch / pin / digest pour Docker, Helm, GHA et custom regex.
+      // Minor et major restent manuels.
+      matchUpdateTypes: ["patch", "pin", "digest"],
+      matchManagers: [
+        "dockerfile",
+        "kubernetes",
+        "kustomize",
+        "helmv3",
+        "helm-values",
+        "github-actions",
+        "custom.regex",
+      ],
+      automerge: true,
+    },
+    {
+      // Stack LinuxServer.io: une seule PR par cycle (sonarr/radarr/lidarr/...).
+      matchDatasources: ["docker"],
+      matchPackageNames: ["lscr.io/linuxserver/**"],
+      groupName: "linuxserver images",
+    },
+    {
+      matchManagers: ["github-actions"],
+      groupName: "github-actions",
+    },
+    {
+      // Control plane: jamais d'auto-bump. Upgrade pilote via Makefile
+      // (etcd-backup -> k8s-upgrade-check -> k8s-upgrade).
+      matchPackageNames: [
+        "ghcr.io/siderolabs/talos",
+        "ghcr.io/siderolabs/installer",
+        "registry.k8s.io/kube-apiserver",
+      ],
+      enabled: false,
+    },
+    {
+      // Helm minor: peut amener des changements de CRD => pas d'auto-merge.
+      matchManagers: ["helmv3", "kustomize"],
+      matchDatasources: ["helm"],
+      matchUpdateTypes: ["minor"],
+      automerge: false,
+    },
+    {
+      matchUpdateTypes: ["major"],
+      automerge: false,
+      addLabels: ["major-update"],
+    },
+  ],
+
+  customManagers: [
+    {
+      // Gitleaks epingle via variable shell annotee dans secret-scan.yml
+      customType: "regex",
+      fileMatch: ["^\\.github/workflows/secret-scan\\.ya?ml$"],
+      matchStrings: [
+        "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+)\\s+GITLEAKS_VERSION:\\s*(?<currentValue>[\\d.]+)",
+      ],
+    },
+  ],
+
+  vulnerabilityAlerts: {
+    enabled: true,
+    labels: ["security", "renovate"],
+    automerge: true,
+  },
+
+  // Heures off-peak (Europe/Paris) pour ne pas saturer ArgoCD en journee.
+  schedule: ["after 22:00 every weekday", "every weekend"],
+}

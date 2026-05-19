@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: qbittorrent
+  name: qbittorrent-seed
   namespace: media
 spec:
   replicas: 1
@@ -9,27 +9,27 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      app: qbittorrent
+      app: qbittorrent-seed
   template:
     metadata:
       labels:
-        app: qbittorrent
+        app: qbittorrent-seed
     spec:
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: "OnRootMismatch"
       containers:
-        - name: qbittorrent
+        - name: qbittorrent-seed
           image: lscr.io/linuxserver/qbittorrent:5.1.4-r3-ls451
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
               containerPort: 8080
             - name: bt-tcp
-              containerPort: 30881
+              containerPort: 30882
               protocol: TCP
             - name: bt-udp
-              containerPort: 30881
+              containerPort: 30882
               protocol: UDP
           livenessProbe:
             httpGet:
@@ -65,11 +65,11 @@ spec:
               mountPath: /config
             - name: media
               mountPath: /downloads
-              subPath: downloads
+              subPath: seed-c411
       volumes:
         - name: config
           persistentVolumeClaim:
-            claimName: qbittorrent-pvc
+            claimName: qbittorrent-seed-pvc
         - name: media
           persistentVolumeClaim:
             claimName: media-pvc

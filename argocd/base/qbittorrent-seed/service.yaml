@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: qbittorrent
+  name: qbittorrent-seed
   namespace: media
 spec:
   type: ClusterIP
   selector:
-    app: qbittorrent
+    app: qbittorrent-seed
   ports:
     - port: 8080
       targetPort: 8080
@@ -14,21 +14,21 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: qbittorrent-bt
+  name: qbittorrent-seed-bt
   namespace: media
 spec:
   type: NodePort
   externalTrafficPolicy: Local
   selector:
-    app: qbittorrent
+    app: qbittorrent-seed
   ports:
     - name: bt-tcp
       protocol: TCP
-      port: 30881
-      targetPort: 30881
-      nodePort: 30881
+      port: 30882
+      targetPort: 30882
+      nodePort: 30882
     - name: bt-udp
       protocol: UDP
-      port: 30881
-      targetPort: 30881
-      nodePort: 30881
+      port: 30882
+      targetPort: 30882
+      nodePort: 30882

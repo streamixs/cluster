@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: qbittorrent
+  name: qui
   namespace: media
 spec:
   replicas: 1
@@ -9,57 +9,46 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      app: qbittorrent
+      app: qui
   template:
     metadata:
       labels:
-        app: qbittorrent
+        app: qui
     spec:
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: "OnRootMismatch"
       containers:
-        - name: qbittorrent
-          image: lscr.io/linuxserver/qbittorrent:5.1.4-r3-ls451
+        - name: qui
+          image: ghcr.io/autobrr/qui:v1.18.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
-              containerPort: 8080
-            - name: bt-tcp
-              containerPort: 30881
-              protocol: TCP
-            - name: bt-udp
-              containerPort: 30881
-              protocol: UDP
+              containerPort: 7476
           livenessProbe:
             httpGet:
               path: /
-              port: 8080
+              port: 7476
             initialDelaySeconds: 30
             periodSeconds: 30
             timeoutSeconds: 5
           readinessProbe:
             httpGet:
               path: /
-              port: 8080
+              port: 7476
             initialDelaySeconds: 30
             periodSeconds: 30
             timeoutSeconds: 5
           env:
-            - name: PUID
-              value: "65534"
-            - name: PGID
-              value: "65534"
-            - name: UMASK
-              value: "002"
             - name: TZ
               value: "Europe/Paris"
           resources:
             requests:
-              cpu: "100m"
-              memory: "256Mi"
+              cpu: "50m"
+              memory: "128Mi"
             limits:
-              memory: "4Gi"
+              cpu: "500m"
+              memory: "512Mi"
           volumeMounts:
             - name: config
               mountPath: /config
@@ -69,7 +58,7 @@ spec:
       volumes:
         - name: config
           persistentVolumeClaim:
-            claimName: qbittorrent-pvc
+            claimName: qui-pvc
         - name: media
           persistentVolumeClaim:
             claimName: media-pvc

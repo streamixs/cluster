@@ -17,6 +17,8 @@ spec:
     - https://helm.cilium.io/
     - https://charts.longhorn.io
     - https://cloudnative-pg.github.io/charts
+    - https://immich-app.github.io/immich-charts
+    - https://grafana.github.io/helm-charts
   destinations:
     - server: https://kubernetes.default.svc
       namespace: "*"
