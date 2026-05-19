@@ -67,3 +67,16 @@ Setup TrueNAS :
 ### Secrets
 
 Managed with SOPS + Age. Key at `.config/age.agekey` (gitignored).
+
+### Dependency updates
+
+[Renovate Bot](https://www.mend.io/renovate/) ouvre des PRs ciblant `develop` pour bumper les images Docker, les charts Helm (`kustomize.helmCharts`) et les actions GitHub. Config dans [`.github/renovate.json5`](.github/renovate.json5).
+
+- **Patches** (`x.y.Z`) : auto-merge active si la branch protection de `develop` autorise l'auto-merge GitHub.
+- **Minor / major** : PR a valider manuellement.
+- **Talos / Kubernetes / installer Sidero** : exclus de Renovate, upgrade pilote via `make k8s-upgrade-check` + `make etcd-backup`.
+- **Schedule** : nuits de semaine (apres 22h) + weekends, fuseau Europe/Paris.
+
+Une *Dependency Dashboard* (issue auto-creee par Renovate) liste les PRs en cours et les bumps en attente.
+
+Activation : installer [l'app Mend Renovate](https://github.com/apps/renovate) sur le repo `streamixs/cluster`.
