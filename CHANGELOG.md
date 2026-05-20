@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/streamixs/cluster/compare/v0.3.1...v0.4.0) (2026-05-20)
+
+
+### Features
+
+* **ci:** kustomize build + kubeconform validation par app ([#102](https://github.com/streamixs/cluster/issues/102)) ([19e2b1e](https://github.com/streamixs/cluster/commit/19e2b1e052ef4ae418bc28e5cc2d95907571950b))
+
 ## [0.3.1](https://github.com/streamixs/cluster/compare/v0.3.0...v0.3.1) (2026-05-20)
 
 
