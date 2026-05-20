@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/streamixs/cluster/compare/v0.3.0...v0.3.1) (2026-05-20)
+
+
+### Bug Fixes
+
+* **gitops:** back on version of traefik-forward-auth ([#100](https://github.com/streamixs/cluster/issues/100)) ([3097e2a](https://github.com/streamixs/cluster/commit/3097e2af536610327ba198bbce136bca2535a6c6))
+
 ## [0.3.0](https://github.com/streamixs/cluster/compare/v0.2.0...v0.3.0) (2026-05-19)
 
 
