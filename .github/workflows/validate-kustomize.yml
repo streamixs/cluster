@@ -1,0 +1,102 @@
+name: Validate kustomize + kubeconform
+
+on:
+  pull_request:
+    paths:
+      - "argocd/**"
+      - ".github/workflows/validate-kustomize.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "argocd/**"
+      - ".github/workflows/validate-kustomize.yml"
+
+permissions:
+  contents: read
+
+env:
+  KUSTOMIZE_VERSION: 5.6.0
+  KUBECONFORM_VERSION: 0.6.7
+  HELM_VERSION: v3.16.4
+  KUBERNETES_VERSION: "1.32.0"
+
+jobs:
+  discover:
+    name: Discover apps
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.list.outputs.apps }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: List apps
+        id: list
+        run: |
+          apps=$(ls -d argocd/apps/*/ | xargs -n1 basename | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "apps=${apps}" >> "$GITHUB_OUTPUT"
+          echo "Discovered apps: ${apps}"
+
+  validate:
+    name: ${{ matrix.app }}
+    needs: discover
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJson(needs.discover.outputs.apps) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+      - name: Install kustomize
+        run: |
+          base="https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize"
+          curl -sSfL "${base}/v${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz" \
+            | tar -xz -C /usr/local/bin kustomize
+          kustomize version
+
+      - name: Install kubeconform
+        run: |
+          curl -sSfL "https://github.com/yannh/kubeconform/releases/download/v${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz" \
+            | tar -xz -C /usr/local/bin kubeconform
+          kubeconform -v
+
+      - name: Render app with kustomize
+        id: build
+        run: |
+          set +e
+          out=$(kustomize build --enable-helm "argocd/apps/${{ matrix.app }}" 2> build.err)
+          rc=$?
+          if [ "$rc" -ne 0 ]; then
+            if grep -qE "ksops|exec plugin|plugin.*not.*found" build.err; then
+              echo "::warning ::App '${{ matrix.app }}' utilise KSOPS, validation kustomize-build skippée (decrypt impossible en CI)."
+              echo "skipped=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "::error ::kustomize build a échoué pour '${{ matrix.app }}':"
+            cat build.err
+            exit "$rc"
+          fi
+          echo "$out" > rendered.yaml
+          echo "skipped=false" >> "$GITHUB_OUTPUT"
+          echo "Rendered $(grep -c '^kind:' rendered.yaml || echo 0) resources."
+
+      - name: Validate with kubeconform
+        if: steps.build.outputs.skipped != 'true'
+        # CRDs (Traefik, cert-manager, CNPG, Longhorn, etc.) ne sont pas
+        # validés faute de catalogue compatible avec le template kubeconform
+        # (casing minuscule des fichiers). -ignore-missing-schemas les
+        # accepte sans bloquer. La validation reste stricte sur les types
+        # K8s core.
+        run: |
+          kubeconform \
+            -strict \
+            -summary \
+            -kubernetes-version "${KUBERNETES_VERSION}" \
+            -schema-location default \
+            -ignore-missing-schemas \
+            rendered.yaml
