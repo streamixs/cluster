@@ -28,7 +28,7 @@ jobs:
     outputs:
       apps: ${{ steps.list.outputs.apps }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: List apps
         id: list
         run: |
@@ -45,10 +45,10 @@ jobs:
       matrix:
         app: ${{ fromJson(needs.discover.outputs.apps) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Helm
-        uses: azure/setup-helm@v4
+        uses: azure/setup-helm@v5
         with:
           version: ${{ env.HELM_VERSION }}
 
