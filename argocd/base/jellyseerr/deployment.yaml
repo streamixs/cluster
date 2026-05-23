@@ -19,7 +19,7 @@ spec:
         fsGroupChangePolicy: OnRootMismatch
       initContainers:
         - name: fix-permissions
-          image: busybox:1.37.0
+          image: busybox:1.38.0
           command: ['sh', '-c', 'chown -R 1000:1000 /app/config']
           volumeMounts:
             - name: config
