@@ -12,7 +12,7 @@ helmCharts:
     namespace: monitoring
     releaseName: kps
     repo: https://prometheus-community.github.io/helm-charts
-    version: 85.2.2
+    version: 85.4.0
     valuesFile: values-kube-prometheus-stack.yaml
     includeCRDs: true
   - name: loki
