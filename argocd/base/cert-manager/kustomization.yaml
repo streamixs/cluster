@@ -15,5 +15,5 @@ helmCharts:
     releaseName: cert-manager
     namespace: kube-system
     repo: https://charts.jetstack.io
-    version: "v1.17.1"
+    version: "v1.20.3"
     valuesFile: values.yaml
