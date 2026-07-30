@@ -26,9 +26,14 @@ metadata:
     lbipam.cilium.io/ips: "192.168.1.220"
 spec:
   type: LoadBalancer
-  # Preserve l'IP source des peers et garantit que seul le node hebergeant le pod
-  # annonce l'IP en ARP.
-  externalTrafficPolicy: Local
+  # Cluster et non Local : l'election du leader L2 de Cilium 1.17 ne tient pas
+  # compte des endpoints, le node qui annonce l'IP en ARP n'est donc pas
+  # forcement celui qui heberge le pod. En Local il ne peut pas relayer et le
+  # kernel repond RST (Connection refused). En Cluster n'importe quel node
+  # relaie, ce qui rend le placement du pod indifferent.
+  # Contrepartie : SNAT, qBittorrent voit les peers entrants avec l'IP du node
+  # relais. Sans effet sur la connectabilite ni sur le ratio.
+  externalTrafficPolicy: Cluster
   # Cilium sert le trafic LB directement, les nodePorts sont inutiles.
   allocateLoadBalancerNodePorts: false
   selector:
