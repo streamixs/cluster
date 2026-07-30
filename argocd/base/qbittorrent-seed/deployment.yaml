@@ -15,8 +15,13 @@ spec:
       labels:
         app: qbittorrent-seed
     spec:
+      # qBittorrent ecrit ses .fastresume a l'arret. Trop court = SIGKILL =
+      # recheck complet de tous les torrents au redemarrage (des heures sur NFS).
+      terminationGracePeriodSeconds: 300
       securityContext:
-        fsGroup: 1000
+        # Doit matcher PUID/PGID ci-dessous, sinon le kubelet peut declencher
+        # un chgrp recursif sur les 9Ti de media-pv.
+        fsGroup: 65534
         fsGroupChangePolicy: "OnRootMismatch"
       containers:
         - name: qbittorrent-seed
@@ -38,6 +43,9 @@ spec:
             initialDelaySeconds: 30
             periodSeconds: 30
             timeoutSeconds: 5
+            # La WebUI ne repond pas pendant un recheck ou une saturation IO NFS.
+            # Le defaut (3 = 90s) tue le pod et relance un recheck : boucle infinie.
+            failureThreshold: 10
           readinessProbe:
             httpGet:
               path: /

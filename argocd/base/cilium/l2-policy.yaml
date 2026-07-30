@@ -4,6 +4,13 @@ metadata:
   name: default-l2-policy
 spec:
   loadBalancerIPs: true
+  # Le control-plane a allowSchedulingOnControlPlanes: false, aucun pod n'y
+  # tournera jamais. Le laisser candidat a l'election du leader L2 lui fait
+  # annoncer des IP de services qu'il ne peut pas servir localement.
+  nodeSelector:
+    matchExpressions:
+      - key: node-role.kubernetes.io/control-plane
+        operator: DoesNotExist
   interfaces:
     - ^eth[0-9]+
     - ^eno[0-9]+

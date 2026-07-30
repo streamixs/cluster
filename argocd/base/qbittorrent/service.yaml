@@ -11,14 +11,31 @@ spec:
     - port: 8080
       targetPort: 8080
 ---
+# LoadBalancer plutot que NodePort : avec externalTrafficPolicy Local, un NodePort
+# n'est joignable que sur le node qui heberge le pod. Le pod n'ayant pas d'affinite,
+# tout reschedule (drain, upgrade Talos, OOM) rendait le port BT injoignable en
+# silence -- le pod reste Running, seul le ratio s'effondre.
+# L'IP du LB suit le pod via les L2 announcements Cilium : le port-forward du
+# routeur pointe vers cette IP une fois pour toutes.
 apiVersion: v1
 kind: Service
 metadata:
   name: qbittorrent-bt
   namespace: media
+  annotations:
+    lbipam.cilium.io/ips: "192.168.1.219"
 spec:
-  type: NodePort
-  externalTrafficPolicy: Local
+  type: LoadBalancer
+  # Cluster et non Local : l'election du leader L2 de Cilium 1.17 ne tient pas
+  # compte des endpoints, le node qui annonce l'IP en ARP n'est donc pas
+  # forcement celui qui heberge le pod. En Local il ne peut pas relayer et le
+  # kernel repond RST (Connection refused). En Cluster n'importe quel node
+  # relaie, ce qui rend le placement du pod indifferent.
+  # Contrepartie : SNAT, qBittorrent voit les peers entrants avec l'IP du node
+  # relais. Sans effet sur la connectabilite ni sur le ratio.
+  externalTrafficPolicy: Cluster
+  # Cilium sert le trafic LB directement, les nodePorts sont inutiles.
+  allocateLoadBalancerNodePorts: false
   selector:
     app: qbittorrent
   ports:
@@ -26,9 +43,7 @@ spec:
       protocol: TCP
       port: 30881
       targetPort: 30881
-      nodePort: 30881
     - name: bt-udp
       protocol: UDP
       port: 30881
       targetPort: 30881
-      nodePort: 30881

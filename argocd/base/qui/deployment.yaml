@@ -52,13 +52,9 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /config
-            - name: media
-              mountPath: /downloads
-              subPath: downloads
+      # Pas de mount media-pvc : qui est un client de l'API qBittorrent, il ne lit
+      # jamais les fichiers. Le monter ajoutait une dependance NFS au demarrage.
       volumes:
         - name: config
           persistentVolumeClaim:
             claimName: qui-pvc
-        - name: media
-          persistentVolumeClaim:
-            claimName: media-pvc
