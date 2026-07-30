@@ -69,6 +69,13 @@
       addLabels: ["major-update"],
     },
     {
+      // autobrr: chaque redemarrage coupe la connexion IRC aux trackers et
+      // fait manquer les annonces le temps de la reconnexion. On choisit le
+      // moment du bump plutot que de le subir en pleine nuit.
+      matchPackageNames: ["ghcr.io/autobrr/autobrr"],
+      automerge: false,
+    },
+    {
       // Renovate utilise `chore(deps):` par defaut, masque par release-please.
       // Les CVE et bumps de securite passent en `fix(deps):` pour apparaitre
       // dans le CHANGELOG sous "Bug Fixes" et trigger un bump patch.

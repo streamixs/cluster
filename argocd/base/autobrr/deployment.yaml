@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autobrr
+  namespace: media
+spec:
+  # Une seule instance, imperativement : deux connexions IRC avec le meme nick
+  # provoquent une collision de pseudo cote serveur et sont interpretees comme
+  # un abus par la plupart des trackers prives.
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: autobrr
+  template:
+    metadata:
+      labels:
+        app: autobrr
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        fsGroupChangePolicy: "OnRootMismatch"
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: autobrr
+          image: ghcr.io/autobrr/autobrr:v1.83.0
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: http
+              containerPort: 7474
+            - name: metrics
+              containerPort: 9094
+          env:
+            - name: TZ
+              value: "Europe/Paris"
+            - name: AUTOBRR__HOST
+              value: "0.0.0.0"
+            - name: AUTOBRR__PORT
+              value: "7474"
+            - name: AUTOBRR__LOG_LEVEL
+              value: "INFO"
+            # Les mises a jour passent par Renovate, pas par l'application.
+            - name: AUTOBRR__CHECK_FOR_UPDATES
+              value: "false"
+            - name: AUTOBRR__METRICS_ENABLED
+              value: "true"
+            - name: AUTOBRR__METRICS_HOST
+              value: "0.0.0.0"
+            - name: AUTOBRR__METRICS_PORT
+              value: "9094"
+          livenessProbe:
+            httpGet:
+              path: /api/healthz/liveness
+              port: 7474
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            # /readiness verifie l'acces a la base, contrairement a /liveness.
+            httpGet:
+              path: /api/healthz/readiness
+              port: 7474
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          volumeMounts:
+            - name: config
+              mountPath: /config
+      # Pas de mount media-pvc : autobrr pousse des .torrent via l'API
+      # qBittorrent, il ne touche jamais aux fichiers. La base SQLite doit par
+      # ailleurs rester sur Longhorn, SQLite sur NFS posant des problemes de
+      # verrouillage pouvant aller jusqu'a la corruption.
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: autobrr-pvc

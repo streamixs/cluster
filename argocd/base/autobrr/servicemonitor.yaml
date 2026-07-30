@@ -1,0 +1,18 @@
+# serviceMonitorSelectorNilUsesHelmValues: false dans les values de
+# kube-prometheus-stack : Prometheus decouvre tous les ServiceMonitor sans
+# exiger de label de selection.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: autobrr
+  namespace: media
+  labels:
+    app: autobrr
+spec:
+  selector:
+    matchLabels:
+      app: autobrr
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s

@@ -15,3 +15,4 @@ resources:
   - mixarr-pvc.yaml
   - tautulli-pvc.yaml
   - qui-pvc.yaml
+  - autobrr-pvc.yaml
