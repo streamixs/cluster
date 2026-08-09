@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.0](https://github.com/streamixs/cluster/compare/v0.4.0...v0.5.0) (2026-08-09)
+
+
+### Features
+
+* **media:** deployer autobrr pour l'automatisation des annonces IRC ([#137](https://github.com/streamixs/cluster/issues/137)) ([3937386](https://github.com/streamixs/cluster/commit/393738632ae858bf2acccb67f1ce9bccff04f4ce))
+
+
+### Bug Fixes
+
+* **media:** durcir la resilience de qbittorrent et qbittorrent-seed ([#134](https://github.com/streamixs/cluster/issues/134)) ([e6be0c4](https://github.com/streamixs/cluster/commit/e6be0c4f922cde40360f631863bfc862ebfa5156))
+
 ## [0.4.0](https://github.com/streamixs/cluster/compare/v0.3.1...v0.4.0) (2026-05-20)
 
 
