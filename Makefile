@@ -23,6 +23,12 @@ CP_NODES      := $(shell yq -r '.nodes[] | select(.controlPlane == true)  | .ipA
 WORKER_NODES  := $(shell yq -r '.nodes[] | select(.controlPlane == false) | .ipAddress' $(TALCONFIG) 2>/dev/null | tr '\n' ',' | sed 's/,$$//')
 FIRST_CP      := $(shell yq -r '[.nodes[] | select(.controlPlane == true)][0].ipAddress' $(TALCONFIG) 2>/dev/null)
 
+# Version Cilium: lue depuis la kustomization qu'ArgoCD applique, jamais
+# dupliquee ici. Un pin en dur finit toujours par diverger et `make cilium`
+# rejoue alors une ancienne version par-dessus celle deployee par ArgoCD.
+CILIUM_KUSTOMIZATION := argocd/apps/cilium/kustomization.yaml
+CILIUM_VERSION       := $(shell yq -r '.helmCharts[] | select(.name == "cilium") | .version' $(CILIUM_KUSTOMIZATION) 2>/dev/null)
+
 # ============================================================
 # Bootstrap complet
 # ============================================================
@@ -67,7 +73,12 @@ endif
 # ============================================================
 
 cilium: ## Installer Cilium via Helm (remplace flannel en dev)
-	@echo "==> Installation de Cilium..."
+ifeq ($(CILIUM_VERSION),)
+	@echo "ERREUR: version Cilium illisible dans $(CILIUM_KUSTOMIZATION)"
+	@echo "        (yq installe ? champ .helmCharts[].version present ?)"
+	@exit 1
+endif
+	@echo "==> Installation de Cilium $(CILIUM_VERSION)..."
 	helm repo add cilium https://helm.cilium.io/ 2>/dev/null || true
 	helm repo update cilium
 ifeq ($(ENV),dev)
@@ -81,7 +92,7 @@ endif
 	helm upgrade --install cilium cilium/cilium \
 		--namespace kube-system \
 		--kubeconfig $(KUBECONFIG) \
-		--version 1.17.1 \
+		--version $(CILIUM_VERSION) \
 		-f argocd/apps/cilium/values.yaml \
 		--wait --timeout 5m
 	@echo "==> Cilium installe. Attente des nodes Ready..."
