@@ -69,6 +69,19 @@
       addLabels: ["major-update"],
     },
     {
+      // Cilium n'autorise QUE les upgrades de minor consecutifs ("the only
+      // tested rollback and upgrade path is between consecutive minor
+      // releases"). Une PR 1.17 -> 1.20 d'un bloc est inapplicable: elle
+      // saute les migrations de CRD intermediaires et casse le CNI.
+      // separateMultipleMinor force une PR par minor (1.18, puis 1.19, puis
+      // 1.20) pour que le chemin d'upgrade reste jouable tel quel.
+      matchDatasources: ["helm"],
+      matchPackageNames: ["cilium"],
+      separateMultipleMinor: true,
+      automerge: false,
+      addLabels: ["cni"],
+    },
+    {
       // autobrr: chaque redemarrage coupe la connexion IRC aux trackers et
       // fait manquer les annonces le temps de la reconnexion. On choisit le
       // moment du bump plutot que de le subir en pleine nuit.

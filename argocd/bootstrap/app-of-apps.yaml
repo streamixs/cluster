@@ -6,6 +6,17 @@ metadata:
   labels:
     env: dev
 spec:
+  # Sans ceci, l'ApplicationSet reecrit le spec des Applications qu'il genere
+  # et un passage en sync manuelle est annule en quelques secondes.
+  # Cilium est le CNI: un upgrade traverse plusieurs minors consecutifs et
+  # chaque palier fait rouler le DaemonSet sur les 4 noeuds. On veut declencher
+  # ces paliers un par un, pas les subir au merge. La derogation ne porte que
+  # sur /spec/syncPolicy/automated: tout le reste du spec reste pilote par le
+  # template ci-dessous.
+  ignoreApplicationDifferences:
+    - name: cilium
+      jsonPointers:
+        - /spec/syncPolicy/automated
   generators:
     - git:
         repoURL: https://github.com/streamixs/cluster
