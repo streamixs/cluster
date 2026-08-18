@@ -42,6 +42,44 @@
       matchPackageNames: ["lscr.io/linuxserver/**"],
       groupName: "linuxserver images",
     },
+    // --- Schemas de versioning ----------------------------------------
+    // Ces images etaient bien DETECTEES par Renovate (elles figurent au
+    // Dependency Dashboard) mais aucune update n'etait jamais proposee: le
+    // versioning docker par defaut n'ordonne pas leurs tags. Resultat, les 7
+    // ont accumule du retard en silence. Un tag non ordonnable est pire
+    // qu'une dependance absente: le dashboard donne l'illusion du suivi.
+    {
+      // Plex: `X.Y.Z.BUILD-<hash git>`. Le suffixe est traite comme un
+      // pre-release a comparer litteralement, or `-1e34174b1` et
+      // `-cb3ebc72d` ne sont pas ordonnables. On compare sur les 4
+      // composantes numeriques, le hash est matche mais non capture.
+      matchDatasources: ["docker"],
+      matchPackageNames: ["plexinc/pms-docker"],
+      versioning: "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\.(?<build>\\d+)-\\w+$",
+    },
+    {
+      // linuxserver, format majoritaire `X.Y.Z.BUILD-lsN`.
+      matchDatasources: ["docker"],
+      matchPackageNames: [
+        "lscr.io/linuxserver/sonarr",
+        "lscr.io/linuxserver/radarr",
+        "lscr.io/linuxserver/lidarr",
+        "lscr.io/linuxserver/prowlarr",
+      ],
+      versioning: "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\.(?<build>\\d+)-ls(?<revision>\\d+)$",
+    },
+    {
+      // qbittorrent: `X.Y.Z-rN-lsN`, le -rN etant le rebuild amont.
+      matchDatasources: ["docker"],
+      matchPackageNames: ["lscr.io/linuxserver/qbittorrent"],
+      versioning: "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-r(?<build>\\d+)-ls(?<revision>\\d+)$",
+    },
+    {
+      // tautulli: prefixe `v` et 3 composantes seulement.
+      matchDatasources: ["docker"],
+      matchPackageNames: ["lscr.io/linuxserver/tautulli"],
+      versioning: "regex:^v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-ls(?<revision>\\d+)$",
+    },
     {
       matchManagers: ["github-actions"],
       groupName: "github-actions",
