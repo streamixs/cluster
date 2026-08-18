@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/streamixs/cluster/compare/v0.6.0...v0.6.1) (2026-08-18)
+
+
+### Bug Fixes
+
+* **deps:** epingler argo-rollouts et couvrir les dependances non suivies ([#148](https://github.com/streamixs/cluster/issues/148)) ([36e2024](https://github.com/streamixs/cluster/commit/36e2024efcf49c478d6ddf4e9655dbf562c3a9e4))
+
 ## [0.6.0](https://github.com/streamixs/cluster/compare/v0.5.0...v0.6.0) (2026-08-18)
 
 
