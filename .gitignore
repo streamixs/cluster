@@ -19,3 +19,6 @@ talos/*/clusterconfig/
 # Helm charts cached locally by `kustomize build --enable-helm`
 argocd/**/charts/
 
+
+# Worktrees git crees par Claude Code — depots imbriques, jamais a committer
+.claude/worktrees/

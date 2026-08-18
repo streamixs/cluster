@@ -42,6 +42,44 @@
       matchPackageNames: ["lscr.io/linuxserver/**"],
       groupName: "linuxserver images",
     },
+    // --- Schemas de versioning ----------------------------------------
+    // Ces images etaient bien DETECTEES par Renovate (elles figurent au
+    // Dependency Dashboard) mais aucune update n'etait jamais proposee: le
+    // versioning docker par defaut n'ordonne pas leurs tags. Resultat, les 7
+    // ont accumule du retard en silence. Un tag non ordonnable est pire
+    // qu'une dependance absente: le dashboard donne l'illusion du suivi.
+    {
+      // Plex: `X.Y.Z.BUILD-<hash git>`. Le suffixe est traite comme un
+      // pre-release a comparer litteralement, or `-1e34174b1` et
+      // `-cb3ebc72d` ne sont pas ordonnables. On compare sur les 4
+      // composantes numeriques, le hash est matche mais non capture.
+      matchDatasources: ["docker"],
+      matchPackageNames: ["plexinc/pms-docker"],
+      versioning: "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\.(?<build>\\d+)-\\w+$",
+    },
+    {
+      // linuxserver, format majoritaire `X.Y.Z.BUILD-lsN`.
+      matchDatasources: ["docker"],
+      matchPackageNames: [
+        "lscr.io/linuxserver/sonarr",
+        "lscr.io/linuxserver/radarr",
+        "lscr.io/linuxserver/lidarr",
+        "lscr.io/linuxserver/prowlarr",
+      ],
+      versioning: "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\.(?<build>\\d+)-ls(?<revision>\\d+)$",
+    },
+    {
+      // qbittorrent: `X.Y.Z-rN-lsN`, le -rN etant le rebuild amont.
+      matchDatasources: ["docker"],
+      matchPackageNames: ["lscr.io/linuxserver/qbittorrent"],
+      versioning: "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-r(?<build>\\d+)-ls(?<revision>\\d+)$",
+    },
+    {
+      // tautulli: prefixe `v` et 3 composantes seulement.
+      matchDatasources: ["docker"],
+      matchPackageNames: ["lscr.io/linuxserver/tautulli"],
+      versioning: "regex:^v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-ls(?<revision>\\d+)$",
+    },
     {
       matchManagers: ["github-actions"],
       groupName: "github-actions",
@@ -89,12 +127,14 @@
       automerge: false,
     },
     {
-      // Renovate utilise `chore(deps):` par defaut, masque par release-please.
-      // Les CVE et bumps de securite passent en `fix(deps):` pour apparaitre
-      // dans le CHANGELOG sous "Bug Fixes" et trigger un bump patch.
+      // `chore` est marque hidden dans release-please-config.json: un
+      // `chore(deps):` ne bumpe rien et n'apparait pas au CHANGELOG, donc la
+      // version restait figee quoi qu'on merge. En emettant `fix(deps):`,
+      // chaque update merge donne un bump patch (0.6.0 -> 0.6.1) et une
+      // ligne de CHANGELOG sous "Bug Fixes".
       matchDepTypes: ["dependencies"],
       matchPackageNames: ["*"],
-      semanticCommitType: "chore",
+      semanticCommitType: "fix",
     },
   ],
 
@@ -121,6 +161,37 @@
       matchStrings: [
         "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+)( versioning=(?<versioning>\\S+))?\\s+tag:\\s*[\"']?(?<currentValue>[^\"'\\s]+)[\"']?",
       ],
+    },
+    {
+      // Image annotee dans un values Helm hors argocd/base (le manager
+      // kubernetes est scope a argocd/base/**, il ne voit pas terraform/).
+      // Cible actuelle: viaductoss/ksops, init container du repoServer ArgoCD.
+      customType: "regex",
+      managerFilePatterns: ["/(^|/)[a-z0-9-]*values\\.ya?ml$/"],
+      matchStrings: [
+        "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+)\\s+image:\\s*\\S+:(?<currentValue>[^\"'\\s@]+)",
+      ],
+    },
+    {
+      // Version epinglee dans une variable Terraform. Le manager terraform
+      // ne lit que les providers et modules, pas une version de chart passee
+      // en variable. Cible actuelle: le chart Helm d'ArgoCD lui-meme, qui
+      // n'etait suivi par rien alors qu'il gere tout le reste.
+      customType: "regex",
+      managerFilePatterns: ["/^terraform/.+\\.tf$/"],
+      matchStrings: [
+        "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+)( registryUrl=(?<registryUrl>\\S+))?\\s+default\\s*=\\s*\"(?<currentValue>[^\"]+)\"",
+      ],
+    },
+    {
+      // Manifest distant epingle sur une release GitHub, tire par kustomize.
+      // Generique: couvre argo-rollouts et tout futur manifest du meme type.
+      customType: "regex",
+      managerFilePatterns: ["/(^|/)kustomization\\.ya?ml$/"],
+      matchStrings: [
+        "https://github\\.com/(?<depName>[^/\\s]+/[^/\\s]+)/releases/download/(?<currentValue>[^/\\s]+)/",
+      ],
+      datasourceTemplate: "github-releases",
     },
   ],
 
