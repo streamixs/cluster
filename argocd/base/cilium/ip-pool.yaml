@@ -1,4 +1,6 @@
-apiVersion: cilium.io/v2alpha1
+# v2alpha1 est retire en 1.19. Cilium ne sert cette ressource en v2 qu'a
+# partir de 1.18, donc cette bascule ne peut pas preceder ce palier.
+apiVersion: cilium.io/v2
 kind: CiliumLoadBalancerIPPool
 metadata:
   name: default-pool
