@@ -32,6 +32,21 @@ persistence:
     storageClass: longhorn
     accessMode: ReadWriteOnce
 
+  # Desactives explicitement malgre agentsEnabled: false, a cause d'une
+  # incoherence du chart en 0.14.3: les templates backend et worker
+  # conditionnent le montage des volumes agents sur
+  #   agentsEnabled ET persistence.<vol>.enabled
+  # tandis que beat ne teste que persistence.<vol>.enabled. Les PVC, eux,
+  # ne sont crees que si agentsEnabled vaut true. beat montait donc des PVC
+  # jamais provisionnes et restait en Pending sur
+  #   persistentvolumeclaim "securo-agent-knowledge" not found
+  # Mettre ces drapeaux a false aligne les trois workloads. A reactiver en
+  # meme temps que les agents.
+  agentKnowledge:
+    enabled: false
+  agentEmbeddingModels:
+    enabled: false
+
 config:
   # Agents IA desactives: aucune transaction bancaire ne sort du cluster.
   # Reactivation plus tard = agentsEnabled + mcpServer.enabled +
