@@ -20,7 +20,7 @@ spec:
         fsGroupChangePolicy: "OnRootMismatch"
       containers:
         - name: radarr
-          image: lscr.io/linuxserver/radarr:6.1.1.10360-ls300
+          image: lscr.io/linuxserver/radarr:6.3.0.10514-ls313
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
