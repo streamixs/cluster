@@ -30,7 +30,16 @@ persistence:
     enabled: true
     size: 5Gi
     storageClass: longhorn
-    accessMode: ReadWriteOnce
+    # ReadWriteMany et non le ReadWriteOnce par defaut du chart: backend,
+    # worker et beat montent tous ce volume, et rien ne les contraint au meme
+    # noeud. En RWO, le premier pod ordonnance verrouille le volume et les
+    # autres restent bloques sur
+    #   Multi-Attach error for volume ... already used by pod(s) ...
+    # Le defaut amont suppose un deploiement mononoeud, ce que ce cluster
+    # n'est pas. Longhorn sert le RWX via un pod share-manager qui exporte du
+    # NFS; les noeuds savent le monter, les PV NFS statiques du cluster le
+    # prouvent.
+    accessMode: ReadWriteMany
 
   # Desactives explicitement malgre agentsEnabled: false, a cause d'une
   # incoherence du chart en 0.14.3: les templates backend et worker
