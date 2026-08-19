@@ -150,6 +150,31 @@ spec:
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
+  name: securo-migration
+  namespace: securo
+spec:
+  # Le Job de migration est selectionne par securo-dns via
+  # app.kubernetes.io/instance: securo, ce qui bascule deja son egress en
+  # deny-by-default. Sans la regle ci-dessous il ne peut donc que resoudre du
+  # DNS, jamais joindre la base: piege propre au modele Cilium, ou une policy
+  # DNS trop large ferme tout le reste pour les endpoints qu'elle attrape.
+  description: Job de migration du schema, sortie vers la base uniquement
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/instance: securo
+      app.kubernetes.io/component: migration
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            cnpg.io/cluster: securo-db
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
   name: securo-redis
   namespace: securo
 spec:

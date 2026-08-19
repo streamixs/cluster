@@ -24,6 +24,12 @@ spec:
             app.kubernetes.io/component: celery-worker
         - matchLabels:
             app.kubernetes.io/component: celery-beat
+        # Le Job de migration porte component: migration. Sans cette entree
+        # il boucle sur un TimeoutError asyncpg, alors meme que le backend se
+        # connecte normalement: un workload ephemere est facile a oublier
+        # quand on raisonne sur les Deployments.
+        - matchLabels:
+            app.kubernetes.io/component: migration
       toPorts:
         - ports:
             - port: "5432"
