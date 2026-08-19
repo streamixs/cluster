@@ -152,13 +152,17 @@ ifndef FILE
 	@echo "ERREUR: preciser FILE=<chemin>"
 	@exit 1
 endif
+	@# Passe par yq et non par un parsing ligne a ligne: sur un bloc litteral
+	@# (`cle: |-`), la ligne de la cle ne porte que `|-`, et une mesure naive
+	@# annonce 2 caracteres pour une cle PEM de 3000. yq lit la valeur reelle.
 	@SOPS_AGE_KEY_FILE=$(AGE_KEY) sops -d $(FILE) \
-		| awk '/^(stringData|data):/{f=1;next} \
-			f && /^[^[:space:]]/{f=0} \
-			f && /^[[:space:]]+[A-Za-z0-9_]+:/{ \
-				k=$$0; sub(/:.*$$/,"",k); gsub(/[[:space:]]/,"",k); \
-				v=substr($$0, index($$0,":")+1); gsub(/^[[:space:]"]+|[[:space:]"]+$$/,"",v); \
-				printf "  %-32s %s\n", k, (length(v)==0 ? "(vide)" : "<" length(v) " caracteres>") }'
+		| yq -r '(.stringData // .data // {}) | to_entries | .[] \
+			| .key + "\t" + ((.value // "") | tostring | length | tostring) \
+			+ "\t" + (((.value // "") | tostring | split("\n") | length) | tostring)' \
+		| awk -F'\t' '{ \
+			d = ($$2 == 0) ? "(vide)" : "<" $$2 " caracteres>"; \
+			if ($$3 > 1) d = d " sur " $$3 " lignes"; \
+			printf "  %-32s %s\n", $$1, d }'
 
 # ============================================================
 # Operations
