@@ -53,3 +53,102 @@ patches:
         annotations:
           argocd.argoproj.io/hook: PostSync
           argocd.argoproj.io/hook-delete-policy: HookSucceeded
+
+  # DATABASE_URL recompose a l'execution a partir du Secret genere par
+  # CloudNativePG, pour que le mot de passe n'existe nulle part dans Git.
+  #
+  # Deux mecanismes Kubernetes rendent ceci possible:
+  #  - une entree `env` explicite l'emporte sur la meme cle heritee d'envFrom,
+  #    donc ce DATABASE_URL masque celui de securo-secret;
+  #  - `$(VAR)` est interpole a partir des variables declarees plus haut dans
+  #    le meme bloc `env`. Attention: l'interpolation ne voit PAS les
+  #    variables issues d'envFrom, d'ou la declaration explicite du mot de
+  #    passe juste avant.
+  #
+  # L'app ne normalise pas le schema (create_async_engine recoit la valeur
+  # telle quelle), la cle `uri` fournie par CNPG n'est donc pas utilisable:
+  # elle porte `postgresql://` la ou SQLAlchemy exige `postgresql+asyncpg://`.
+  #
+  # Cible les seuls composants qui parlent a la base. Le frontend ne l'a pas,
+  # et un futur composant oublie ici echouerait au demarrage faute d'URL,
+  # plutot que de se rabattre silencieusement sur autre chose.
+  # Un patch par workload: la fusion stratégique apparie les conteneurs par
+  # nom, et chacun porte le sien (backend, celery-worker, celery-beat,
+  # migration). Le frontend est volontairement absent, il ne parle pas a la
+  # base.
+  - target: {kind: Deployment, name: securo-backend}
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: securo-backend
+      spec:
+        template:
+          spec:
+            containers:
+              - name: backend
+                env:
+                  - name: SECURO_DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: securo-db-app
+                        key: password
+                  - name: DATABASE_URL
+                    value: postgresql+asyncpg://securo:$(SECURO_DB_PASSWORD)@securo-db-rw:5432/securo
+  - target: {kind: Deployment, name: securo-worker}
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: securo-worker
+      spec:
+        template:
+          spec:
+            containers:
+              - name: celery-worker
+                env:
+                  - name: SECURO_DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: securo-db-app
+                        key: password
+                  - name: DATABASE_URL
+                    value: postgresql+asyncpg://securo:$(SECURO_DB_PASSWORD)@securo-db-rw:5432/securo
+  - target: {kind: Deployment, name: securo-beat}
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: securo-beat
+      spec:
+        template:
+          spec:
+            containers:
+              - name: celery-beat
+                env:
+                  - name: SECURO_DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: securo-db-app
+                        key: password
+                  - name: DATABASE_URL
+                    value: postgresql+asyncpg://securo:$(SECURO_DB_PASSWORD)@securo-db-rw:5432/securo
+  - target: {kind: Job, name: securo-migration}
+    patch: |
+      apiVersion: batch/v1
+      kind: Job
+      metadata:
+        name: securo-migration
+      spec:
+        template:
+          spec:
+            containers:
+              - name: migration
+                env:
+                  - name: SECURO_DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: securo-db-app
+                        key: password
+                  - name: DATABASE_URL
+                    value: postgresql+asyncpg://securo:$(SECURO_DB_PASSWORD)@securo-db-rw:5432/securo

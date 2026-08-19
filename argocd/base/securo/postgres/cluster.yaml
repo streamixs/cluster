@@ -15,12 +15,11 @@ spec:
     initdb:
       database: securo
       owner: securo
-      # Identifiants fournis plutot que generes: DATABASE_URL est une chaine
-      # de connexion complete passee au backend via envFrom, elle ne peut pas
-      # referencer le mot de passe aleatoire d'un autre Secret. Les deux
-      # secrets SOPS portent donc le meme mot de passe.
-      secret:
-        name: securo-db-credentials
+      # Pas de `secret:` ici: on laisse CloudNativePG generer le mot de passe
+      # et le publier dans le Secret securo-db-app. Il n'existe donc nulle
+      # part dans Git, meme chiffre, et sa rotation reste du ressort de
+      # l'operateur. DATABASE_URL est recompose a partir de ce Secret par le
+      # patch `env` de la kustomization parente.
       postInitApplicationSQL:
         - CREATE EXTENSION IF NOT EXISTS vector;
   storage:
