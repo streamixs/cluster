@@ -50,7 +50,15 @@ spec:
             app.kubernetes.io/name: traefik
       toPorts:
         - ports:
-            - port: "3000"
+            # 8080, le port du conteneur, et non 3000 qui est celui du
+            # Service. Cilium applique la policy sur l'endpoint APRES
+            # traduction d'adresse: le trafic arrive sur 8080. Ecrire 3000
+            # ici laisse le service joignable en apparence mais fait tomber
+            # tout le trafic, ce qui se manifeste par un Gateway Timeout cote
+            # Traefik. Le Service securo-frontend expose 3000 -> targetPort
+            # http -> 8080; backend et redis, eux, ont des ports identiques
+            # des deux cotes.
+            - port: "8080"
               protocol: TCP
   egress:
     - toEndpoints:
