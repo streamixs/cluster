@@ -152,3 +152,22 @@ patches:
                         key: password
                   - name: DATABASE_URL
                     value: postgresql+asyncpg://securo:$(SECURO_DB_PASSWORD)@securo-db-rw:5432/securo
+
+  # Le conteneur redis tourne en uid 999, mais son volume est monte
+  # root:root en 0755: le processus ne peut pas ecrire son snapshot RDB.
+  # Redis bascule alors en MISCONF et rejette TOUTE ecriture, ce qui fait
+  # echouer le rate limiting sur /api/auth/login et remonte en 500 cote
+  # interface. Le chart 0.14.3 n'expose aucun securityContext pour redis,
+  # d'ou ce patch: fsGroup 1000 est le groupe redis, Kubernetes applique la
+  # propriete de groupe au volume au montage.
+  - target: {kind: StatefulSet, name: securo-redis-master}
+    patch: |
+      apiVersion: apps/v1
+      kind: StatefulSet
+      metadata:
+        name: securo-redis-master
+      spec:
+        template:
+          spec:
+            securityContext:
+              fsGroup: 1000
