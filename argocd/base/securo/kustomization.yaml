@@ -1,0 +1,55 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: securo
+
+resources:
+  - namespace.yaml
+  - ingressroute.yaml
+  - policies
+  - postgres
+
+generators:
+  - generators/secret-generator.yaml
+
+helmCharts:
+  - name: securo
+    namespace: securo
+    releaseName: securo
+    # Chart distribue en OCI. kustomize sait le consommer (verifie), il n'y a
+    # donc pas besoin de vendoriser le chart dans le repo.
+    repo: oci://ghcr.io/securo-finance/charts
+    version: 0.14.3
+    valuesFile: values.yaml
+    includeCRDs: false
+
+# Le chart s'appuie sur les hooks Helm. Notre source etant kustomize, ArgoCD
+# ne voit que des annotations `helm.sh/hook` sur des manifests ordinaires. On
+# ne parie pas sur son interpretation: les deux cas sont rendus explicites.
+patches:
+  # Pod de test du chart (`helm.sh/hook: test`), destine a `helm test`. Il n'a
+  # aucun sens en deploiement continu.
+  - target:
+      kind: Pod
+      name: securo-test-connection
+    patch: |
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: securo-test-connection
+      $patch: delete
+  # Job de migration du schema. Un Job est immuable: applique comme ressource
+  # ordinaire, le second sync echouerait en tentant de le modifier. En hook
+  # PostSync supprime apres succes, il rejoue proprement a chaque montee de
+  # version.
+  - target:
+      kind: Job
+      name: securo-migration
+    patch: |
+      apiVersion: batch/v1
+      kind: Job
+      metadata:
+        name: securo-migration
+        annotations:
+          argocd.argoproj.io/hook: PostSync
+          argocd.argoproj.io/hook-delete-policy: HookSucceeded

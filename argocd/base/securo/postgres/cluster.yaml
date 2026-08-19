@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/postgresql.cnpg.io/cluster_v1.json
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: securo-db
+  namespace: securo
+spec:
+  instances: 1
+  # Meme image que immich: elle embarque pgvector 0.8.2 (extension `vector`),
+  # dont securo a besoin. Le chart amont utilise pgvector/pgvector:pg16, mais
+  # introduire une seconde image Postgres dans le cluster pour la meme
+  # capacite n'aurait pas de sens.
+  imageName: tensorchord/cloudnative-vectorchord:17
+  bootstrap:
+    initdb:
+      database: securo
+      owner: securo
+      # Identifiants fournis plutot que generes: DATABASE_URL est une chaine
+      # de connexion complete passee au backend via envFrom, elle ne peut pas
+      # referencer le mot de passe aleatoire d'un autre Secret. Les deux
+      # secrets SOPS portent donc le meme mot de passe.
+      secret:
+        name: securo-db-credentials
+      postInitApplicationSQL:
+        - CREATE EXTENSION IF NOT EXISTS vector;
+  storage:
+    size: 10Gi
+    storageClass: longhorn
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 2000m
+      memory: 2Gi

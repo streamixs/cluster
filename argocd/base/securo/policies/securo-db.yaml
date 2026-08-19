@@ -1,0 +1,78 @@
+# Policy sur les pods CloudNativePG. C'est la piece la plus delicate du lot:
+# fermer l'ingress d'une base CNPG sans autoriser l'operateur le rend
+# ingerable (plus de failover, plus de sauvegarde, plus de mise a jour). Les
+# trois ports du pod ont chacun un appelant legitime:
+#   5432 postgresql -> les pods applicatifs securo
+#   8000 status     -> l'operateur cnpg-system (instance manager)
+#   9187 metrics    -> Prometheus
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: securo-db
+  namespace: securo
+spec:
+  description: Base securo joignable par l'app, l'operateur CNPG et Prometheus
+  endpointSelector:
+    matchLabels:
+      cnpg.io/cluster: securo-db
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/instance: securo
+            app.kubernetes.io/component: backend
+        - matchLabels:
+            app.kubernetes.io/component: celery-worker
+        - matchLabels:
+            app.kubernetes.io/component: celery-beat
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+    # Replication et coordination entre instances du meme cluster. Inutile a
+    # instances: 1, mais indispensable le jour ou on passe a 2 ou 3, et sans
+    # effet tant qu'il n'y a qu'un pod.
+    - fromEndpoints:
+        - matchLabels:
+            cnpg.io/cluster: securo-db
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: cnpg-system
+      toPorts:
+        - ports:
+            - port: "8000"
+              protocol: TCP
+            - port: "5432"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: monitoring
+      toPorts:
+        - ports:
+            - port: "9187"
+              protocol: TCP
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: kube-system
+            k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchPattern: "*"
+    - toEndpoints:
+        - matchLabels:
+            cnpg.io/cluster: securo-db
+    # L'instance manager dialogue avec l'API server pour publier son etat et
+    # suivre les evenements du cluster. Sans cette sortie, le pod demarre mais
+    # l'operateur ne le voit jamais devenir pret.
+    - toEntities:
+        - kube-apiserver

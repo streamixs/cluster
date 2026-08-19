@@ -1,0 +1,173 @@
+# Premieres NetworkPolicies du cluster. Rappel du modele Cilium: des qu'une
+# policy selectionne un endpoint pour une direction, cette direction bascule en
+# deny-by-default pour lui. Il n'y a donc pas de regle "default-deny" a ecrire,
+# ce sont ces autorisations qui creent le cloisonnement.
+#
+# Perimetre volontairement limite aux pods applicatifs
+# (app.kubernetes.io/instance: securo). Les pods CloudNativePG portent
+# l'instance `securo-db` et sont traites dans securo-db.yaml.
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: securo-dns
+  namespace: securo
+spec:
+  description: Resolution DNS pour tous les pods applicatifs securo
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/instance: securo
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: kube-system
+            k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchPattern: "*"
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: securo-frontend
+  namespace: securo
+spec:
+  description: Le frontend n'accepte que Traefik et ne parle qu'au backend
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/instance: securo
+      app.kubernetes.io/component: frontend
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: traefik
+            app.kubernetes.io/name: traefik
+      toPorts:
+        - ports:
+            - port: "3000"
+              protocol: TCP
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/instance: securo
+            app.kubernetes.io/component: backend
+      toPorts:
+        - ports:
+            - port: "8000"
+              protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: securo-backend
+  namespace: securo
+spec:
+  description: Backend joignable par le frontend, sortie vers base, redis et APIs bancaires
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/instance: securo
+      app.kubernetes.io/component: backend
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/instance: securo
+            app.kubernetes.io/component: frontend
+      toPorts:
+        - ports:
+            - port: "8000"
+              protocol: TCP
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            cnpg.io/cluster: securo-db
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/instance: securo
+            app.kubernetes.io/component: redis
+      toPorts:
+        - ports:
+            - port: "6379"
+              protocol: TCP
+    # Sortie Internet en HTTPS uniquement: agregateurs bancaires
+    # (EnableBanking, SimpleFIN, Pluggy), taux de change, et Pocket-ID pour
+    # l'OIDC. toFQDNs serait plus etroit mais imposerait de maintenir la liste
+    # des domaines a chaque nouveau connecteur bancaire; le port 443 vers le
+    # monde reste un net progres par rapport a l'absence totale de policy.
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: securo-celery
+  namespace: securo
+spec:
+  description: Worker et beat Celery, memes sorties que le backend sans ingress
+  endpointSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/component
+        operator: In
+        values:
+          - celery-worker
+          - celery-beat
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            cnpg.io/cluster: securo-db
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/instance: securo
+            app.kubernetes.io/component: redis
+      toPorts:
+        - ports:
+            - port: "6379"
+              protocol: TCP
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: securo-redis
+  namespace: securo
+spec:
+  description: Redis n'accepte que le backend et les process Celery
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/instance: securo
+      app.kubernetes.io/component: redis
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/instance: securo
+            app.kubernetes.io/component: backend
+        - matchLabels:
+            app.kubernetes.io/component: celery-worker
+        - matchLabels:
+            app.kubernetes.io/component: celery-beat
+      toPorts:
+        - ports:
+            - port: "6379"
+              protocol: TCP

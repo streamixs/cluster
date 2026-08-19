@@ -1,0 +1,51 @@
+global:
+  domain: securo.streamixs.com
+  tls: true
+  # Le chart genere sinon un Secret depuis les valeurs en clair, ce qui
+  # mettrait SECRET_KEY et DATABASE_URL dans Git. Les values.yaml du chart
+  # recommandent elles-memes existingSecret en production.
+  existingSecret: securo-secret
+
+# Postgres servi par CloudNativePG (postgres/cluster.yaml) et non par le
+# StatefulSet embarque du chart: on herite de l'operateur et de la coherence
+# du cluster. L'image vectorchord deja utilisee par immich fournit pgvector
+# 0.8.2, dont securo a besoin pour les embeddings.
+postgresql:
+  enabled: false
+
+# Redis reste embarque: il ne sert que de cache et de broker Celery, son
+# contenu est reconstructible et ne justifie pas un operateur.
+redis:
+  enabled: true
+
+# Exposition par IngressRoute Traefik + middleware forward-auth, comme les
+# autres UI sensibles. On desactive les deux mecanismes du chart.
+ingress:
+  enabled: false
+httpRoute:
+  enabled: false
+
+persistence:
+  attachments:
+    enabled: true
+    size: 5Gi
+    storageClass: longhorn
+    accessMode: ReadWriteOnce
+
+config:
+  # Agents IA desactives: aucune transaction bancaire ne sort du cluster.
+  # Reactivation plus tard = agentsEnabled + mcpServer.enabled +
+  # agentsOllamaBaseUrl. Pas de migration, pas de reprise de donnees: la base
+  # de connaissances n'est creee qu'a l'activation. Les PVC agents sont
+  # conditionnes a ce meme drapeau, ils ne sont donc pas provisionnes ici.
+  agentsEnabled: false
+
+  # OIDC vers Pocket-ID. Le client doit etre cree manuellement dans son
+  # interface (Pocket-ID tourne hors cluster, sur 192.168.1.4): tant que
+  # OIDC_CLIENT_ID et OIDC_CLIENT_SECRET sont vides dans securo-secret, la
+  # decouverte est configuree mais inactive, et l'acces reste filtre par
+  # forward-auth.
+  oidcDiscoveryUrl: https://auth.streamixs.com/.well-known/openid-configuration
+
+mcpServer:
+  enabled: false
