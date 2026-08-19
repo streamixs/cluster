@@ -20,7 +20,7 @@ spec:
         fsGroupChangePolicy: "OnRootMismatch"
       containers:
         - name: lidarr
-          image: lscr.io/linuxserver/lidarr:3.1.0.4875-ls25
+          image: lscr.io/linuxserver/lidarr:3.1.0.4875-ls39
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8686
