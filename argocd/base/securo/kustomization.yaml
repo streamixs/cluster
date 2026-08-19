@@ -1,0 +1,173 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: securo
+
+resources:
+  - namespace.yaml
+  - ingressroute.yaml
+  - policies
+  - postgres
+
+generators:
+  - generators/secret-generator.yaml
+
+helmCharts:
+  - name: securo
+    namespace: securo
+    releaseName: securo
+    # Chart distribue en OCI. kustomize sait le consommer (verifie), il n'y a
+    # donc pas besoin de vendoriser le chart dans le repo.
+    repo: oci://ghcr.io/securo-finance/charts
+    version: 0.14.3
+    valuesFile: values.yaml
+    includeCRDs: false
+
+# Le chart s'appuie sur les hooks Helm. Notre source etant kustomize, ArgoCD
+# ne voit que des annotations `helm.sh/hook` sur des manifests ordinaires. On
+# ne parie pas sur son interpretation: les deux cas sont rendus explicites.
+patches:
+  # Pod de test du chart (`helm.sh/hook: test`), destine a `helm test`. Il n'a
+  # aucun sens en deploiement continu.
+  - target:
+      kind: Pod
+      name: securo-test-connection
+    patch: |
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: securo-test-connection
+      $patch: delete
+  # Job de migration du schema. Un Job est immuable: applique comme ressource
+  # ordinaire, le second sync echouerait en tentant de le modifier. En hook
+  # PostSync supprime apres succes, il rejoue proprement a chaque montee de
+  # version.
+  - target:
+      kind: Job
+      name: securo-migration
+    patch: |
+      apiVersion: batch/v1
+      kind: Job
+      metadata:
+        name: securo-migration
+        annotations:
+          argocd.argoproj.io/hook: PostSync
+          argocd.argoproj.io/hook-delete-policy: HookSucceeded
+
+  # DATABASE_URL recompose a l'execution a partir du Secret genere par
+  # CloudNativePG, pour que le mot de passe n'existe nulle part dans Git.
+  #
+  # Deux mecanismes Kubernetes rendent ceci possible:
+  #  - une entree `env` explicite l'emporte sur la meme cle heritee d'envFrom,
+  #    donc ce DATABASE_URL masque celui de securo-secret;
+  #  - `$(VAR)` est interpole a partir des variables declarees plus haut dans
+  #    le meme bloc `env`. Attention: l'interpolation ne voit PAS les
+  #    variables issues d'envFrom, d'ou la declaration explicite du mot de
+  #    passe juste avant.
+  #
+  # L'app ne normalise pas le schema (create_async_engine recoit la valeur
+  # telle quelle), la cle `uri` fournie par CNPG n'est donc pas utilisable:
+  # elle porte `postgresql://` la ou SQLAlchemy exige `postgresql+asyncpg://`.
+  #
+  # Cible les seuls composants qui parlent a la base. Le frontend ne l'a pas,
+  # et un futur composant oublie ici echouerait au demarrage faute d'URL,
+  # plutot que de se rabattre silencieusement sur autre chose.
+  # Un patch par workload: la fusion stratégique apparie les conteneurs par
+  # nom, et chacun porte le sien (backend, celery-worker, celery-beat,
+  # migration). Le frontend est volontairement absent, il ne parle pas a la
+  # base.
+  - target: {kind: Deployment, name: securo-backend}
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: securo-backend
+      spec:
+        template:
+          spec:
+            containers:
+              - name: backend
+                env:
+                  - name: SECURO_DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: securo-db-app
+                        key: password
+                  - name: DATABASE_URL
+                    value: postgresql+asyncpg://securo:$(SECURO_DB_PASSWORD)@securo-db-rw:5432/securo
+  - target: {kind: Deployment, name: securo-worker}
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: securo-worker
+      spec:
+        template:
+          spec:
+            containers:
+              - name: celery-worker
+                env:
+                  - name: SECURO_DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: securo-db-app
+                        key: password
+                  - name: DATABASE_URL
+                    value: postgresql+asyncpg://securo:$(SECURO_DB_PASSWORD)@securo-db-rw:5432/securo
+  - target: {kind: Deployment, name: securo-beat}
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: securo-beat
+      spec:
+        template:
+          spec:
+            containers:
+              - name: celery-beat
+                env:
+                  - name: SECURO_DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: securo-db-app
+                        key: password
+                  - name: DATABASE_URL
+                    value: postgresql+asyncpg://securo:$(SECURO_DB_PASSWORD)@securo-db-rw:5432/securo
+  - target: {kind: Job, name: securo-migration}
+    patch: |
+      apiVersion: batch/v1
+      kind: Job
+      metadata:
+        name: securo-migration
+      spec:
+        template:
+          spec:
+            containers:
+              - name: migration
+                env:
+                  - name: SECURO_DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: securo-db-app
+                        key: password
+                  - name: DATABASE_URL
+                    value: postgresql+asyncpg://securo:$(SECURO_DB_PASSWORD)@securo-db-rw:5432/securo
+
+  # Le conteneur redis tourne en uid 999, mais son volume est monte
+  # root:root en 0755: le processus ne peut pas ecrire son snapshot RDB.
+  # Redis bascule alors en MISCONF et rejette TOUTE ecriture, ce qui fait
+  # echouer le rate limiting sur /api/auth/login et remonte en 500 cote
+  # interface. Le chart 0.14.3 n'expose aucun securityContext pour redis,
+  # d'ou ce patch: fsGroup 1000 est le groupe redis, Kubernetes applique la
+  # propriete de groupe au volume au montage.
+  - target: {kind: StatefulSet, name: securo-redis-master}
+    patch: |
+      apiVersion: apps/v1
+      kind: StatefulSet
+      metadata:
+        name: securo-redis-master
+      spec:
+        template:
+          spec:
+            securityContext:
+              fsGroup: 1000

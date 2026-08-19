@@ -1,0 +1,92 @@
+global:
+  domain: securo.streamixs.com
+  tls: true
+  # Le chart genere sinon un Secret depuis les valeurs en clair, ce qui
+  # mettrait SECRET_KEY et DATABASE_URL dans Git. Les values.yaml du chart
+  # recommandent elles-memes existingSecret en production.
+  existingSecret: securo-secret
+
+# Postgres servi par CloudNativePG (postgres/cluster.yaml) et non par le
+# StatefulSet embarque du chart: on herite de l'operateur et de la coherence
+# du cluster. L'image vectorchord deja utilisee par immich fournit pgvector
+# 0.8.2, dont securo a besoin pour les embeddings.
+postgresql:
+  enabled: false
+
+# Redis reste embarque: il ne sert que de cache et de broker Celery, son
+# contenu est reconstructible et ne justifie pas un operateur.
+redis:
+  enabled: true
+
+# Exposition par IngressRoute Traefik + middleware forward-auth, comme les
+# autres UI sensibles. On desactive les deux mecanismes du chart.
+ingress:
+  enabled: false
+httpRoute:
+  enabled: false
+
+persistence:
+  attachments:
+    enabled: true
+    size: 5Gi
+    storageClass: longhorn
+    # ReadWriteMany et non le ReadWriteOnce par defaut du chart: backend,
+    # worker et beat montent tous ce volume, et rien ne les contraint au meme
+    # noeud. En RWO, le premier pod ordonnance verrouille le volume et les
+    # autres restent bloques sur
+    #   Multi-Attach error for volume ... already used by pod(s) ...
+    # Le defaut amont suppose un deploiement mononoeud, ce que ce cluster
+    # n'est pas. Longhorn sert le RWX via un pod share-manager qui exporte du
+    # NFS; les noeuds savent le monter, les PV NFS statiques du cluster le
+    # prouvent.
+    accessMode: ReadWriteMany
+
+  # Desactives explicitement malgre agentsEnabled: false, a cause d'une
+  # incoherence du chart en 0.14.3: les templates backend et worker
+  # conditionnent le montage des volumes agents sur
+  #   agentsEnabled ET persistence.<vol>.enabled
+  # tandis que beat ne teste que persistence.<vol>.enabled. Les PVC, eux,
+  # ne sont crees que si agentsEnabled vaut true. beat montait donc des PVC
+  # jamais provisionnes et restait en Pending sur
+  #   persistentvolumeclaim "securo-agent-knowledge" not found
+  # Mettre ces drapeaux a false aligne les trois workloads. A reactiver en
+  # meme temps que les agents.
+  agentKnowledge:
+    enabled: false
+  agentEmbeddingModels:
+    enabled: false
+
+config:
+  # Agents IA desactives: aucune transaction bancaire ne sort du cluster.
+  # Reactivation plus tard = agentsEnabled + mcpServer.enabled +
+  # agentsOllamaBaseUrl. Pas de migration, pas de reprise de donnees: la base
+  # de connaissances n'est creee qu'a l'activation. Les PVC agents sont
+  # conditionnes a ce meme drapeau, ils ne sont donc pas provisionnes ici.
+  agentsEnabled: false
+
+  # --- OIDC vers Pocket-ID ------------------------------------------------
+  # oidcEnabled est a false par defaut dans le chart: renseigner la seule
+  # discovery et les identifiants ne suffit pas, aucun bouton de connexion
+  # n'apparait. C'est ce drapeau qui active la fonctionnalite.
+  oidcEnabled: true
+  oidcProviderName: Pocket ID
+  oidcDiscoveryUrl: https://auth.streamixs.com/.well-known/openid-configuration
+
+  # Derive de FRONTEND_URL quand il est vide, mais explicite ici: c'est
+  # l'URL a declarer cote Pocket-ID, autant qu'elle soit lisible dans le
+  # depot plutot que deduite d'un helper.
+  oidcRedirectUri: https://securo.streamixs.com/api/auth/oidc/callback
+
+  # verified_email et non le defaut disabled: un compte local existe deja.
+  # En disabled, une connexion OIDC portant la meme adresse ne s'y
+  # rattacherait pas. verified_email fait le lien lorsque le fournisseur
+  # atteste l'adresse, ce que Pocket-ID fait.
+  oidcExistingUserLinkMode: verified_email
+  oidcRequireVerifiedEmail: true
+
+  # Synchronisation des roles laissee inactive: elle suppose des groupes
+  # cote Pocket-ID qui n'existent pas encore.
+  oidcSyncRoles: false
+
+mcpServer:
+  enabled: false

@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/postgresql.cnpg.io/cluster_v1.json
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: securo-db
+  namespace: securo
+spec:
+  instances: 1
+  # Meme image que immich: elle embarque pgvector 0.8.2 (extension `vector`),
+  # dont securo a besoin. Le chart amont utilise pgvector/pgvector:pg16, mais
+  # introduire une seconde image Postgres dans le cluster pour la meme
+  # capacite n'aurait pas de sens.
+  imageName: tensorchord/cloudnative-vectorchord:17
+  bootstrap:
+    initdb:
+      database: securo
+      owner: securo
+      # Pas de `secret:` ici: on laisse CloudNativePG generer le mot de passe
+      # et le publier dans le Secret securo-db-app. Il n'existe donc nulle
+      # part dans Git, meme chiffre, et sa rotation reste du ressort de
+      # l'operateur. DATABASE_URL est recompose a partir de ce Secret par le
+      # patch `env` de la kustomization parente.
+      postInitApplicationSQL:
+        - CREATE EXTENSION IF NOT EXISTS vector;
+  storage:
+    size: 10Gi
+    storageClass: longhorn
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 2000m
+      memory: 2Gi

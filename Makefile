@@ -128,6 +128,43 @@ talos-gen-secret: ## Generer et chiffrer les secrets Talos
 	@echo "==> Secrets generes et chiffres dans $(TALOS_DIR)/talsecret.sops.yaml"
 
 # ============================================================
+# Secrets applicatifs (SOPS)
+# ============================================================
+# La cle age n'est jamais exportee dans le shell: elle est passee a sops par
+# invocation, pour qu'elle ne fuite pas dans l'environnement d'un autre
+# process ni dans l'historique.
+AGE_KEY := .config/age.agekey
+
+secret-edit: ## Editer un secret SOPS en place (FILE=chemin/vers/secret.yaml)
+ifndef FILE
+	@echo "ERREUR: preciser FILE=<chemin>"
+	@echo "  ex: make secret-edit FILE=argocd/base/securo/secrets/securo-secret.yaml"
+	@exit 1
+endif
+	@test -f $(AGE_KEY) || { echo "ERREUR: cle age absente ($(AGE_KEY))"; exit 1; }
+	@test -f $(FILE) || { echo "ERREUR: fichier absent: $(FILE)"; exit 1; }
+	SOPS_AGE_KEY_FILE=$(AGE_KEY) sops $(FILE)
+	@echo "==> $(FILE) rechiffre."
+	@echo "    Verifier avant commit: make secret-keys FILE=$(FILE)"
+
+secret-keys: ## Lister les cles d'un secret SOPS sans afficher les valeurs (FILE=...)
+ifndef FILE
+	@echo "ERREUR: preciser FILE=<chemin>"
+	@exit 1
+endif
+	@# Passe par yq et non par un parsing ligne a ligne: sur un bloc litteral
+	@# (`cle: |-`), la ligne de la cle ne porte que `|-`, et une mesure naive
+	@# annonce 2 caracteres pour une cle PEM de 3000. yq lit la valeur reelle.
+	@SOPS_AGE_KEY_FILE=$(AGE_KEY) sops -d $(FILE) \
+		| yq -r '(.stringData // .data // {}) | to_entries | .[] \
+			| .key + "\t" + ((.value // "") | tostring | length | tostring) \
+			+ "\t" + (((.value // "") | tostring | split("\n") | length) | tostring)' \
+		| awk -F'\t' '{ \
+			d = ($$2 == 0) ? "(vide)" : "<" $$2 " caracteres>"; \
+			if ($$3 > 1) d = d " sur " $$3 " lignes"; \
+			printf "  %-32s %s\n", $$1, d }'
+
+# ============================================================
 # Operations
 # ============================================================
 

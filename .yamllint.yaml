@@ -17,4 +17,6 @@ ignore: |
   argocd/base/plex/secrets/plex-secret.yaml
   argocd/base/mixarr/secrets/mixarr-secret.yaml
   argocd/base/traefik-forward-auth/secrets/forward-auth-secret.yaml
+  argocd/base/securo/secrets/securo-secret.yaml
+  argocd/base/securo/secrets/securo-db-credentials.yaml
   talos/prod/talsecret.sops.yaml
