@@ -128,6 +128,39 @@ talos-gen-secret: ## Generer et chiffrer les secrets Talos
 	@echo "==> Secrets generes et chiffres dans $(TALOS_DIR)/talsecret.sops.yaml"
 
 # ============================================================
+# Secrets applicatifs (SOPS)
+# ============================================================
+# La cle age n'est jamais exportee dans le shell: elle est passee a sops par
+# invocation, pour qu'elle ne fuite pas dans l'environnement d'un autre
+# process ni dans l'historique.
+AGE_KEY := .config/age.agekey
+
+secret-edit: ## Editer un secret SOPS en place (FILE=chemin/vers/secret.yaml)
+ifndef FILE
+	@echo "ERREUR: preciser FILE=<chemin>"
+	@echo "  ex: make secret-edit FILE=argocd/base/securo/secrets/securo-secret.yaml"
+	@exit 1
+endif
+	@test -f $(AGE_KEY) || { echo "ERREUR: cle age absente ($(AGE_KEY))"; exit 1; }
+	@test -f $(FILE) || { echo "ERREUR: fichier absent: $(FILE)"; exit 1; }
+	SOPS_AGE_KEY_FILE=$(AGE_KEY) sops $(FILE)
+	@echo "==> $(FILE) rechiffre."
+	@echo "    Verifier avant commit: make secret-keys FILE=$(FILE)"
+
+secret-keys: ## Lister les cles d'un secret SOPS sans afficher les valeurs (FILE=...)
+ifndef FILE
+	@echo "ERREUR: preciser FILE=<chemin>"
+	@exit 1
+endif
+	@SOPS_AGE_KEY_FILE=$(AGE_KEY) sops -d $(FILE) \
+		| awk '/^(stringData|data):/{f=1;next} \
+			f && /^[^[:space:]]/{f=0} \
+			f && /^[[:space:]]+[A-Za-z0-9_]+:/{ \
+				k=$$0; sub(/:.*$$/,"",k); gsub(/[[:space:]]/,"",k); \
+				v=substr($$0, index($$0,":")+1); gsub(/^[[:space:]"]+|[[:space:]"]+$$/,"",v); \
+				printf "  %-32s %s\n", k, (length(v)==0 ? "(vide)" : "<" length(v) " caracteres>") }'
+
+# ============================================================
 # Operations
 # ============================================================
 
