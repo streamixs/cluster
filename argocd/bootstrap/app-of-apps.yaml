@@ -20,7 +20,7 @@ spec:
   generators:
     - git:
         repoURL: https://github.com/streamixs/cluster
-        revision: main
+        revision: feat/securo
         directories:
           - path: argocd/apps/*
   template:
@@ -30,7 +30,7 @@ spec:
       project: platform
       source:
         repoURL: https://github.com/streamixs/cluster
-        targetRevision: main
+        targetRevision: feat/securo
         path: argocd/apps/{{path.basename}}
       destination:
         server: https://kubernetes.default.svc
