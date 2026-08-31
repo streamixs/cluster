@@ -12,9 +12,6 @@ spec:
     # separement doublerait la surface sans rien apporter.
     - match: Host(`securo.streamixs.com`)
       kind: Rule
-      middlewares:
-        - name: forward-auth
-          namespace: auth
       services:
         - name: securo-frontend
           port: 3000
