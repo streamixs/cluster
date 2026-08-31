@@ -1,0 +1,18 @@
+# Faux positifs gitleaks, au format commit:chemin:regle:ligne
+#
+# secret-scan.yml lance `gitleaks detect --source .`, qui scanne l'historique
+# complet et pas seulement l'arbre de travail. Corriger un fichier ne suffit
+# donc pas: le commit fautif reste analyse a chaque execution. Seule une
+# reecriture d'historique l'effacerait, ce qui ne se justifie pas pour un
+# faux positif.
+#
+# Chaque entree doit correspondre a un contenu verifie comme non sensible.
+# Ne jamais y ajouter un vrai secret pour faire taire la CI: un secret pousse
+# est a considerer comme compromis, il se revoque, il ne s'ignore pas.
+
+# securo-secret.example.yaml est un fichier d'exemple, sans aucun materiel
+# cryptographique: il documentait la forme attendue de la cle Enable Banking
+# et reproduisait a ce titre les lignes d'en-tete et de pied d'un PEM. La
+# regle private-key matche ce marqueur, pas le contenu. Les lignes ont depuis
+# ete retirees du fichier, cette entree ne couvre donc que le passe.
+d7170ee329c0c097c677412478c7fb3c19f58ee7:argocd/base/securo/secrets/securo-secret.example.yaml:private-key:51
