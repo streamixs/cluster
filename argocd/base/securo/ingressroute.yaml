@@ -1,0 +1,18 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: securo
+  namespace: securo
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    # Une seule route: le frontend proxifie lui-meme /api vers
+    # securo-backend:8000 (variable BACKEND_URL du chart). Exposer le backend
+    # separement doublerait la surface sans rien apporter.
+    - match: Host(`securo.streamixs.com`)
+      kind: Rule
+      services:
+        - name: securo-frontend
+          port: 3000
+  tls: {}
