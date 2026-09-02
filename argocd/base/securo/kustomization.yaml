@@ -19,7 +19,7 @@ helmCharts:
     # Chart distribue en OCI. kustomize sait le consommer (verifie), il n'y a
     # donc pas besoin de vendoriser le chart dans le repo.
     repo: oci://ghcr.io/securo-finance/charts
-    version: 0.14.3
+    version: 0.15.0
     valuesFile: values.yaml
     includeCRDs: false
 
