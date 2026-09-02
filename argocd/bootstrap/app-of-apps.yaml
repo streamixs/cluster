@@ -17,6 +17,14 @@ spec:
     - name: cilium
       jsonPointers:
         - /spec/syncPolicy/automated
+    # securo detient des donnees financieres dans un cluster CloudNativePG.
+    # Pouvoir couper l'auto-sync depuis kubectl, sans passer par une PR, est
+    # la condition pour intervenir sur une base en cours d'incident: sans
+    # cette derogation l'ApplicationSet retablit prune+selfHeal en quelques
+    # secondes et defait toute manipulation en cours.
+    - name: securo
+      jsonPointers:
+        - /spec/syncPolicy/automated
   generators:
     - git:
         repoURL: https://github.com/streamixs/cluster
