@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.7.0](https://github.com/streamixs/cluster/compare/v0.6.1...v0.7.0) (2026-09-05)
+
+
+### Features
+
+* **securo:** deployer Securo, gestionnaire de finances auto-heberge ([e477cde](https://github.com/streamixs/cluster/commit/e477cde2acfb198706319af1b11333aae69da1d9))
+* **securo:** deployer Securo, gestionnaire de finances auto-heberge ([#154](https://github.com/streamixs/cluster/issues/154)) ([e477cde](https://github.com/streamixs/cluster/commit/e477cde2acfb198706319af1b11333aae69da1d9))
+
+
+### Bug Fixes
+
+* **argocd:** permettre de figer l'auto-sync de securo ([#158](https://github.com/streamixs/cluster/issues/158)) ([4409c48](https://github.com/streamixs/cluster/commit/4409c483f2cc8acdf1a5e7f80defc4622eeaed6b))
+
 ## [0.6.1](https://github.com/streamixs/cluster/compare/v0.6.0...v0.6.1) (2026-08-18)
 
 
