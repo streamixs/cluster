@@ -73,6 +73,7 @@ ArgoCD uses an **ApplicationSet** (`argocd/bootstrap/app-of-apps.yaml`) that aut
 - **cilium** — CNI + kube-proxy replacement + L2 announcements
 - **cloudnative-pg** — operator Postgres (utilise par Immich)
 - **external-services** — ExternalName services (Home Assistant, TrueNAS, Pocket-ID)
+- **hermes** — agent Hermes (Nous Research), gateway Telegram en long polling, modele servi par la VM Ollama
 - **immich** — galerie photo, backed par CloudNativePG
 - **longhorn** — storage replique pour les PVC RWO (configs des apps)
 - **media** — stack media (voir ci-dessous)

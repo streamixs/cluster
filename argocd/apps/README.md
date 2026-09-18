@@ -7,6 +7,7 @@ Arborescence des applications gérées par Argo CD (ApplicationSet). Chaque sous
 - `cert-manager/`: installe cert-manager + Issuers/Certificates (namespace `kube-system`)
 - `ingress-nginx/`: installe l'ingress controller (namespace `kube-system`)
 - `loki/`: installe loki (namespace `loki`)
+- `hermes/`: agent Hermes (Nous Research), gateway Telegram en long polling (namespace `hermes`)
 
 ### Ajouter une nouvelle application
 1) Créer un dossier `argocd/apps/<app-name>` avec l’un des modèles:

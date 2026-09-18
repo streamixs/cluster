@@ -1,0 +1,80 @@
+# Cloisonnement reseau d'Hermes. L'agent execute du code et navigue sur le web
+# a la demande: on part du principe qu'il peut etre amene a faire n'importe
+# quelle requete, et on decide donc explicitement de ce qu'il peut joindre.
+#
+# Rappel du modele Cilium: selectionner un endpoint pour une direction bascule
+# cette direction en deny-by-default. `enableDefaultDeny` rend ici la chose
+# explicite plutot que de dependre de la presence ou non d'une liste de
+# regles -- l'ingress n'a aucune regle et doit rester totalement ferme.
+#
+# `kubectl port-forward` continue de fonctionner malgre l'ingress ferme: il
+# entre dans la netns du pod par le kubelet et ne traverse pas le datapath.
+# Les probes du kubelet passent egalement (enable-host-firewall: false).
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: hermes
+spec:
+  description: Hermes joint Internet, le kube-apiserver et la VM Ollama, mais aucune autre machine du LAN
+  endpointSelector:
+    matchLabels:
+      app: hermes
+  enableDefaultDeny:
+    ingress: true
+    egress: true
+  egress:
+    # Resolution DNS. Sans cette regle, l'egress etant deny-by-default, meme
+    # api.telegram.org serait inaccessible.
+    - toEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: kube-system
+            k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchPattern: "*"
+
+    # API Kubernetes, pour le ServiceAccount en lecture seule.
+    - toEntities:
+        - kube-apiserver
+
+    # VM Ollama sur Proxmox: seule machine du LAN que l'agent a le droit de
+    # joindre. L'autorisation explicite prime sur l'exclusion 192.168.0.0/16
+    # de la regle Internet ci-dessous, les regles Cilium etant additives.
+    #
+    # L'IP doit rester fixe: un bail DHCP qui change couperait l'acces au
+    # modele sans autre symptome qu'un timeout, la policy continuant
+    # d'autoriser une adresse desormais vide.
+    - toCIDR:
+        - 192.168.1.22/32
+      toPorts:
+        - ports:
+            - port: "11434"
+              protocol: TCP
+
+    # Internet, mais PAS le LAN. Les `except` retirent les plages privees et
+    # le CGNAT du 0.0.0.0/0: l'agent peut appeler Telegram, Google ou
+    # n'importe quel site, mais ne peut pas se retourner vers TrueNAS,
+    # Pocket-ID, Home Assistant ou les autres noeuds.
+    #
+    # toFQDNs serait plus etroit, mais imposerait de maintenir la liste des
+    # domaines a chaque nouvelle capacite de l'agent -- ce qui, pour un agent
+    # generaliste, revient a tout autoriser avec du retard.
+    - toCIDRSet:
+        - cidr: 0.0.0.0/0
+          except:
+            - 10.0.0.0/8
+            - 172.16.0.0/12
+            - 192.168.0.0/16
+            - 100.64.0.0/10
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+            - port: "80"
+              protocol: TCP

@@ -1,0 +1,158 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hermes
+  labels:
+    app: hermes
+spec:
+  # JAMAIS 2. Le PVC est RWO, et surtout deux gateways branchees sur le meme
+  # bot Telegram en long polling se volent mutuellement les updates.
+  replicas: 1
+  strategy:
+    # PVC RWO: l'ancien pod doit avoir libere le volume avant que le nouveau
+    # demarre. RollingUpdate resterait bloque en Pending indefiniment.
+    type: Recreate
+  selector:
+    matchLabels:
+      app: hermes
+  template:
+    metadata:
+      labels:
+        app: hermes
+    spec:
+      serviceAccountName: hermes
+      securityContext:
+        runAsNonRoot: true
+        # UID/GID du user `hermes` de l'image, verifies sur v2026.9.14:
+        # `useradd -u 10000 -m -d /opt/data hermes`. Attention, l'image elle
+        # meme declare `USER root` et compte sur s6-overlay pour redescendre
+        # via `s6-setuidgid hermes`; on court-circuite ce mecanisme en
+        # demarrant directement en 10000 (voir le commentaire sur /run).
+        runAsUser: 10000
+        runAsGroup: 10000
+        fsGroup: 10000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        # --- Pourquoi cet initContainer existe -----------------------------
+        # L'image demarre s6-overlay 3.2.3.0 en PID 1. Au boot, son `preinit`
+        # verifie que /run appartient a l'UID courant et, sinon, le repare --
+        # mais il ne le peut qu'en etant setuid-root. Avec
+        # `allowPrivilegeEscalation: false` (no_new_privs), ce setuid est
+        # neutralise et s6 s'arrete net:
+        #
+        #   preinit: fatal: /run belongs to uid 0 instead of 10000, has
+        #   insecure and/or unworkable permissions, and we're lacking the
+        #   privileges to fix it.
+        #
+        # Il faut donc lui fournir un /run deja possede par l'UID 10000. Un
+        # emptyDir monte directement ne suffit PAS: `fsGroup` ne change que le
+        # groupe, le proprietaire reste root et s6 refuse (teste).
+        #
+        # La parade: un initContainer qui tourne lui aussi en 10000 cree un
+        # sous-dossier dans l'emptyDir -- ce sous-dossier herite donc de
+        # l'UID 10000 -- et le conteneur principal le monte en `subPath`. Zero
+        # conteneur root dans le pod, et tout le securityContext est conserve.
+        #
+        # emptyDir sur disque et non `medium: Memory`: s6 execute des binaires
+        # depuis /run, le volume doit etre exec. C'est le cas des emptyDir sur
+        # ces noeuds Talos (argocd-repo-server y execute deja ksops).
+        - name: prepare-s6-run
+          image: busybox:1.38.0
+          imagePullPolicy: IfNotPresent
+          command: ['sh', '-c', 'mkdir -p /mnt/s6-run/run']
+          resources:
+            requests:
+              cpu: "10m"
+              memory: "16Mi"
+            limits:
+              cpu: "50m"
+              memory: "32Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            privileged: false
+            runAsUser: 10000
+            runAsGroup: 10000
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: s6-run
+              mountPath: /mnt/s6-run
+      containers:
+        - name: hermes
+          image: nousresearch/hermes-agent:v2026.9.14
+          imagePullPolicy: IfNotPresent
+          # Routage assure par docker/main-wrapper.sh: `gateway` n'etant pas un
+          # executable du PATH, il est passe en sous-commande a `hermes`.
+          args: ["gateway", "run"]
+          env:
+            - name: TZ
+              value: "Europe/Paris"
+            - name: HERMES_DASHBOARD
+              value: "1"
+          # TELEGRAM_BOT_TOKEN, TELEGRAM_ALLOWED_USERS et les identifiants
+          # basic auth du dashboard viennent du Secret chiffre par SOPS.
+          envFrom:
+            - secretRef:
+                name: hermes-secret
+          ports:
+            - name: api
+              containerPort: 8642
+            - name: dashboard
+              containerPort: 9119
+          readinessProbe:
+            tcpSocket:
+              port: dashboard
+            initialDelaySeconds: 20
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "1Gi"
+            limits:
+              # Pas de limite CPU volontairement: la charge est en rafales
+              # (appel LLM, rendu Chromium) et un throttling ferait trainer
+              # les reponses Telegram sans rien proteger, le pod etant seul
+              # sur son namespace.
+              memory: "4Gi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            # s6 ecrit sa configuration compilee et ses sockets de supervision
+            # ailleurs que sous /run; on ne scelle pas le rootfs.
+            readOnlyRootFilesystem: false
+            runAsNonRoot: true
+            privileged: false
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: data
+              mountPath: /opt/data
+            - name: s6-run
+              mountPath: /run
+              # Le sous-dossier cree par l'initContainer, donc possede par
+              # l'UID 10000. Monter la racine de l'emptyDir a la place ferait
+              # echouer le boot de s6.
+              subPath: run
+            - name: dshm
+              # Chromium/Playwright (navigation web de l'agent) plante sur le
+              # /dev/shm de 64 Mio par defaut des conteneurs.
+              mountPath: /dev/shm
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: hermes-data
+        - name: s6-run
+          emptyDir: {}
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1Gi
