@@ -1,0 +1,38 @@
+# Managed scope Hermes: couche de configuration poussee par l'operateur et
+# NON modifiable depuis l'agent (Telegram, dashboard, CLI). Hermes la lit dans
+# le dossier designe par HERMES_MANAGED_DIR et ses valeurs l'emportent sur
+# celles de /opt/data/config.yaml ("managed wins at the leaf").
+#
+# Pourquoi ce detour plutot qu'un `hermes plugins enable` lance a la main:
+# l'activation vit sinon dans config.yaml sur le PVC, donc hors de Git et
+# perdue a la moindre recreation du volume. Ici elle est versionnee et
+# reappliquee a chaque demarrage.
+#
+# Monte volontairement AILLEURS que /etc/hermes (le defaut): l'image y place
+# deja image-provenance.json, qu'une ConfigMap montee au meme endroit
+# masquerait.
+#
+# Une modification de cette ConfigMap n'entraine PAS de redemarrage du pod:
+# le fichier monte est rafraichi par le kubelet et Hermes le relit (son cache
+# est indexe sur mtime+taille), mais la liste des plugins n'est evaluee qu'au
+# demarrage de la gateway. Apres un changement ici, forcer un
+# `kubectl rollout restart deploy/hermes -n hermes`.
+#
+# N'y mettre que ce qui releve de l'infrastructure. Le modele et le provider
+# en sont volontairement absents: les epingler ici interdirait de changer de
+# modele depuis Telegram, ce qui est un usage normal de l'agent.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hermes-managed
+data:
+  config.yaml: |
+    # Les plugins bundled sont livres desactives ("opt-in default: nothing
+    # enabled"). Sans cette liste, la gateway demarre sans aucune plateforme
+    # et gateway_state.json reste a "platforms": {} -- le bot Telegram ne se
+    # connecte jamais, alors meme que le token est valide et que `hermes
+    # status` affiche "Telegram configured" (qui ne teste que la presence du
+    # token, pas l'activation du plugin).
+    plugins:
+      enabled:
+        - telegram-platform
