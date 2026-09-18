@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
   - namespace.yaml
+  - managed-config.yaml
   - hermes-pvc.yaml
   - rbac.yaml
   - deployment.yaml

@@ -96,6 +96,16 @@ spec:
               value: "Europe/Paris"
             - name: HERMES_DASHBOARD
               value: "1"
+            # Couche de config poussee par l'operateur (ConfigMap hermes-managed).
+            # Sans elle, aucun plugin de plateforme n'est actif et la gateway
+            # demarre sans Telegram.
+            - name: HERMES_MANAGED_DIR
+              value: /etc/hermes-managed
+            # Provider Ollama: sans cet override, Hermes viserait Ollama Cloud
+            # (https://ollama.com/v1), que la NetworkPolicy laisserait d'ailleurs
+            # passer en 443 sans qu'on s'en apercoive.
+            - name: OLLAMA_BASE_URL
+              value: http://192.168.1.22:11434/v1
           # TELEGRAM_BOT_TOKEN, TELEGRAM_ALLOWED_USERS et les identifiants
           # basic auth du dashboard viennent du Secret chiffre par SOPS.
           envFrom:
@@ -146,6 +156,9 @@ spec:
               # Chromium/Playwright (navigation web de l'agent) plante sur le
               # /dev/shm de 64 Mio par defaut des conteneurs.
               mountPath: /dev/shm
+            - name: managed
+              mountPath: /etc/hermes-managed
+              readOnly: true
       volumes:
         - name: data
           persistentVolumeClaim:
@@ -156,3 +169,6 @@ spec:
           emptyDir:
             medium: Memory
             sizeLimit: 1Gi
+        - name: managed
+          configMap:
+            name: hermes-managed
