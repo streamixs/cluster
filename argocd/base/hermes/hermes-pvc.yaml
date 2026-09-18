@@ -1,0 +1,15 @@
+# Tout l'etat persistant d'Hermes vit sous /opt/data: config.yaml, .env,
+# memories, skills, sessions, crons. RWO suffit et impose de fait le
+# `replicas: 1` du Deployment, ce qui est aussi ce qu'exige le long polling
+# Telegram (deux gateways sur le meme bot se volent les updates).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hermes-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: longhorn

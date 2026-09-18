@@ -1,0 +1,21 @@
+# ClusterIP uniquement. Le dashboard s'atteint par `kubectl port-forward`, qui
+# entre directement dans la netns du pod et ne traverse donc ni ce Service ni
+# la CiliumNetworkPolicy. Pas d'IngressRoute: Telegram fonctionne en long
+# polling, rien n'a besoin d'etre joignable depuis l'exterieur.
+apiVersion: v1
+kind: Service
+metadata:
+  name: hermes
+  labels:
+    app: hermes
+spec:
+  type: ClusterIP
+  selector:
+    app: hermes
+  ports:
+    - name: dashboard
+      port: 9119
+      targetPort: dashboard
+    - name: api
+      port: 8642
+      targetPort: api

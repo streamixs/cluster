@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: hermes
+---
+# Lecture seule sur le cluster, pour qu'Hermes puisse repondre a des questions
+# d'exploitation depuis Telegram sans jamais pouvoir modifier quoi que ce soit.
+#
+# Volontairement PAS de `secrets` ni de `configmaps`: un agent qui lit les
+# secrets du cluster est equivalent a un agent qui detient tous les mots de
+# passe. Les configmaps sont exclus pour la meme raison, ils servent souvent de
+# rangement a des valeurs qui auraient du etre des secrets.
+#
+# Aucun verbe d'ecriture (`create`, `update`, `patch`, `delete`): l'agent
+# observe, il n'agit pas. Les corrections passent par le repo et ArgoCD.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: hermes-readonly
+rules:
+  - apiGroups: [""]
+    resources:
+      - pods
+      - pods/log
+      - services
+      - endpoints
+      - events
+      - nodes
+      - namespaces
+      - persistentvolumeclaims
+      - persistentvolumes
+    verbs: [get, list, watch]
+  - apiGroups: [apps]
+    resources: [deployments, statefulsets, daemonsets, replicasets]
+    verbs: [get, list, watch]
+  - apiGroups: [batch]
+    resources: [jobs, cronjobs]
+    verbs: [get, list, watch]
+  - apiGroups: [argoproj.io]
+    resources: [applications, appprojects]
+    verbs: [get, list, watch]
+  - apiGroups: [longhorn.io]
+    resources: [volumes, nodes, replicas, engines]
+    verbs: [get, list, watch]
+  - apiGroups: [metrics.k8s.io]
+    resources: [pods, nodes]
+    verbs: [get, list]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: hermes-readonly
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: hermes-readonly
+subjects:
+  - kind: ServiceAccount
+    name: hermes
+    namespace: hermes

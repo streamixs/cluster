@@ -1,0 +1,76 @@
+# Pod temporaire de migration des donnees Hermes du Mac vers le PVC.
+#
+# VOLONTAIREMENT HORS DE argocd/: l'ApplicationSet scanne argocd/apps/*, ce
+# fichier lui est donc invisible et ne sera jamais synchronise ni recree par
+# selfHeal. C'est le seul manifest du repo applique a la main, et il est
+# destine a etre supprime aussitot la copie terminee.
+#
+# Mode d'emploi:
+#
+#   1. Couper la gateway Hermes sur le Mac.
+#   2. kubectl scale deploy/hermes -n hermes --replicas=0
+#      (le PVC est RWO: ce pod ne peut pas monter le volume tant que le
+#      Deployment tourne, il resterait bloque en Pending)
+#   3. kubectl apply -f scripts/hermes-migrate-pod.yaml
+#   4. kubectl wait --for=condition=Ready pod/hermes-migrate -n hermes
+#   5. kubectl cp ~/.hermes/. hermes/hermes-migrate:/opt/data
+#   6. Corriger la config copiee (chemins du Mac, endpoint Ollama), et
+#      RETIRER le token Telegram du .env / config.yaml: il doit venir
+#      uniquement du Secret SOPS, sinon il traine en clair sur le PVC.
+#        kubectl exec -it -n hermes hermes-migrate -- sh
+#   7. kubectl delete -f scripts/hermes-migrate-pod.yaml
+#   8. kubectl scale deploy/hermes -n hermes --replicas=1
+#
+# L'UID 10000 est celui du user `hermes` de l'image: les fichiers copies
+# arrivent donc avec la bonne propriete, et le bootstrap s6 du vrai pod n'a
+# rien a reparer au demarrage.
+#
+# Le label `app` differe volontairement de `hermes`: ce pod n'est donc pas
+# selectionne par la CiliumNetworkPolicy, qui exigerait sinon des regles de
+# sortie qu'il n'a pas besoin d'avoir.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hermes-migrate
+  namespace: hermes
+  labels:
+    app: hermes-migrate
+spec:
+  restartPolicy: Never
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 10000
+    runAsGroup: 10000
+    fsGroup: 10000
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: shell
+      image: busybox:1.38.0
+      # `kubectl cp` a besoin de tar dans le conteneur cible: busybox le
+      # fournit. 2h suffisent largement pour la copie et les retouches.
+      command: ['sleep', '7200']
+      resources:
+        requests:
+          cpu: "10m"
+          memory: "32Mi"
+        limits:
+          cpu: "500m"
+          memory: "256Mi"
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+        runAsNonRoot: true
+        privileged: false
+        seccompProfile:
+          type: RuntimeDefault
+      volumeMounts:
+        - name: data
+          mountPath: /opt/data
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: hermes-data

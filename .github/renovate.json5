@@ -120,6 +120,21 @@
       addLabels: ["cni"],
     },
     {
+      // hermes-agent: tags CalVer `vAAAA.M.J`, avec parfois une 4e composante
+      // (v2026.8.16.2). Le versioning docker par defaut ne les ordonne pas —
+      // meme piege que plex et la stack linuxserver plus haut. La regex
+      // ecarte au passage `latest` et `main`, qui pointent sur la HEAD.
+      //
+      // Pas d'auto-merge, pour la meme raison qu'autobrr juste en dessous:
+      // un bump redemarre le pod, ce qui coupe la gateway Telegram. Les tags
+      // sortant presque tous les jours, l'auto-merge patch de la regle
+      // generale provoquerait un redemarrage quotidien subi.
+      matchDatasources: ["docker"],
+      matchPackageNames: ["nousresearch/hermes-agent"],
+      versioning: "regex:^v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(\\.(?<build>\\d+))?$",
+      automerge: false,
+    },
+    {
       // autobrr: chaque redemarrage coupe la connexion IRC aux trackers et
       // fait manquer les annonces le temps de la reconnexion. On choisit le
       // moment du bump plutot que de le subir en pleine nuit.

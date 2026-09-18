@@ -1,0 +1,14 @@
+# L'ApplicationSet cree deja le namespace (CreateNamespace=true), mais sans
+# label. Ce manifest le reprend en gestion pour y poser les Pod Security
+# Standards: `enforce: baseline` rejette les pods privilegies, `warn:
+# restricted` signale en plus tout ecart au profil le plus strict sans
+# bloquer. Hermes tourne en non-root avec toutes les capabilities drop, il
+# satisfait deja restricted; le warn sert de garde-fou si un futur patch
+# relache le securityContext.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hermes
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/warn: restricted
