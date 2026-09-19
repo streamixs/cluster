@@ -18,9 +18,11 @@
 # demarrage de la gateway. Apres un changement ici, forcer un
 # `kubectl rollout restart deploy/hermes -n hermes`.
 #
-# N'y mettre que ce qui releve de l'infrastructure. Le modele et le provider
-# en sont volontairement absents: les epingler ici interdirait de changer de
-# modele depuis Telegram, ce qui est un usage normal de l'agent.
+# N'y mettre que ce qui releve de l'infrastructure: quels plugins tournent, et
+# ou se trouve le serveur d'inference. Le CHOIX du modele en est volontairement
+# absent -- l'epingler interdirait d'en changer depuis Telegram, ce qui est un
+# usage normal de l'agent. Declarer un provider ne fige pas ce choix: ca ajoute
+# une entree au selecteur, l'utilisateur reste libre de la retenir ou non.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -36,3 +38,21 @@ data:
     plugins:
       enabled:
         - telegram-platform
+
+    # Serveur Ollama sur Proxmox, expose en OpenAI-compatible.
+    #
+    # Hermes n'a PAS de provider "ollama": ce nom n'est qu'un alias du profil
+    # `custom`, un gabarit vide sans endpoint, et le seul provider Ollama
+    # reellement livre est `ollama-cloud`, qui pointe sur https://ollama.com/v1.
+    # Le selecteur de `hermes model` ne proposait donc aucune entree utilisable
+    # pour une instance locale. On en declare une ici.
+    #
+    # api_mode chat_completions: c'est la surface qu'Ollama expose sous /v1,
+    # il n'implemente pas l'API Responses.
+    # discover_models: la liste vient de /v1/models, donc ajouter un modele sur
+    # la VM suffit a le voir apparaitre, sans repasser par une PR.
+    providers:
+      ollama-local:
+        base_url: http://192.168.1.22:11434/v1
+        api_mode: chat_completions
+        discover_models: true
