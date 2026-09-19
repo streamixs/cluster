@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.7.0](https://github.com/streamixs/cluster/compare/v0.6.1...v0.7.0) (2026-09-19)
+
+
+### Features
+
+* **hermes:** deployer l'agent Hermes avec gateway Telegram ([#173](https://github.com/streamixs/cluster/issues/173)) ([4556555](https://github.com/streamixs/cluster/commit/45565555e4f0d4e8ede2a2019f2ec787b61afaad))
+* **securo:** deployer Securo, gestionnaire de finances auto-heberge ([e477cde](https://github.com/streamixs/cluster/commit/e477cde2acfb198706319af1b11333aae69da1d9))
+* **securo:** deployer Securo, gestionnaire de finances auto-heberge ([#154](https://github.com/streamixs/cluster/issues/154)) ([e477cde](https://github.com/streamixs/cluster/commit/e477cde2acfb198706319af1b11333aae69da1d9))
+
+
+### Bug Fixes
+
+* **argocd:** permettre de figer l'auto-sync de securo ([#158](https://github.com/streamixs/cluster/issues/158)) ([4409c48](https://github.com/streamixs/cluster/commit/4409c483f2cc8acdf1a5e7f80defc4622eeaed6b))
+* **hermes:** activer le plugin telegram via un managed scope ([#174](https://github.com/streamixs/cluster/issues/174)) ([673e64d](https://github.com/streamixs/cluster/commit/673e64d60c4973bf08246b4afe5fd8fb21875626))
+* **hermes:** declarer la VM Ollama comme provider custom ([#175](https://github.com/streamixs/cluster/issues/175)) ([ac671a4](https://github.com/streamixs/cluster/commit/ac671a47c0c8925815f6f40d4784f0800f08b395))
+
 ## [0.6.1](https://github.com/streamixs/cluster/compare/v0.6.0...v0.6.1) (2026-08-18)
 
 
