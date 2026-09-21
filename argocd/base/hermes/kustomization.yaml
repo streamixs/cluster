@@ -8,6 +8,7 @@ resources:
   - rbac.yaml
   - deployment.yaml
   - service.yaml
+  - ingressroute.yaml
   - policies
 
 generators:

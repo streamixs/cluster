@@ -38,6 +38,12 @@ data:
     plugins:
       enabled:
         - telegram-platform
+        # Provider d'authentification OIDC du dashboard. Le plugin se decrit
+        # comme s'auto-activant des qu'un issuer et un client_id sont presents,
+        # mais plugins.enabled est une liste d'autorisation: absent d'ici, il
+        # n'est pas charge du tout. Sans lui, le dashboard expose publiquement
+        # retomberait sur le basic auth.
+        - self-hosted
 
     # Serveur Ollama sur Proxmox, expose en OpenAI-compatible.
     #

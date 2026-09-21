@@ -101,6 +101,28 @@ spec:
             # demarre sans Telegram.
             - name: HERMES_MANAGED_DIR
               value: /etc/hermes-managed
+            # --- Dashboard expose sur hermes.streamixs.com -------------------
+            # Indispensable derriere un reverse proxy: sert a construire le
+            # redirect_uri OIDC, le Path des cookies et les URLs des assets.
+            # Sans lui, le dashboard se croit sur http://0.0.0.0:9119 et la
+            # boucle d'authentification echoue.
+            - name: HERMES_DASHBOARD_PUBLIC_URL
+              value: https://hermes.streamixs.com
+            # OIDC natif contre Pocket-ID, en plus du forward-auth place devant
+            # par Traefik. Le plugin `self-hosted` (active dans le managed
+            # scope) verifie l'ID token contre le jwks_uri decouvert.
+            - name: HERMES_DASHBOARD_OIDC_ISSUER
+              value: https://auth.streamixs.com
+            # Client public: le flux est authorization-code + PKCE, il n'y a
+            # donc PAS de client_secret a stocker. Un client_id n'est pas un
+            # secret -- il circule en clair dans l'URL d'autorisation -- d'ou
+            # sa presence ici plutot que dans le Secret SOPS.
+            #
+            # TODO: remplacer par le client_id du client OIDC cree dans
+            # Pocket-ID, avec pour URI de redirection:
+            #   https://hermes.streamixs.com/auth/callback
+            - name: HERMES_DASHBOARD_OIDC_CLIENT_ID
+              value: CHANGEME
           # TELEGRAM_BOT_TOKEN, TELEGRAM_ALLOWED_USERS et les identifiants
           # basic auth du dashboard viennent du Secret chiffre par SOPS.
           envFrom:
