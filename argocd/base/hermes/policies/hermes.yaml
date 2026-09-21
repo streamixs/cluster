@@ -22,6 +22,23 @@ spec:
   enableDefaultDeny:
     ingress: true
     egress: true
+  ingress:
+    # Traefik, pour le dashboard expose sur hermes.streamixs.com. Seul le port
+    # 9119 est ouvert: 8642 est l'API programmatique de la gateway et reste
+    # injoignable, y compris depuis l'interieur du cluster.
+    #
+    # 9119 est le port du CONTENEUR, pas celui du Service. Cilium applique la
+    # policy sur l'endpoint APRES traduction d'adresse. Ici les deux coincident,
+    # mais l'erreur est classique et se manifeste par un Gateway Timeout cote
+    # Traefik alors que le Service parait joignable.
+    - fromEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: traefik
+            app.kubernetes.io/name: traefik
+      toPorts:
+        - ports:
+            - port: "9119"
+              protocol: TCP
   egress:
     # Resolution DNS. Sans cette regle, l'egress etant deny-by-default, meme
     # api.telegram.org serait inaccessible.
@@ -57,6 +74,11 @@ spec:
             - port: "11434"
               protocol: TCP
 
+    # Note: la verification OIDC du dashboard (decouverte de l'issuer et
+    # recuperation du jwks chez Pocket-ID) passe par la regle Internet
+    # ci-dessous: auth.streamixs.com resout vers l'adresse publique, pas vers
+    # une IP du LAN. Aucune regle supplementaire n'est donc necessaire.
+    #
     # Internet, mais PAS le LAN. Les `except` retirent les plages privees et
     # le CGNAT du 0.0.0.0/0: l'agent peut appeler Telegram, Google ou
     # n'importe quel site, mais ne peut pas se retourner vers TrueNAS,
