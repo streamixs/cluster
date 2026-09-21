@@ -1,16 +1,23 @@
 # Dashboard Hermes expose sur hermes.streamixs.com.
 #
-# Deux barrieres successives, volontairement:
-#   1. forward-auth (Pocket-ID) au niveau de Traefik, comme pour les autres UI
-#      du cluster;
-#   2. l'OIDC natif du dashboard, qui verifie lui-meme l'ID token contre le
-#      jwks_uri de Pocket-ID.
+# UNE seule authentification: l'OIDC natif du dashboard, qui verifie l'ID token
+# contre le jwks_uri de Pocket-ID.
 #
-# Cette redondance se justifie ici plus qu'ailleurs: derriere cette URL il n'y
-# a pas une interface de consultation mais un agent qui dispose d'un acces en
-# lecture a une boite Gmail, en ecriture sur un calendrier et en lecture sur le
-# cluster. Qui franchit l'authentification ne lit pas des donnees, il pilote
-# l'agent.
+# Le middleware forward-auth a ete retire. Il faisait double emploi: les deux
+# couches interrogeaient le meme Pocket-ID, et l'utilisateur devait donc
+# s'authentifier deux fois de suite contre le meme fournisseur d'identite pour
+# atteindre l'interface. Le gain de securite reel ne valait pas ce cout.
+#
+# Ce qu'on perd: une requete non authentifiee atteint desormais la pile HTTP du
+# dashboard au lieu d'etre arretee par Traefik. C'est le fonctionnement normal
+# d'une application qui gere son propre OIDC, et la verification du token reste
+# faite contre le jwks_uri de Pocket-ID -- pas contre un cookie opaque.
+#
+# Le contexte reste le meme: derriere cette URL il n'y a pas une interface de
+# consultation mais un agent qui dispose d'un acces en lecture a une boite
+# Gmail, en ecriture sur un calendrier et en lecture sur le cluster. Qui
+# franchit l'authentification ne lit pas des donnees, il pilote l'agent. C'est
+# ce qui rend la reduction des scopes Gmail plus urgente que cette couche.
 #
 # SEUL le port 9119 est expose. Le port 8642 est l'API programmatique de la
 # gateway: elle n'a aucune raison d'etre joignable depuis Internet, et le
@@ -25,9 +32,6 @@ spec:
   routes:
     - match: Host(`hermes.streamixs.com`)
       kind: Rule
-      middlewares:
-        - name: forward-auth
-          namespace: auth
       services:
         - name: hermes
           port: 9119
