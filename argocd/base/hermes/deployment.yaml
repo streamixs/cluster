@@ -118,11 +118,12 @@ spec:
             # secret -- il circule en clair dans l'URL d'autorisation -- d'ou
             # sa presence ici plutot que dans le Secret SOPS.
             #
-            # TODO: remplacer par le client_id du client OIDC cree dans
-            # Pocket-ID, avec pour URI de redirection:
-            #   https://hermes.streamixs.com/auth/callback
+            # Client OIDC declare dans Pocket-ID, URI de redirection
+            # https://hermes.streamixs.com/auth/callback. Changer cette URI
+            # cote Pocket-ID sans la repercuter ici (ou l'inverse) casse la
+            # boucle d'authentification avec un redirect_uri_mismatch.
             - name: HERMES_DASHBOARD_OIDC_CLIENT_ID
-              value: CHANGEME
+              value: 3d4d6ede-f50e-469f-a1d4-3210dd6db3a4
           # TELEGRAM_BOT_TOKEN, TELEGRAM_ALLOWED_USERS et les identifiants
           # basic auth du dashboard viennent du Secret chiffre par SOPS.
           envFrom:
