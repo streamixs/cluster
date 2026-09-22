@@ -25,7 +25,7 @@ repoServer:
   initContainers:
     - name: install-ksops
       # renovate: datasource=docker depName=viaductoss/ksops
-      image: viaductoss/ksops:v4.3.3
+      image: viaductoss/ksops:v4.5.1
       command: ["/bin/sh", "-c"]
       args:
         - echo "Installing KSOPS...";
