@@ -1,3 +1,7 @@
+kind: ServiceAccount
+metadata:
+  name: hermes
+---
 # Lecture seule sur le cluster, pour qu'Hermes puisse repondre a des questions
 # d'exploitation depuis Telegram sans jamais pouvoir modifier quoi que ce soit.
 #
@@ -9,10 +13,6 @@
 # Aucun verbe d'ecriture (`create`, `update`, `patch`, `delete`): l'agent
 # observe, il n'agit pas. Les corrections passent par le repo et ArgoCD.
 # apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: hermes
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
