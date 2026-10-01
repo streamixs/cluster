@@ -6,4 +6,4 @@ kind: Kustomization
 # syncs a deux dates donnent deux versions, et rien n'apparait dans Git.
 # Renovate suit cette URL via le custom manager github-releases.
 resources:
-  - https://github.com/argoproj/argo-rollouts/releases/download/v1.9.1/install.yaml
+  - https://github.com/argoproj/argo-rollouts/releases/download/v1.10.0/install.yaml
