@@ -1,0 +1,21 @@
+# Backup complet quotidien. Les WAL partent en continu entre deux backups, ce
+# qui permet une restauration a la minute pres.
+#
+# 2h et non plus tard: la sauvegarde Proxmox de la VM Silo tourne a 4h et
+# doit embarquer le backup du jour.
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: immich-db-daily
+  namespace: immich
+spec:
+  # Format CNPG a 6 champs: la seconde vient en premier.
+  schedule: "0 0 2 * * *"
+  # Premier backup des la creation, sans attendre 2h.
+  immediate: true
+  backupOwnerReference: self
+  cluster:
+    name: immich-db
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io

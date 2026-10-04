@@ -4,6 +4,10 @@ kind: Cluster
 metadata:
   name: immich-db
   namespace: immich
+  annotations:
+    # Ni un fichier retire du repo ni la suppression de l'Application ne
+    # doivent pouvoir effacer la base.
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
 spec:
   instances: 1
   imageName: tensorchord/cloudnative-vectorchord:17
@@ -20,6 +24,13 @@ spec:
         - CREATE EXTENSION IF NOT EXISTS pg_trgm;
         - CREATE EXTENSION IF NOT EXISTS unaccent;
         - CREATE EXTENSION IF NOT EXISTS vchord CASCADE;
+  # WAL archives en continu et backups vers immich-s3. Ajouter ou retirer ce
+  # bloc redemarre l'instance (injection du sidecar): ~1 min de coupure.
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: immich-s3
   storage:
     size: 10Gi
     storageClass: longhorn

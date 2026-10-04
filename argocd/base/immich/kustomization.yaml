@@ -10,6 +10,9 @@ resources:
   - ingressroute.yaml
   - postgres
 
+generators:
+  - generators/secret-generator.yaml
+
 helmCharts:
   - name: immich
     namespace: immich

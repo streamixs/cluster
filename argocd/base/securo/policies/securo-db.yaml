@@ -82,3 +82,11 @@ spec:
     # l'operateur ne le voit jamais devenir pret.
     - toEntities:
         - kube-apiserver
+    # Sidecar barman-cloud: WAL et backups vers Silo (VM Proxmox). Il partage
+    # l'endpoint du pod Postgres, c'est donc cette policy qui le couvre.
+    - toCIDR:
+        - 192.168.1.7/32
+      toPorts:
+        - ports:
+            - port: "9000"
+              protocol: TCP

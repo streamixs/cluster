@@ -4,6 +4,10 @@ kind: Cluster
 metadata:
   name: securo-db
   namespace: securo
+  annotations:
+    # Ni un fichier retire du repo ni la suppression de l'Application ne
+    # doivent pouvoir effacer la base.
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
 spec:
   instances: 1
   # Meme image que immich: elle embarque pgvector 0.8.2 (extension `vector`),
@@ -22,6 +26,13 @@ spec:
       # patch `env` de la kustomization parente.
       postInitApplicationSQL:
         - CREATE EXTENSION IF NOT EXISTS vector;
+  # WAL archives en continu et backups vers securo-s3. Ajouter ou retirer ce
+  # bloc redemarre l'instance (injection du sidecar): ~1 min de coupure.
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: securo-s3
   storage:
     size: 10Gi
     storageClass: longhorn

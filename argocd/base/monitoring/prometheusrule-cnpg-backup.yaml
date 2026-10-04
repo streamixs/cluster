@@ -1,0 +1,42 @@
+# Alertes sur les sauvegardes CloudNativePG (plugin barman-cloud).
+#
+# La plus importante est CNPGWalArchivingFailing: tant que l'envoi des WAL
+# echoue, Postgres les conserve sur son propre volume. Silo injoignable assez
+# longtemps = volume plein = base arretee.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cnpg-backup
+spec:
+  groups:
+    - name: cnpg-backup
+      rules:
+        - alert: CNPGWalArchivingFailing
+          expr: cnpg_pg_stat_archiver_last_failed_time > cnpg_pg_stat_archiver_last_archived_time
+          for: 15m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Archivage WAL en echec sur {{ $labels.namespace }}/{{ $labels.pod }}"
+            description: >-
+              Les WAL ne partent plus vers le S3 et s'accumulent sur le volume
+              de la base. Verifier Silo (192.168.1.7:9000) et les logs du
+              conteneur plugin-barman-cloud.
+        - alert: CNPGBackupTooOld
+          expr: time() - barman_cloud_cloudnative_pg_io_last_available_backup_timestamp > 26 * 3600
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Aucun backup reussi depuis plus de 26h sur {{ $labels.namespace }}/{{ $labels.pod }}"
+            description: Le ScheduledBackup quotidien de 2h n'a pas abouti.
+        - alert: CNPGBackupFailed
+          expr: >-
+            barman_cloud_cloudnative_pg_io_last_failed_backup_timestamp
+            > barman_cloud_cloudnative_pg_io_last_available_backup_timestamp
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Le dernier backup a echoue sur {{ $labels.namespace }}/{{ $labels.pod }}"
+            description: "Voir `kubectl get backups -n {{ $labels.namespace }}`."
