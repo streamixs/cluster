@@ -113,6 +113,12 @@ Setup TrueNAS :
 3. Creer une API key (Credentials > API Keys > Add)
 4. Mettre la cle dans `argocd/apps/democratic-csi/values.yaml`
 
+### Sauvegardes
+
+Bases CloudNativePG (securo, immich) : plugin barman-cloud vers Silo (S3, VM Proxmox `192.168.1.7:9000`),
+un bucket et une cle par base. WAL en continu + backup complet quotidien a 2h, retention 30 jours.
+La VM Silo est sauvegardee par Proxmox sur TrueNAS a 4h. Procedure : `docs/restore-cnpg.md`.
+
 ### Secrets Management
 
 SOPS + Age encryption. La cle age est dans `.config/age.agekey` (gitignored).

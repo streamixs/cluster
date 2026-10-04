@@ -1,0 +1,33 @@
+# Depot des sauvegardes de immich-db: Silo (fork MinIO) sur une VM Proxmox,
+# elle-meme sauvegardee chaque nuit sur TrueNAS.
+#
+# Bucket et cle dedies, distincts de ceux de securo.
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: immich-s3
+  namespace: immich
+spec:
+  # Fenetre de restauration: n'importe quel instant des 30 derniers jours.
+  retentionPolicy: "30d"
+  configuration:
+    destinationPath: s3://cnpg-immich/
+    endpointURL: http://192.168.1.7:9000
+    s3Credentials:
+      accessKeyId:
+        name: immich-s3
+        key: ACCESS_KEY_ID
+      secretAccessKey:
+        name: immich-s3
+        key: ACCESS_SECRET_KEY
+    wal:
+      compression: gzip
+    data:
+      compression: gzip
+  instanceSidecarConfiguration:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+      limits:
+        memory: 256Mi

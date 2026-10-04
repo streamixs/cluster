@@ -20,4 +20,6 @@ ignore: |
   argocd/base/securo/secrets/securo-secret.yaml
   argocd/base/hermes/secrets/hermes-secret.yaml
   argocd/base/securo/secrets/securo-db-credentials.yaml
+  argocd/base/securo/secrets/securo-s3.yaml
+  argocd/base/immich/secrets/immich-s3.yaml
   talos/prod/talsecret.sops.yaml
