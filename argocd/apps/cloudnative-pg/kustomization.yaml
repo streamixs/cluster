@@ -14,3 +14,14 @@ helmCharts:
     version: 0.29.1
     valuesFile: values.yaml
     includeCRDs: true
+  # Sauvegardes Barman Cloud. Le support in-tree (`barmanObjectStore`) est
+  # retire depuis CNPG 1.30: le plugin est la seule voie. Il doit tourner dans
+  # le namespace de l'operateur et s'appuie sur cert-manager pour le mTLS
+  # entre l'operateur et lui.
+  - name: plugin-barman-cloud
+    namespace: cnpg-system
+    releaseName: plugin-barman-cloud
+    repo: https://cloudnative-pg.github.io/charts
+    version: 0.8.1
+    valuesFile: values-barman-cloud.yaml
+    includeCRDs: true
