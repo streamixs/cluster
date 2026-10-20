@@ -55,11 +55,50 @@ spec:
           rules:
             dns:
               - matchPattern: "*"
-
     # API Kubernetes, pour le ServiceAccount en lecture seule.
     - toEntities:
         - kube-apiserver
-
+    # Metriques et historique du cluster, en lecture seule: Prometheus
+    # (PromQL), Loki (promtail y pousse deja les access logs de Traefik, donc
+    # les octets, durees et codes HTTP par flux Plex) et Tautulli (historique
+    # des lectures: utilisateur, appareil, direct/transcode, bitrate).
+    #
+    # Sans ces regles, le deny-by-default coupe aussi le pod-a-pod: chaque
+    # requete expire en timeout alors que le DNS, l'apiserver et Internet
+    # repondent. Le symptome se lit comme une panne applicative, pas comme
+    # une policy.
+    #
+    # Loki est joint sur son Service direct (3100), pas sur loki-gateway:
+    # `auth_enabled: false` cote serveur, donc la gateway n'apporte rien a un
+    # lecteur interne, et ca evite d'y stocker un mot de passe.
+    #
+    # Fenetres de conservation disponibles: 30 jours de metriques (45GB) et
+    # 720h de logs (30Gi). Assez pour des stats dans la duree, pas pour de
+    # l'archeologie.
+    - toEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: monitoring
+            app.kubernetes.io/name: prometheus
+      toPorts:
+        - ports:
+            - port: "9090"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: monitoring
+            app.kubernetes.io/name: loki
+      toPorts:
+        - ports:
+            - port: "3100"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: media
+            app: tautulli
+      toPorts:
+        - ports:
+            - port: "8181"
+              protocol: TCP
     # VM Ollama sur Proxmox: seule machine du LAN que l'agent a le droit de
     # joindre. L'autorisation explicite prime sur l'exclusion 192.168.0.0/16
     # de la regle Internet ci-dessous, les regles Cilium etant additives.
@@ -73,7 +112,6 @@ spec:
         - ports:
             - port: "11434"
               protocol: TCP
-
     # Note: la verification OIDC du dashboard (decouverte de l'issuer et
     # recuperation du jwks chez Pocket-ID) passe par la regle Internet
     # ci-dessous: auth.streamixs.com resout vers l'adresse publique, pas vers
