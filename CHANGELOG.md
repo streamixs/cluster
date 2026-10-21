@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.8.0](https://github.com/streamixs/cluster/compare/v0.7.0...v0.8.0) (2026-10-21)
+
+
+### Features
+
+* **hermes:** improve hermes access ([#189](https://github.com/streamixs/cluster/issues/189)) ([411fd35](https://github.com/streamixs/cluster/commit/411fd35f3a75c9e637204a6ee047610f287d287d))
+* **plex:** add igpu integration intel ([#194](https://github.com/streamixs/cluster/issues/194)) ([4f0faf6](https://github.com/streamixs/cluster/commit/4f0faf688d2a36b3c5be328158087421bd662810))
+
+
+### Bug Fixes
+
+* **docs:** corriger l'IP de TrueNAS (192.168.1.10) ([#186](https://github.com/streamixs/cluster/issues/186)) ([381fe40](https://github.com/streamixs/cluster/commit/381fe4011d763d44ddc8a6fb96b83f533d85a177))
+* **loki:** remove gateway from loki and fix endpoint ([#191](https://github.com/streamixs/cluster/issues/191)) ([441a0b3](https://github.com/streamixs/cluster/commit/441a0b336121f061596e411fbce2348cdd8c1712))
+* **traefik:** add policy for traefik ([#193](https://github.com/streamixs/cluster/issues/193)) ([29b3feb](https://github.com/streamixs/cluster/commit/29b3feb68a49707b99aa18d0778635a6bb06252d))
+* **traefik:** add second instance and do not deploy on same worker and fix ip ([#192](https://github.com/streamixs/cluster/issues/192)) ([d4f65ef](https://github.com/streamixs/cluster/commit/d4f65efd7c3dfbe347d93e34e3afe39ad7506928))
+
 ## [0.7.0](https://github.com/streamixs/cluster/compare/v0.6.1...v0.7.0) (2026-09-22)
 
 
