@@ -47,7 +47,7 @@ make argocd ENV=prod
 
 ### Storage (TrueNAS)
 
-NFS storage via **democratic-csi** + TrueNAS (192.168.1.5).
+NFS storage via **democratic-csi** + TrueNAS (192.168.1.10).
 
 Datasets a creer sur TrueNAS :
 

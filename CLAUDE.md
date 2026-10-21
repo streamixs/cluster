@@ -95,7 +95,7 @@ ArgoCD uses an **ApplicationSet** (`argocd/bootstrap/app-of-apps.yaml`) that aut
 
 ### Storage
 
-NFS via **democratic-csi** + **TrueNAS** (192.168.1.5).
+NFS via **democratic-csi** + **TrueNAS** (192.168.1.10).
 
 Datasets sur TrueNAS :
 ```
