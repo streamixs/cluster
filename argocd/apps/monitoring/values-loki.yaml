@@ -76,16 +76,7 @@ resultsCache:
   enabled: false
 
 gateway:
-  enabled: true
-  replicas: 1
-  resources:
-    requests:
-      cpu: 25m
-      memory: 32Mi
-    limits:
-      cpu: 200m
-      memory: 128Mi
-
+  enabled: false
 test:
   enabled: false
 lokiCanary:
