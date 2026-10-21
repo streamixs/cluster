@@ -1,0 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# L'ApplicationSet genere une Application par dossier de argocd/apps, donc ce
+# dossier suffit a creer la sienne. La destination reste kube-system, comme
+# cilium: un device plugin doit enregistrer son socket dans le kubelet du noeud.
+namespace: kube-system
+resources:
+  - daemonset.yaml

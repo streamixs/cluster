@@ -1,0 +1,106 @@
+# Expose l'iGPU Intel comme ressource Kubernetes `gpu.intel.com/i915`, pour que
+# Plex obtienne /dev/dri sans etre privileged.
+#
+# Pourquoi ce detour: `privileged: true` + hostPath /dev/dri fonctionne, mais
+# donne au conteneur l'acces a tous les devices de l'hote, et Plex est joignable
+# depuis Internet via plex.streamixs.com. Ici le seul composant qui touche aux
+# devices est ce DaemonSet, qui n'ecoute sur rien et n'a pas de token d'API
+# (automountServiceAccountToken: false).
+#
+# Prerequis verifies sur le cluster:
+#   - extension Talos i915 installee sur les 3 workers, /dev/dri expose
+#     (card0 + renderD128), HD Graphics 620 en PCI 0000:00:02.0
+#   - containerd 2.1.6: CDI est active par defaut depuis containerd 2.0, ce qui
+#     est indispensable puisque le plugin injecte le device via une spec CDI
+#     deposee dans /var/run/cdi, et non plus par un bind-mount direct.
+#
+# Le conteneur n'est PAS privileged: capabilities drop ALL, seccomp
+# RuntimeDefault, racine en lecture seule, et /dev/dri monte en readOnly.
+# C'est le manifeste amont d'Intel, seule l'image est epinglee.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: intel-gpu-plugin
+  labels:
+    app: intel-gpu-plugin
+spec:
+  selector:
+    matchLabels:
+      app: intel-gpu-plugin
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: intel-gpu-plugin
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: intel-gpu-plugin
+          # Tag reel sur Docker Hub: intel publie sans prefixe `v`.
+          image: intel/intel-gpu-plugin:0.37.1
+          imagePullPolicy: IfNotPresent
+          # shared-dev-num > 1 autorise plusieurs conteneurs a partager le meme
+          # GPU, ce que la doc du plugin recommande pour du transcodage media.
+          # Avec 1 (le defaut), Plex serait seul a pouvoir le demander.
+          args:
+            - -shared-dev-num
+            - "5"
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          securityContext:
+            seLinuxOptions:
+              type: container_device_plugin_t
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              memory: "45Mi"
+              cpu: 40m
+            limits:
+              memory: "115Mi"
+              cpu: 100m
+          volumeMounts:
+            - name: devfs
+              mountPath: /dev/dri
+              readOnly: true
+            - name: sysfsdrm
+              mountPath: /sys/class/drm
+              readOnly: true
+            - name: kubeletsockets
+              mountPath: /var/lib/kubelet/device-plugins
+            - name: cdipath
+              mountPath: /var/run/cdi
+      volumes:
+        - name: devfs
+          hostPath:
+            path: /dev/dri
+        - name: sysfsdrm
+          hostPath:
+            path: /sys/class/drm
+        - name: kubeletsockets
+          hostPath:
+            path: /var/lib/kubelet/device-plugins
+        - name: cdipath
+          hostPath:
+            path: /var/run/cdi
+            type: DirectoryOrCreate
+      # Tous les workers sont en amd64 et portent le meme iGPU. Le master est
+      # exclu par son taint control-plane, un DaemonSet ne le tolerating pas.
+      nodeSelector:
+        kubernetes.io/arch: amd64
