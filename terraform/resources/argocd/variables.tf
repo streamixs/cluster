@@ -8,7 +8,7 @@ variable "chart_version" {
   description = "Argo CD Helm chart version"
   type        = string
   # renovate: datasource=helm depName=argo-cd registryUrl=https://argoproj.github.io/argo-helm
-  default = "9.4.12"
+  default = "10.11.6"
 }
 
 variable "values_file" {
