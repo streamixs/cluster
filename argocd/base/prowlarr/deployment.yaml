@@ -20,7 +20,7 @@ spec:
         fsGroupChangePolicy: "OnRootMismatch"
       containers:
         - name: prowlarr
-          image: lscr.io/linuxserver/prowlarr:2.7.0.5723-ls166
+          image: lscr.io/linuxserver/prowlarr:2.7.0.5723-ls167
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 9696
