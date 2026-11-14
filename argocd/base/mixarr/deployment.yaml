@@ -20,7 +20,7 @@ spec:
         fsGroupChangePolicy: "OnRootMismatch"
       containers:
         - name: mixarr
-          image: ghcr.io/aquantumofdonuts/mixarr:v2.3.5
+          image: ghcr.io/aquantumofdonuts/mixarr:v3.0.0
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
