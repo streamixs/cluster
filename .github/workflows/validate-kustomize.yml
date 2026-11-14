@@ -52,17 +52,32 @@ jobs:
         with:
           version: ${{ env.HELM_VERSION }}
 
+      # Le CDN des releases GitHub (release-assets.githubusercontent.com) renvoie
+      # regulierement des 5xx transitoires (502/504). Sans retry, un hoquet reseau
+      # casse tout le job. On telecharge dans un fichier, on verifie le sha256
+      # publie par le projet, puis on extrait : plus de pipe curl | tar qui masque
+      # une reponse tronquee.
       - name: Install kustomize
         run: |
-          base="https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize"
-          curl -sSfL "${base}/v${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz" \
-            | tar -xz -C /usr/local/bin kustomize
+          set -euo pipefail
+          base="https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}"
+          asset="kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz"
+          fetch() {
+            curl -sSfL --retry 5 --retry-all-errors --retry-delay 2 --retry-max-time 180 -o "$2" "$1"
+          }
+          fetch "${base}/${asset}" "${asset}"
+          fetch "${base}/checksums.txt" checksums.txt
+          grep " ${asset}\$" checksums.txt | sha256sum -c -
+          tar -xzf "${asset}" -C /usr/local/bin kustomize
           kustomize version
 
       - name: Install kubeconform
         run: |
-          curl -sSfL "https://github.com/yannh/kubeconform/releases/download/v${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz" \
-            | tar -xz -C /usr/local/bin kubeconform
+          set -euo pipefail
+          url="https://github.com/yannh/kubeconform/releases/download/v${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz"
+          curl -sSfL --retry 5 --retry-all-errors --retry-delay 2 --retry-max-time 180 \
+            -o kubeconform.tar.gz "${url}"
+          tar -xzf kubeconform.tar.gz -C /usr/local/bin kubeconform
           kubeconform -v
 
       - name: Render app with kustomize
