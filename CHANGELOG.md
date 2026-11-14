@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.1](https://github.com/streamixs/cluster/compare/v0.8.0...v0.8.1) (2026-11-14)
+
+
+### Bug Fixes
+
+* **ci:** retry and checksum-verify CI tool downloads ([#217](https://github.com/streamixs/cluster/issues/217)) ([7c467b9](https://github.com/streamixs/cluster/commit/7c467b9ec3a4ee26d6d14b3c824530c1b9a9f14c))
+
 ## [0.8.0](https://github.com/streamixs/cluster/compare/v0.7.0...v0.8.0) (2026-10-21)
 
 
