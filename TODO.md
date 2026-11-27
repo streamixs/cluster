@@ -64,7 +64,8 @@
       Longhorn.
 - [ ] Longhorn : réactiver `preUpgradeChecker` ou documenter le contournement.
 - [ ] Traefik : chart `40.3.0` → `42.4.3` (Traefik 3.7.20), puis `43.0.0`
-      (Traefik 3.8.0) après une période de cooling.
+      (Traefik 3.8.0) après une période de cooling. PR B1 prête ; sync
+      manuelle requise avant merge.
 - [ ] Talos : retirer `vm.nr_hugepages: 1024` si inutile, ajouter les limites
       inotify pour Plex/*arr.
 - [ ] Renovate : `minimumReleaseAge`, managers `imageName` et

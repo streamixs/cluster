@@ -10,6 +10,7 @@ rules:
     spaces: 2
     indent-sequences: consistent
 ignore: |
+  argocd/**/charts/
   argocd/base/cert-manager/issuers/secret-cf-token.yaml
   argocd/base/plex/secrets/plex-secret.yaml
   argocd/base/oauth2-proxy/secrets/oauth2-proxy-secret.yaml
