@@ -23,7 +23,7 @@ de sauvegarde.
 | State file shared accidentally | Gitleaks CI blocks commits; `.gitignore` excludes `*.tfstate` |
 | State file lost | Garder une copie de sauvegarde ; `terraform apply` peut recréer ArgoCD **si** `.config/age.agekey` existe encore |
 | Secrets in plaintext state | Sauvegarder le state hors ligne ; faire tourner les secrets après bootstrap via `scripts/rotate-argocd-password.sh` et `scripts/rotate-sops-key.sh` |
-| Lock file non versionné | `.terraform.lock.hcl` est maintenant commité (la PR #222) |
+| Lock file non versionné | `.terraform.lock.hcl` est commité (hashes linux_amd64 + darwin_arm64) |
 
 ## Décision actuelle : state local
 

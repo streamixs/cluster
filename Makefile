@@ -99,7 +99,7 @@ talos-gen-secret: ## Generer et chiffrer les secrets Talos (atomique)
 	@set -euo pipefail; \
 		cd $(TALOS_DIR); \
 		tmp=$$(mktemp ./talsecret.XXXXXX); \
-		out=$$(mktemp ./talsecret.XXXXXX.sops); \
+		out="$$tmp.sops"; \
 		trap 'rm -f "$$tmp" "$$out"' EXIT; \
 		talhelper gensecret > "$$tmp"; \
 		SOPS_AGE_KEY_FILE="$(CURDIR)/$(AGE_KEY)" sops -e "$$tmp" > "$$out"; \

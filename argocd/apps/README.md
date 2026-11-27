@@ -77,4 +77,4 @@ helmCharts:
 - Le namespace par défaut de destination est le nom du dossier (`{{path.basename}}`), mais les kustomizations peuvent déployer ailleurs. Cela peut créer des namespaces vides (`cert-manager`, `cilium`, `cloudnative-pg`, `intel-gpu-plugin`, `longhorn`, `traefik-forward-auth`) : à corriger ou documenter.
 - Pour changer la branche/chemin, modifier `argocd/bootstrap/app-of-apps.yaml`.
 - `make argocd` installe ArgoCD ; `make gitops` crée l’AppProject et l’ApplicationSet.
-- Les apps d’infrastructure se synchronisent manuellement. Voir `docs/change-control.md`.
+- Les apps d’infrastructure **doivent** se synchroniser manuellement. Voir `docs/change-control.md`.

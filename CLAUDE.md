@@ -53,7 +53,7 @@ ArgoCD uses an **ApplicationSet** (`argocd/bootstrap/app-of-apps.yaml`) that aut
 - **Conventional Commits obligatoires** (`feat:`, `fix:`, `chore:`, `BREAKING CHANGE:` dans le footer) — c'est release-please qui lit ces préfixes pour bumper la version.
 - **release-please** (workflow `.github/workflows/release-please.yml`) maintient une "Release PR" permanente sur `main`. Quand on la merge, elle bumpe `.release-please-manifest.json`, met à jour `CHANGELOG.md`, crée le tag `vX.Y.Z` et la GitHub Release automatiquement.
 - La branche `develop` n'est plus la cible : trunk-based, tout converge sur `main`. Elle reste à supprimer sur le remote.
-- Les PR Renovate sont mergées **manuellement** : pas d'auto-merge, même si la CI est verte.
+- Les PR Renovate doivent être mergées **manuellement** : pas d'auto-merge, même si la CI est verte.
 - Le workflow cible est PR obligatoire + checks requis + squash only + pas de force push. Voir `docs/change-control.md`.
 
 ### Directory Conventions

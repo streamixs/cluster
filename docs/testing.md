@@ -42,8 +42,10 @@ Le script CI rend n'importe quelle app sans déchiffrer les secrets (il retire
 les générateurs KSOPS dans une copie temporaire) :
 
 ```bash
-# nécessite PyYAML : python3 -m pip install --user pyyaml
-./scripts/ci/render-app.sh <app> > /tmp/rendered.yaml
+# macOS : passer par un venv pour éviter PEP 668
+python3 -m venv /tmp/ci-venv
+/tmp/ci-venv/bin/pip install --disable-pip-version-check pyyaml
+PATH=/tmp/ci-venv/bin:$PATH ./scripts/ci/render-app.sh <app> > /tmp/rendered.yaml
 ```
 
 Pour une app sans KSOPS, le rendu direct fonctionne aussi :

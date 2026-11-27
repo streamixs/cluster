@@ -96,7 +96,7 @@ mot de passe admin initial ; voir [`terraform/STATE.md`](terraform/STATE.md).
 - La CI valide sur chaque PR : `yamllint`, rendu de **toutes** les apps
   (KSOPS inclus), `kubeconform` avec schémas CRD, Terraform, check SOPS,
   `gitleaks`.
-- Le job agrégé `all-kustomize` sert de gate global pour la branch protection.
+- Le job agrégé `all-kustomize` servira de gate global pour la branch protection.
 - Un lab `kind`/`k3d` peut être créé à la demande pour un test applicatif ;
   il n'est pas un environnement permanent.
 - Les limites restantes (Pluto, Talos, test d'admission kind) et la checklist
@@ -116,9 +116,9 @@ Quand tu merges la Release PR, release-please crée automatiquement le tag `vX.Y
 
 [Renovate Bot](https://www.mend.io/renovate/) ouvre des PRs ciblant `main` pour bumper les images Docker, les charts Helm (`kustomize.helmCharts`), les actions GitHub et la version de gitleaks. Config dans [`.github/renovate.json5`](.github/renovate.json5).
 
-- **Aucun auto-merge** : les PR Renovate sont mergées manuellement après
-  validation. Même un patch noté « validé » par la CI n'est pas mergé
-  automatiquement.
+- **Politique : aucun auto-merge** : les PR Renovate doivent être mergées
+  manuellement après validation. Même un patch noté « validé » par la CI n'est
+  pas mergé automatiquement.
 - **Patches / minor / major** : PR à valider manuellement.
 - **Talos / Kubernetes / installer Sidero** : exclus, upgrade pilote via `make k8s-upgrade-check` + `make etcd-backup`.
 - **Schedule** : nuits de semaine (apres 22h) + weekends, fuseau Europe/Paris.

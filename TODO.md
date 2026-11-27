@@ -90,7 +90,7 @@
 ## Fait
 
 - [x] Monitoring : kube-prometheus-stack + Loki + Promtail.
-- [x] Renovate Bot (merges manuels, pas d'auto-merge).
+- [x] Renovate Bot (politique : merges manuels, pas d'auto-merge).
 - [x] CI : rendu de toutes les apps (KSOPS inclus), kubeconform + schémas CRD,
       Terraform, SOPS check, job agrégé `all-kustomize`.
 - [x] Images épinglées (sauf quelques cas suivis).

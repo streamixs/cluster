@@ -28,7 +28,8 @@ fichier existant n'est pas remplacé.
 Vérifier que le fichier est bien chiffré :
 
 ```bash
-sops -d talos/prod/talsecret.sops.yaml >/dev/null && echo OK
+SOPS_AGE_KEY_FILE=.config/age.agekey \
+  sops -d talos/prod/talsecret.sops.yaml >/dev/null && echo OK
 ```
 
 ## 2. Générer les machine configs
