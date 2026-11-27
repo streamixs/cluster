@@ -62,6 +62,12 @@ alertmanager:
 Le Secret est monté par l'opérateur dans
 `/etc/alertmanager/secrets/alertmanager-telegram/`.
 
+`externalUrl` est renseigné pour Prometheus
+(`https://prometheus.streamixs.com`) et Alertmanager
+(`https://alertmanager.streamixs.com`) : les liens « Source » des notifications
+pointent donc vers les URLs publiques, derrière `forward-auth`, au lieu du
+service interne `*.monitoring.svc`.
+
 ### Tester
 
 L'alerte `Watchdog` est envoyée en permanence. Après sync, vérifier :
@@ -106,6 +112,12 @@ Puis sync ArgoCD et redémarrer Grafana si nécessaire :
 kubectl --kubeconfig ~/.talos/kubeconfig-prod -n monitoring \
   rollout restart deploy/kps-grafana
 ```
+
+Le PVC Grafana est en `ReadWriteOnce` sur Longhorn. Le Deployment utilise donc
+`deploymentStrategy: Recreate` : un `RollingUpdate` resterait bloqué en
+`Multi-Attach error` puisque l'ancien pod conserve le volume tant que le
+nouveau n'est pas prêt. Attendre quelques secondes d'indisponibilité pendant un
+redémarrage est normal.
 
 ## Alertes de base
 
