@@ -52,7 +52,9 @@ ArgoCD uses an **ApplicationSet** (`argocd/bootstrap/app-of-apps.yaml`) that aut
 - Toute modif passe par une PR : `feat/*`, `fix/*`, `chore/*`, `renovate/*` → `main` (squash-merge).
 - **Conventional Commits obligatoires** (`feat:`, `fix:`, `chore:`, `BREAKING CHANGE:` dans le footer) — c'est release-please qui lit ces préfixes pour bumper la version.
 - **release-please** (workflow `.github/workflows/release-please.yml`) maintient une "Release PR" permanente sur `main`. Quand on la merge, elle bumpe `.release-please-manifest.json`, met à jour `CHANGELOG.md`, crée le tag `vX.Y.Z` et la GitHub Release automatiquement.
-- Plus de branche `develop` : trunk-based, tout converge sur `main`.
+- La branche `develop` n'est plus la cible : trunk-based, tout converge sur `main`. Elle reste à supprimer sur le remote.
+- Les PR Renovate sont mergées **manuellement** : pas d'auto-merge, même si la CI est verte.
+- Le workflow cible est PR obligatoire + checks requis + squash only + pas de force push. Voir `docs/change-control.md`.
 
 ### Directory Conventions
 
@@ -61,7 +63,8 @@ ArgoCD uses an **ApplicationSet** (`argocd/bootstrap/app-of-apps.yaml`) that aut
 - **`argocd/bootstrap/`** — The ApplicationSet and AppProject definitions. Rarely modified.
 - **`argocd/projects/`** — ArgoCD AppProject definitions. New Helm repos must be added to `platform.yaml`'s `sourceRepos`.
 - **`talos/prod/`** — Talos machine configs via `talhelper`. Les configs générées vont dans `clusterconfig/` (gitignored, régénérables depuis `talconfig.yaml` + `talsecret.sops.yaml`).
-- **`terraform/`** — Only handles ArgoCD Helm install + SOPS age key secret. Not used for other apps.
+- **`terraform/`** — Only handles ArgoCD Helm install + SOPS age key secret. Not used for other apps. State local pour l'instant, voir `terraform/STATE.md`.
+- **`docs/`** — Runbooks : bootstrap, testing, backup/restore, upgrade, change control, inventaire, scripts.
 
 ### Apps deployees
 
@@ -127,18 +130,22 @@ Exceptions assumées :
 
 ### Adding a New Application
 
-1. Creer `argocd/apps/<app-name>/kustomization.yaml` (l'ApplicationSet le decouvre automatiquement)
-2. Si l'app utilise un nouveau repo Helm, l'ajouter dans `argocd/projects/platform.yaml` `sourceRepos`
-3. Si l'app a besoin de manifests custom, creer une base dans `argocd/base/<app-name>/`
-4. Si secret, utiliser SOPS + KSOPS generator
+1. Creer `argocd/apps/<app-name>/kustomization.yaml` (l'ApplicationSet le decouvre automatiquement).
+2. Si l'app utilise un nouveau repo Helm/OCI, l'ajouter dans `argocd/projects/platform.yaml` `sourceRepos`.
+3. Si l'app a besoin de manifests custom, creer une base dans `argocd/base/<app-name>/`.
+4. Si secret, utiliser SOPS + KSOPS generator (`generators/secret-generator.yaml`).
+5. Verifier le namespace de destination, les probes, resources, securityContext, PSS et NetworkPolicy.
+6. Epingler l'image et verifier que Renovate la suit (ou ajouter un custom manager).
 
 ### Key Config Details
 
 - ArgoCD : branche cible `main`
 - Kubeconfig prod : `~/.talos/kubeconfig-prod`
+- State Terraform local pour l'instant : voir `terraform/STATE.md`
 - Tous les ingresses utilisent le wildcard `*.streamixs.com` (cert-manager + Cloudflare DNS01)
 - Talos : `v1.12.6`, Kubernetes : `v1.35.3`
 - YAML style : 2-space indent, max 140 char lines, no document-start markers
+- Documentation : `docs/`, en français
 
 ## CI
 
@@ -147,10 +154,21 @@ GitHub Actions :
 - `validate-kustomize.yml` : `kustomize build` + `kubeconform` par app
 - `secret-scan.yml` : detection de secrets en clair
 
+Limites connues : les apps KSOPS sont sautées, les CRDs ne sont pas validées,
+la version K8s de la CI est en retard, Terraform/Talos ne sont pas validés.
+Voir `docs/testing.md` et `TODO.md`.
+
 Config yamllint dans `.yamllint.yaml`. Le fichier `argocd/base/cert-manager/issuers/secret-cf-token.yaml` est exclu (SOPS-encrypted).
 
 ## Documents associes
 
 - `README.md` — Quickstart utilisateur
-- `TODO.md` — Backlog priorise (P0 securite -> P4 prod-ready)
-- `ROADMAP.md` — Retrospective complete + plan d'amelioration moyen terme
+- `docs/bootstrap-prod.md` — Bootstrap prod détaillé
+- `docs/testing.md` — Validation avant merge + lab jetable
+- `docs/backup-restore.md` — Backups et restore
+- `docs/upgrade-runbook.md` — Upgrades Talos/K8s/Cilium/Longhorn/CNPG
+- `docs/change-control.md` — PR, squash, sync manuelle
+- `docs/inventory.md` — Nœuds, IPs, domaines, ports
+- `docs/scripts.md` — Rotation ArgoCD/SOPS
+- `TODO.md` — Backlog priorisé
+- `ROADMAP.md` — Vision et phases

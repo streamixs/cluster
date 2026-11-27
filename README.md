@@ -22,6 +22,9 @@ brew install siderolabs/tap/talosctl budimanjojo/tap/talhelper helm \
   kubernetes-cli terraform sops age yq jq
 ```
 
+La clé age doit être présente dans `.config/age.agekey` avant de générer les
+secrets Talos.
+
 ### Bootstrap prod (manuel)
 
 ```bash
@@ -31,13 +34,15 @@ make talos-gen                    # génère les machine configs
 # appliquer les configs avec talosctl apply-config sur chaque node
 # puis talosctl bootstrap sur le premier control plane
 
-make cilium                       # CNI Cilium
+make cilium                       # CNI Cilium (avant ArgoCD, pour les CRDs)
 make argocd                       # ArgoCD via Terraform
 make gitops                       # AppProject + ApplicationSet
 make status                       # nodes + pods
 ```
 
 Sans `make gitops`, ArgoCD est installé mais aucune Application n'est créée.
+La procédure détaillée et les commandes `talosctl` exactes sont dans
+[`docs/bootstrap-prod.md`](docs/bootstrap-prod.md).
 
 ### Structure
 
@@ -46,6 +51,17 @@ Sans `make gitops`, ArgoCD est installé mais aucune Application n'est créée.
 - `argocd/apps/` — Applications gérées par ArgoCD
 - `argocd/base/` — bases Kustomize (media, cert-manager, etc.)
 - `argocd/bootstrap/` — ApplicationSet + projets
+- `docs/` — runbooks et inventaire (bootstrap, testing, backup, upgrades)
+
+### Opérations
+
+- [`docs/bootstrap-prod.md`](docs/bootstrap-prod.md) — reconstruction du cluster.
+- [`docs/testing.md`](docs/testing.md) — validation avant merge.
+- [`docs/backup-restore.md`](docs/backup-restore.md) — état des backups et restore.
+- [`docs/upgrade-runbook.md`](docs/upgrade-runbook.md) — upgrades Talos/K8s/Cilium/Longhorn/CNPG.
+- [`docs/change-control.md`](docs/change-control.md) — PR, squash, sync manuelle.
+- [`docs/inventory.md`](docs/inventory.md) — nœuds, IPs, domaines, ports.
+- [`docs/scripts.md`](docs/scripts.md) — rotation ArgoCD/SOPS.
 
 ### Storage (TrueNAS)
 
@@ -62,12 +78,18 @@ dans le repo.
 
 Managed with SOPS + Age. Key at `.config/age.agekey` (gitignored).
 
+**Sauvegarder cette clé offline** : sans elle, tous les secrets SOPS sont
+irrécupérables. Le state Terraform contient aussi une copie de la clé et le
+mot de passe admin initial ; voir [`terraform/STATE.md`](terraform/STATE.md).
+
 ### Workflow (trunk-based)
 
 - **`main`** est la seule branche long-running. ArgoCD lit `main`.
 - Tout passe par PR (feature, fix, chore, Renovate) → squash-merge sur `main`.
 - **Conventional Commits requis** dans les titres de PR : `feat:`, `fix:`, `chore:`, `feat!:` (breaking), etc.
-- Aucun merge direct sur `main`; les checks CI sont obligatoires.
+- Le workflow cible est : PR obligatoire, checks requis, squash only, pas de
+  force push, merge manuel. L'état exact des réglages GitHub et la procédure
+  sont dans [`docs/change-control.md`](docs/change-control.md).
 
 ### Testing avant merge
 
@@ -75,8 +97,8 @@ Managed with SOPS + Age. Key at `.config/age.agekey` (gitignored).
   `kubeconform`, `gitleaks`).
 - Un lab `kind`/`k3d` peut être créé à la demande pour un test applicatif ;
   il n'est pas un environnement permanent.
-- Le durcissement de la CI (KSOPS, schemas CRD, Terraform, Pluto) est suivi
-  dans `TODO.md`.
+- Les limites actuelles (apps KSOPS sautées, CRDs non validées, Terraform/Talos
+  non validés) et la checklist sont dans [`docs/testing.md`](docs/testing.md).
 
 ### Releases (automatique)
 
@@ -92,8 +114,10 @@ Quand tu merges la Release PR, release-please crée automatiquement le tag `vX.Y
 
 [Renovate Bot](https://www.mend.io/renovate/) ouvre des PRs ciblant `main` pour bumper les images Docker, les charts Helm (`kustomize.helmCharts`), les actions GitHub et la version de gitleaks. Config dans [`.github/renovate.json5`](.github/renovate.json5).
 
-- **Patches** (`x.y.Z`) : auto-merge active si la branch protection de `main` autorise l'auto-merge GitHub.
-- **Minor / major** : PR a valider manuellement.
+- **Aucun auto-merge** : les PR Renovate sont mergées manuellement après
+  validation. Même un patch noté « validé » par la CI n'est pas mergé
+  automatiquement.
+- **Patches / minor / major** : PR à valider manuellement.
 - **Talos / Kubernetes / installer Sidero** : exclus, upgrade pilote via `make k8s-upgrade-check` + `make etcd-backup`.
 - **Schedule** : nuits de semaine (apres 22h) + weekends, fuseau Europe/Paris.
 - La politique de commit des bumps est définie dans `.github/renovate.json5`.

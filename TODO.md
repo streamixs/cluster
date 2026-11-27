@@ -24,7 +24,6 @@
 - [ ] **Pod Security Standards** : baseline sur tous les namespaces
       applicatifs, restricted là où c'est possible.
 - [ ] **SOPS check en CI** : vérifier que les secrets sont bien chiffrés.
-- [ ] **.gitignore** : ajouter `backups/` et `*.snapshot`.
 
 ## P1 — CI et pré-merge
 
@@ -39,9 +38,11 @@
 - [ ] **Actionlint + shellcheck + renovate-config-validator**.
 - [ ] **Actions GitHub épinglées par SHA**.
 - [ ] **Branch protection `main`** : PR obligatoire, checks requis,
-      branche à jour, pas de force push.
+      branche à jour, pas de force push, squash only.
+- [ ] **Job CI agrégé** `all-validations` à exiger dans la protection.
 - [ ] **`make validate`** : reproduire la CI en local.
 - [ ] **PR template** : checklist validation, backup, rollback.
+- [ ] **Désactiver l'auto-merge Renovate** et documenter le merge manuel.
 - [ ] **Sync manuelle / sync windows** pour Cilium, Longhorn, CNPG,
       cert-manager, Traefik.
 - [ ] **Sync waves** : CNPG → Immich/Securo, cert-manager → Traefik,
@@ -73,24 +74,29 @@
 
 ## P3 — Exploitation et documentation
 
-- [ ] Créer `docs/bootstrap-prod.md`, `docs/testing.md`,
-      `docs/backup-restore.md`, `docs/upgrade-runbook.md`.
-- [ ] Mettre à jour `PRIVACY.md` (Ollama local) et le déplacer dans `docs/`.
+- [x] Mettre à jour `PRIVACY.md` pour Ollama Cloud, en gardant le fichier à la
+      racine (URL Google OAuth).
 - [ ] Supprimer `scripts/hermes-migrate-pod.yaml` (migration terminée).
-- [ ] Nettoyer `.yamllint.yaml` (chemins supprimés).
-- [ ] Supprimer la branche `develop` et les vieilles branches de feature.
 - [ ] Décider 1 CP + backup/restore ou 3 CP ; documenter le RTO/RPO.
 - [ ] Chiffrement des disques Talos (LUKS2/TPM) pour les données au repos.
 - [ ] ExternalDNS + Cloudflare, Gatus, Crowdsec/rate limiting Traefik.
 - [ ] Migration Promtail → Grafana Alloy.
+- [ ] State Terraform : garder local + backup pour l'instant ; étudier un
+      backend chiffré plus tard.
+- [ ] Politique de release des bumps Renovate (fix(deps) vs chore(deps)) —
+      décision reportée.
 
 ## Fait
 
 - [x] Monitoring : kube-prometheus-stack + Loki + Promtail.
-- [x] Renovate Bot + auto-merge patches.
+- [x] Renovate Bot (merges manuels, pas d'auto-merge).
 - [x] CI `kustomize build` + kubeconform (partielle).
 - [x] Images épinglées (sauf quelques cas suivis).
 - [x] SOPS + Age + KSOPS + gitleaks.
 - [x] Traefik 2 replicas + PDB, Cilium L2 + IP pool.
 - [x] NetworkPolicies Securo et Hermes.
 - [x] Suppression de l'environnement dev dans le code (Makefile, docs, `talos/dev/`).
+- [x] `.gitignore` : `backups/` et `*.snapshot`.
+- [x] `.yamllint.yaml` : chemins obsolètes retirés.
+- [x] Docs : bootstrap, testing, backup/restore, upgrade, change control,
+      inventaire, scripts.

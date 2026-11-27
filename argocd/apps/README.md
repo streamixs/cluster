@@ -26,6 +26,39 @@ Arborescence des applications gérées par Argo CD (ApplicationSet). Chaque sous
 2) Commit/push sur `main` via PR.
 3) Argo CD créera automatiquement l’`Application` (naming = `path.basename`).
 
+Checklist avant merge :
+
+- [ ] Le namespace de destination est correct (ou géré explicitement).
+- [ ] Les repos Helm/OCI sont dans `argocd/projects/platform.yaml` `sourceRepos`.
+- [ ] Les secrets utilisent SOPS + KSOPS (`generators/secret-generator.yaml`).
+- [ ] L’image est épinglée et suivie par Renovate.
+- [ ] Probes, resources et securityContext sont définis.
+- [ ] PSS et NetworkPolicy sont prises en compte.
+- [ ] `kustomize build --enable-helm` passe (ou l’app est validée par la CI).
+
+Exemple de secret KSOPS :
+
+```yaml
+# argocd/base/<app>/generators/secret-generator.yaml
+apiVersion: viaduct.ai/v1
+kind: ksops
+metadata:
+  name: secret-generator
+  annotations:
+    config.kubernetes.io/function: |
+      exec:
+        path: ksops
+files:
+  - secrets/<app>-secret.yaml
+```
+
+Puis dans `kustomization.yaml` :
+
+```yaml
+generators:
+  - generators/secret-generator.yaml
+```
+
 Exemple (Helm via Kustomize):
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -41,5 +74,7 @@ helmCharts:
 
 ### Notes
 - L’ApplicationSet définit `CreateNamespace=true`, `PruneLast=true`, `ServerSideApply=true`, `ApplyOutOfSyncOnly=true`.
-- Le namespace par défaut de destination est le nom du dossier (`{{path.basename}}`), mais les kustomizations peuvent déployer ailleurs.
+- Le namespace par défaut de destination est le nom du dossier (`{{path.basename}}`), mais les kustomizations peuvent déployer ailleurs. Cela peut créer des namespaces vides (`cert-manager`, `cilium`, `cloudnative-pg`, `intel-gpu-plugin`, `longhorn`, `traefik-forward-auth`) : à corriger ou documenter.
 - Pour changer la branche/chemin, modifier `argocd/bootstrap/app-of-apps.yaml`.
+- `make argocd` installe ArgoCD ; `make gitops` crée l’AppProject et l’ApplicationSet.
+- Les apps d’infrastructure se synchronisent manuellement. Voir `docs/change-control.md`.

@@ -64,8 +64,10 @@ la CI est en retard.
 - [x] Terraform par défaut sur `kubeconfig-prod`.
 - [x] Labels ArgoCD `env: prod`.
 - [x] Documentation alignée sur un seul environnement.
+- [x] Runbooks dans `docs/`.
 - [ ] Nettoyer les ressources runtime dev (cluster Docker, kubeconfig, state).
-- [ ] Supprimer `develop` et les vieilles branches.
+- [ ] La branche `develop` n'est plus utilisée ; sa suppression remote est laissée
+      à ta main (pas de suppression automatique).
 
 ### Phase 2 — CI de validation complète
 
@@ -75,8 +77,11 @@ la CI est en retard.
 - [ ] Terraform fmt/validate.
 - [ ] Actionlint, shellcheck, renovate-config-validator.
 - [ ] Actions GitHub épinglées par SHA.
-- [ ] Branch protection sur `main`.
+- [ ] Job CI agrégé `all-validations`.
+- [ ] Branch protection sur `main` (PR + checks requis + squash only + pas de
+      force push).
 - [ ] `make validate` local.
+- [ ] Auto-merge Renovate désactivé et merges manuels documentés.
 
 ### Phase 3 — Backups et restore
 
@@ -105,7 +110,7 @@ la CI est en retard.
 
 ### Phase 6 — Exploitation
 
-- [ ] Runbooks bootstrap/upgrade/restore.
+- [x] Runbooks bootstrap/testing/upgrade/backup/change-control/inventaire.
 - [ ] Décision 1 CP vs 3 CP, RTO/RPO.
 - [ ] Chiffrement des disques Talos.
 - [ ] ExternalDNS, Gatus, Crowdsec.
@@ -118,11 +123,15 @@ la CI est en retard.
 - Tester les données réelles dans un cluster de test.
 - Déployer automatiquement les composants d'infrastructure sans revue.
 
-## Règle de merge
+## Règle de merge (cible)
 
-- `main` est protégée.
+- `main` protégée par un ruleset.
 - Toute modification passe par une PR.
 - Squash-merge uniquement.
 - Checks CI obligatoires.
+- Pas d'auto-merge : merge manuel après validation.
 - Les composants d'infrastructure se synchronisent manuellement, avec backup
   et plan de rollback.
+
+L'état exact des réglages GitHub et la procédure sont dans
+`docs/change-control.md`.
