@@ -5,7 +5,7 @@ namespace: auth
 
 resources:
   - namespace.yaml
-  - ../../base/traefik-forward-auth
-  # PR A1 : oauth2-proxy est deploye en parallele. Il n'est utilise que par
-  # l'IngressRoute de test (tautulli) jusqu'au cutover de la PR A2.
+  # A2 : oauth2-proxy remplace traefik-forward-auth. Le nom du dossier/app
+  # ArgoCD reste `traefik-forward-auth` pour eviter un remplacement
+  # d'Application ; il sera renomme dans une PR de suivi.
   - ../../base/oauth2-proxy

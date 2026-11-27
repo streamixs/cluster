@@ -1,32 +1,36 @@
 # Migration traefik-forward-auth → oauth2-proxy
 
-## Pourquoi
+## État actuel
 
-`thomseddon/traefik-forward-auth:2` pointe sur une image Docker Hub de 2020,
-et le projet n'a plus de release depuis 2024. On le remplace par
-**oauth2-proxy**, maintenu, compatible OIDC/Pocket-ID et ForwardAuth Traefik.
+La migration est terminée : **oauth2-proxy** remplace complètement
+`traefik-forward-auth` pour le middleware Traefik `forward-auth`.
 
-La migration se fait en deux temps :
+- Middleware : `auth/forward-auth`
+- Adresse : `http://oauth2-proxy.auth.svc.cluster.local:4180/`
+- Callback : `https://oauth.streamixs.com/oauth2/callback`
+- Provider : Pocket-ID (OIDC)
+- Cookie : `_oauth2_proxy`, domaine `.streamixs.com`
+- 2 replicas, PDB, probes, NetworkPolicy
 
-- **PR A1** : déployer oauth2-proxy en parallèle, tester sur une seule app.
-- **PR A2** : basculer le middleware global, retirer l'ancien forward-auth.
+Toutes les IngressRoutes protégées continuent de référencer `forward-auth` :
+elles n'ont pas eu à changer.
 
-## PR A1 — déploiement en parallèle
+L'ancien `traefik-forward-auth` (Deployment, Service, callback `/_oauth`,
+secret, générateur KSOPS) a été supprimé.
 
-Cette PR ajoute :
+> Le dossier d'application ArgoCD s'appelle encore
+> `argocd/apps/traefik-forward-auth` pour éviter un remplacement d'Application.
+> Un renommage vers `oauth2-proxy` pourra être fait dans une PR de suivi.
 
-- le Deployment/Service `oauth2-proxy` (2 replicas, PDB, probes) ;
-- un middleware temporaire `forward-auth-oauth2` (adresse `/`, pas
-  `/oauth2/auth`) ;
-- la route callback `oauth2-callback` ;
-- la NetworkPolicy (Traefik → oauth2-proxy, oauth2-proxy → Pocket-ID) ;
-- le secret SOPS `oauth2-proxy-secret` ;
-- la bascule de **Tautulli uniquement** vers `forward-auth-oauth2`.
+## Pourquoi ce remplacement
 
-Les autres apps restent sur l'ancien `forward-auth`. Si le test échoue,
-Tautulli est la seule app impactée.
+`thomseddon/traefik-forward-auth:2` pointait sur une image Docker Hub de 2020,
+et le projet n'a plus de release depuis 2024. `oauth2-proxy` est maintenu,
+compatible OIDC/Pocket-ID et ForwardAuth Traefik.
 
-## 1. Créer le client OIDC dans Pocket-ID
+## Reconstruction / configuration
+
+### Client OIDC Pocket-ID
 
 Créer un client OIDC :
 
@@ -34,80 +38,66 @@ Créer un client OIDC :
 - redirect URI : `https://oauth.streamixs.com/oauth2/callback`
 - scopes : `openid email profile`
 
-Récupérer le `client-id` et le `client-secret`.
-
-## 2. Renseigner le secret SOPS
+### Secret SOPS
 
 ```bash
 make secret-edit FILE=argocd/base/oauth2-proxy/secrets/oauth2-proxy-secret.yaml
 ```
 
-Remplacer :
+Clés :
 
 - `client-id`
 - `client-secret`
+- `cookie-secret` : exactement **16, 24 ou 32 caractères**
+  (`openssl rand -hex 16` produit 32 caractères).
 
-Le `cookie-secret` a déjà été généré aléatoirement et chiffré ; le conserver.
-Il doit faire exactement **16, 24 ou 32 caractères** (pas 44). Pour le
-régénérer : `openssl rand -hex 16` (32 caractères hex).
-
-Vérifier les clés sans afficher les valeurs :
+Vérifier sans afficher les valeurs :
 
 ```bash
 make secret-keys FILE=argocd/base/oauth2-proxy/secrets/oauth2-proxy-secret.yaml
 ```
 
-## 3. Appliquer et tester
+### Middleware
 
-Après merge de la PR A1 et sync ArgoCD :
+```yaml
+forwardAuth:
+  address: http://oauth2-proxy.auth.svc.cluster.local:4180/
+  trustForwardHeader: true
+  authResponseHeaders:
+    - X-Auth-Request-User
+    - X-Auth-Request-Email
+```
+
+`OAUTH2_PROXY_UPSTREAMS=static://202` fait renvoyer `202` quand la session est
+valide.
+
+## Vérifications
 
 ```bash
-kubectl --kubeconfig ~/.talos/kubeconfig-prod get pods -n auth
-kubectl --kubeconfig ~/.talos/kubeconfig-prod get svc -n auth oauth2-proxy
+kubectl --kubeconfig ~/.talos/kubeconfig-prod -n auth get deploy,svc,pods
+kubectl --kubeconfig ~/.talos/kubeconfig-prod -n auth logs deploy/oauth2-proxy --tail=100
+```
+
+Au démarrage, les logs doivent contenir :
+
+```text
+Cookie settings: ... domains:.streamixs.com ...
 ```
 
 Tester :
 
-1. ouvrir `https://tautulli.streamixs.com` ;
-2. vérifier la redirection vers Pocket-ID ;
-3. vérifier le retour sur `https://oauth.streamixs.com/oauth2/callback` ;
-4. vérifier l'accès à Tautulli après login ;
-5. tester le logout ;
-6. vérifier que les autres apps passent toujours par l'ancien forward-auth.
+1. ouvrir une app protégée ;
+2. redirection vers Pocket-ID ;
+3. retour sur `https://oauth.streamixs.com/oauth2/callback` ;
+4. accès à l'app ;
+5. logout ;
+6. vérifier le cookie `_oauth2_proxy` sur `.streamixs.com`.
 
-Logs :
+## Rollback
 
-```bash
-kubectl --kubeconfig ~/.talos/kubeconfig-prod logs -n auth deploy/oauth2-proxy --tail=100
-```
-
-## 4. Rollback A1
-
-Si le test échoue :
-
-```bash
-# Remettre Tautulli sur l'ancien middleware
-git revert <commit-tautulli>
-```
-
-Ou modifier `argocd/base/tautulli/ingressroute.yaml` pour remettre
-`forward-auth`. Les autres apps ne sont pas affectées.
-
-## 5. PR A2 — cutover global
-
-Après validation :
-
-- changer l'adresse du middleware `forward-auth` vers
-  `http://oauth2-proxy.auth.svc.cluster.local:4180/` (racine, pas
-  `/oauth2/auth`) ;
-- mettre à jour la route callback vers `/oauth2/` ;
-- supprimer l'ancien callback `/_oauth` ;
-- supprimer l'ancien Deployment/Service `traefik-forward-auth` ;
-- supprimer l'ancien secret si plus utilisé ;
-- remettre Tautulli sur `forward-auth` (qui pointera désormais vers
-  oauth2-proxy) ;
-- supprimer le middleware temporaire `forward-auth-oauth2` ;
-- renommer éventuellement l'app `traefik-forward-auth` en `oauth2-proxy`.
+Un `git revert` de la PR de cutover recrée l'ancien
+Deployment/Service/Middleware/callback `traefik-forward-auth`, à condition que
+le revert inclue la restauration du secret SOPS supprimé.
 
 Les utilisateurs devront se reconnecter une fois : le cookie change de
 `_forward_auth` à `_oauth2_proxy`.
@@ -125,9 +115,7 @@ forwardAuth:
 ```
 
 Avec `/oauth2/auth`, oauth2-proxy renvoie `401` sans cookie et Traefik le
-transmet tel quel. Avec `/`, il renvoie `302` vers Pocket-ID. Le paramètre
-`OAUTH2_PROXY_UPSTREAMS=static://202` fait renvoyer `202` quand la session est
-valide, ce que Traefik ForwardAuth accepte.
+transmet tel quel. Avec `/`, il renvoie `302` vers Pocket-ID.
 
 Une alternative est d'utiliser un middleware `errors` avec
 `query: "/oauth2/start?rd={url}"` et `statusRewrites: "401": 302`, mais elle
@@ -142,7 +130,7 @@ Cookie settings: ... domains: path:/
 ```
 
 Si `domains:` est vide, le cookie n'est valable que pour
-`oauth.streamixs.com` et n'est pas envoyé à `tautulli.streamixs.com`.
+`oauth.streamixs.com` et n'est pas envoyé aux autres sous-domaines.
 La variable d'environnement doit être **`OAUTH2_PROXY_COOKIE_DOMAINS`**
 (pluriel), pas `OAUTH2_PROXY_COOKIE_DOMAIN` :
 
@@ -175,5 +163,6 @@ kubectl --kubeconfig ~/.talos/kubeconfig-prod rollout restart deploy/oauth2-prox
   drop ALL.
 - L'ingress est limité à Traefik ; l'egress à `auth.streamixs.com:443`.
 - Le secret est chiffré SOPS ; ne jamais commiter les valeurs réelles.
-- Le client OIDC `traefik-forward-auth` reste en place jusqu'à la fin de A2
-  pour permettre le rollback.
+- `--reverse-proxy=true` est nécessaire derrière Traefik. Un
+  `--trusted-proxy-ip` pourra être ajouté quand l'adressage des pods Traefik
+  sera stable.

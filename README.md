@@ -60,7 +60,7 @@ La procédure détaillée et les commandes `talosctl` exactes sont dans
 - [`docs/backup-restore.md`](docs/backup-restore.md) — état des backups et restore.
 - [`docs/upgrade-runbook.md`](docs/upgrade-runbook.md) — upgrades Talos/K8s/Cilium/Longhorn/CNPG.
 - [`docs/change-control.md`](docs/change-control.md) — PR, squash, sync manuelle.
-- [`docs/oauth2-proxy-migration.md`](docs/oauth2-proxy-migration.md) — migration forward-auth → oauth2-proxy.
+- [`docs/oauth2-proxy-migration.md`](docs/oauth2-proxy-migration.md) — migration forward-auth → oauth2-proxy (terminée).
 - [`docs/inventory.md`](docs/inventory.md) — nœuds, IPs, domaines, ports.
 - [`docs/scripts.md`](docs/scripts.md) — rotation ArgoCD/SOPS.
 

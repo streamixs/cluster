@@ -25,7 +25,7 @@ cluster de test.
 - **GitOps** : Talos + Cilium + ArgoCD ApplicationSet, auto-discovery des apps.
 - **Un seul environnement** : moins de maintenance, moins de risques.
 - **Secrets** : SOPS + Age + KSOPS, secret-scan en CI.
-- **Auth centralisée** : Pocket-ID + traefik-forward-auth sur la majorité des UI.
+- **Auth centralisée** : Pocket-ID + oauth2-proxy sur la majorité des UI.
 - **Observabilité** : Prometheus, Grafana, Loki, Promtail, Alertmanager.
 - **Stockage** : Longhorn pour les PVC RWO, NFS TrueNAS pour les médias/photos.
 - **Réseau** : Cilium kube-proxy replacement, L2 announcements, IP pool.
@@ -40,9 +40,9 @@ age. C'est le risque numéro un pour Immich, Securo, Hermes et les configs.
 
 ### 2. ArgoCD et l'auth trop exposés
 
-ArgoCD n'a ni OIDC ni forward-auth, l'AppProject est quasi cluster-admin, le
-repo-server détient la clé age et exécute des plugins, et `traefik-forward-auth`
-tourne en un seul replica sans probe.
+ArgoCD n'a ni OIDC ni forward-auth, et l'AppProject est quasi cluster-admin. Le
+repo-server détient aussi la clé age et exécute des plugins. En revanche,
+`oauth2-proxy` est maintenant en 2 replicas avec PDB, probes et NetworkPolicy.
 
 ### 3. Segmentation réseau insuffisante
 
@@ -104,7 +104,7 @@ et le job agrégé `all-kustomize` existe. Il reste : Pluto, `actionlint`,
 ### Phase 5 — Robustesse
 
 - [ ] Probes, PDB, resources, priorityClass.
-- [ ] Anti-affinité Traefik/forward-auth.
+- [ ] Anti-affinité Traefik (oauth2-proxy a déjà une anti-affinité required).
 - [ ] NetworkPolicies et PSS.
 - [ ] Découper l'app media.
 - [ ] Renovate : `minimumReleaseAge`, managers manquants.

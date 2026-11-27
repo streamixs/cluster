@@ -17,8 +17,8 @@
       receiver `null`, les alertes sont jetées).
 - [ ] **Grafana** : supprimer `adminPassword: changeme`, utiliser un Secret.
 - [ ] **ArgoCD** : OIDC Pocket-ID + RBAC, ou forward-auth + restriction IP.
-- [ ] **Remplacer `traefik-forward-auth` par `oauth2-proxy`** : A1 déployé en
-      parallèle, A2 cutover global. Voir `docs/oauth2-proxy-migration.md`.
+- [x] **Remplacer `traefik-forward-auth` par `oauth2-proxy`** : cutover global
+      terminé. Voir `docs/oauth2-proxy-migration.md`.
 - [ ] **ArgoCD AppProject** : least privilege (sourceRepos, destinations,
       clusterResourceWhitelist).
 - [ ] **NetworkPolicies** : media, immich, argocd, auth, monitoring,
@@ -54,11 +54,11 @@
 
 ## P2 — Robustesse
 
-- [ ] Probes manquantes : sonarr, lidarr, prowlarr, tautulli,
-      traefik-forward-auth, liveness Hermes.
-- [ ] PDB : traefik-forward-auth, cert-manager, ArgoCD, CNPG, monitoring.
-- [ ] `traefik-forward-auth` : 2 replicas + anti-affinité + NetworkPolicy +
-      `WHITELIST`.
+- [ ] Probes manquantes : sonarr, lidarr, prowlarr, tautulli, liveness Hermes.
+- [ ] PDB : cert-manager, ArgoCD, CNPG, monitoring.
+- [x] `oauth2-proxy` : 2 replicas + anti-affinité + NetworkPolicy + probes.
+- [ ] `oauth2-proxy` : restreindre les emails (`email-domain`/`allowed-group`)
+      au lieu de `*`.
 - [ ] Traefik : anti-affinité required ou topologySpreadConstraints.
 - [ ] Resources + priorityClass : Traefik, Cilium, cert-manager, ArgoCD,
       Longhorn.
@@ -81,6 +81,8 @@
 - [x] Mettre à jour `PRIVACY.md` pour Ollama Cloud, en gardant le fichier à la
       racine (URL Google OAuth).
 - [ ] Supprimer `scripts/hermes-migrate-pod.yaml` (migration terminée).
+- [ ] Renommer l'Application ArgoCD `traefik-forward-auth` en `oauth2-proxy`
+      (garder le cutover séparé du renommage).
 - [ ] Décider 1 CP + backup/restore ou 3 CP ; documenter le RTO/RPO.
 - [ ] Chiffrement des disques Talos (LUKS2/TPM) pour les données au repos.
 - [ ] ExternalDNS + Cloudflare, Gatus, Crowdsec/rate limiting Traefik.
@@ -95,6 +97,8 @@
 - [x] Monitoring : kube-prometheus-stack + Loki + Promtail.
 - [x] Renovate Bot (merges manuels, pas d'auto-merge).
 - [x] Ruleset `main` actif : PR + checks requis + squash only + pas de force push.
+- [x] Auth : `traefik-forward-auth` remplacé par `oauth2-proxy` (2 replicas,
+      PDB, probes, NetworkPolicy).
 - [x] CI : rendu de toutes les apps (KSOPS inclus), kubeconform + schémas CRD,
       Terraform, SOPS check, job agrégé `all-kustomize`.
 - [x] Images épinglées (sauf quelques cas suivis).

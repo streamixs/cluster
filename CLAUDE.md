@@ -83,7 +83,8 @@ ArgoCD uses an **ApplicationSet** (`argocd/bootstrap/app-of-apps.yaml`) that aut
 - **monitoring** — kube-prometheus-stack, Loki, Promtail
 - **securo** — gestionnaire de finances auto-hébergé, backed par CloudNativePG
 - **traefik** — ingress controller (LoadBalancer via Cilium L2)
-- **traefik-forward-auth** — auth via Pocket-ID en middleware
+- **traefik-forward-auth** — app ArgoCD historiquement nommée ainsi ; déploie
+  désormais `oauth2-proxy` (auth Pocket-ID en middleware)
 
 ### Stack media (`argocd/apps/media`)
 
@@ -120,7 +121,8 @@ Convention : fichiers chiffres en `.sops.yaml`.
 
 La plupart des UI sensibles (Sonarr, Radarr, Prowlarr, qBittorrent, Grafana,
 Prometheus, Alertmanager, etc.) passent par le middleware Traefik `forward-auth`
-(namespace `auth`) qui delegue a **Pocket-ID** (OIDC).
+(namespace `auth`) qui delegue a **oauth2-proxy**, lui-même adossé à
+**Pocket-ID** (OIDC). L'ancien `traefik-forward-auth` a été supprimé.
 
 Exceptions assumées :
 - ArgoCD n'est pas encore derrière `forward-auth` ni OIDC : accès par compte
@@ -169,7 +171,7 @@ Config yamllint dans `.yamllint.yaml`. Le fichier `argocd/base/cert-manager/issu
 - `docs/backup-restore.md` — Backups et restore
 - `docs/upgrade-runbook.md` — Upgrades Talos/K8s/Cilium/Longhorn/CNPG
 - `docs/change-control.md` — PR, squash, sync manuelle
-- `docs/oauth2-proxy-migration.md` — Migration forward-auth → oauth2-proxy
+- `docs/oauth2-proxy-migration.md` — Migration forward-auth → oauth2-proxy (terminée)
 - `docs/inventory.md` — Nœuds, IPs, domaines, ports
 - `docs/scripts.md` — Rotation ArgoCD/SOPS
 - `TODO.md` — Backlog priorisé
