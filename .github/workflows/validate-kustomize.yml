@@ -2,29 +2,30 @@ name: Validate kustomize + kubeconform
 
 on:
   pull_request:
-    paths:
-      - "argocd/**"
-      - ".github/workflows/validate-kustomize.yml"
   push:
     branches:
       - main
-    paths:
-      - "argocd/**"
-      - ".github/workflows/validate-kustomize.yml"
 
 permissions:
   contents: read
 
+concurrency:
+  group: validate-kustomize-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
-  KUSTOMIZE_VERSION: 5.6.0
-  KUBECONFORM_VERSION: 0.6.7
+  KUSTOMIZE_VERSION: 5.8.3
+  KUBECONFORM_VERSION: 0.8.0
   HELM_VERSION: v3.16.4
-  KUBERNETES_VERSION: "1.32.0"
+  KUBERNETES_VERSION: "1.35.3"
+  PYYAML_VERSION: "6.0.2"
+  CRD_SCHEMA_BASE: "https://raw.githubusercontent.com/datreeio/CRDs-catalog/main"
 
 jobs:
   discover:
     name: Discover apps
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       apps: ${{ steps.list.outputs.apps }}
     steps:
@@ -40,6 +41,7 @@ jobs:
     name: ${{ matrix.app }}
     needs: discover
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -80,38 +82,44 @@ jobs:
           tar -xzf kubeconform.tar.gz -C /usr/local/bin kubeconform
           kubeconform -v
 
-      - name: Render app with kustomize
-        id: build
+      - name: Install PyYAML
         run: |
-          set +e
-          out=$(kustomize build --enable-helm "argocd/apps/${{ matrix.app }}" 2> build.err)
-          rc=$?
-          if [ "$rc" -ne 0 ]; then
-            if grep -qE "ksops|exec plugin|plugin.*not.*found" build.err; then
-              echo "::warning ::App '${{ matrix.app }}' utilise KSOPS, validation kustomize-build skippée (decrypt impossible en CI)."
-              echo "skipped=true" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-            echo "::error ::kustomize build a échoué pour '${{ matrix.app }}':"
-            cat build.err
-            exit "$rc"
-          fi
-          echo "$out" > rendered.yaml
-          echo "skipped=false" >> "$GITHUB_OUTPUT"
+          python3 -m pip install --disable-pip-version-check --no-cache-dir \
+            "pyyaml==${PYYAML_VERSION}"
+
+      # Les generateurs KSOPS sont retires dans une copie temporaire : on valide
+      # toutes les apps, y compris media/cert-manager/hermes/securo/traefik-forward-auth.
+      # Les fichiers de secrets restent chiffres et ne sont pas rendus.
+      - name: Render app with kustomize
+        run: |
+          ./scripts/ci/render-app.sh "${{ matrix.app }}" > rendered.yaml
           echo "Rendered $(grep -c '^kind:' rendered.yaml || echo 0) resources."
 
       - name: Validate with kubeconform
-        if: steps.build.outputs.skipped != 'true'
-        # CRDs (Traefik, cert-manager, CNPG, Longhorn, etc.) ne sont pas
-        # validés faute de catalogue compatible avec le template kubeconform
-        # (casing minuscule des fichiers). -ignore-missing-schemas les
-        # accepte sans bloquer. La validation reste stricte sur les types
-        # K8s core.
+        # Schemas core Kubernetes + CRDs du catalogue Datree. Les CRDs inconnues
+        # restent tolérées par -ignore-missing-schemas, mais les CRDs courantes
+        # (Traefik, Cilium, CNPG, Longhorn, cert-manager, monitoring) sont validées.
         run: |
           kubeconform \
             -strict \
             -summary \
             -kubernetes-version "${KUBERNETES_VERSION}" \
             -schema-location default \
+            -schema-location "${CRD_SCHEMA_BASE}/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json" \
             -ignore-missing-schemas \
             rendered.yaml
+
+  all-kustomize:
+    name: all-kustomize
+    needs: [discover, validate]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check validation result
+        run: |
+          if [ "${{ needs.discover.result }}" != "success" ] || [ "${{ needs.validate.result }}" != "success" ]; then
+            echo "Une ou plusieurs apps ont échoué la validation kustomize/kubeconform."
+            exit 1
+          fi
+          echo "Toutes les apps sont valides."

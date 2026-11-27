@@ -41,6 +41,6 @@ resource "kubernetes_secret" "sops-age" {
     }
   }
 
-  depends_on = [ kubernetes_namespace.argocd ]
+  depends_on = [kubernetes_namespace.argocd]
 }
 
