@@ -17,8 +17,8 @@ variable "argocd_oidc_client_secret" {
   default     = ""
 }
 
-variable "argocd_oidc_admin_email" {
-  description = "Pocket-ID email mapped to the ArgoCD admin role"
+variable "argocd_oidc_admin_group" {
+  description = "Pocket-ID group mapped to the ArgoCD admin role"
   type        = string
   default     = ""
 }

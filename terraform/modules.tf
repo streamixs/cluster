@@ -7,5 +7,5 @@ module "argocd" {
 
   argocd_oidc_client_id     = var.argocd_oidc_client_id
   argocd_oidc_client_secret = var.argocd_oidc_client_secret
-  argocd_oidc_admin_email   = var.argocd_oidc_admin_email
+  argocd_oidc_admin_group   = var.argocd_oidc_admin_group
 }

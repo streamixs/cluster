@@ -42,7 +42,7 @@ OIDC est optionnel et desactive tant que ces variables sont vides :
 
 - `argocd_oidc_client_id`
 - `argocd_oidc_client_secret` (sensible)
-- `argocd_oidc_admin_email`
+- `argocd_oidc_admin_group`
 
 Quand elles sont renseignees, Terraform cree le Secret `argocd-oidc` et ajoute
 la config OIDC + RBAC au release Helm. Procedure complete :

@@ -9,9 +9,9 @@ resource "kubernetes_namespace" "argocd" {
 }
 
 locals {
-  # OIDC est active uniquement quand le client Pocket-ID et l'email admin
+  # OIDC est active uniquement quand le client Pocket-ID et le groupe admin
   # sont fournis. Sans ces variables, le bootstrap reste identique.
-  oidc_enabled = var.argocd_oidc_client_id != "" && var.argocd_oidc_admin_email != ""
+  oidc_enabled = var.argocd_oidc_client_id != "" && var.argocd_oidc_admin_group != ""
 }
 
 # Secret separe pour que le client secret OIDC ne soit pas dans les values
@@ -48,7 +48,7 @@ resource "helm_release" "argocd" {
     local.oidc_enabled ? [
       templatefile("${path.module}/argocd-oidc-values.yaml.tpl", {
         client_id   = var.argocd_oidc_client_id
-        admin_email = var.argocd_oidc_admin_email
+        admin_group = var.argocd_oidc_admin_group
       })
     ] : []
   )
@@ -60,8 +60,8 @@ resource "helm_release" "argocd" {
 
   lifecycle {
     precondition {
-      condition     = (var.argocd_oidc_client_id == "") == (var.argocd_oidc_admin_email == "")
-      error_message = "argocd_oidc_client_id and argocd_oidc_admin_email must be set together."
+      condition     = (var.argocd_oidc_client_id == "") == (var.argocd_oidc_admin_group == "")
+      error_message = "argocd_oidc_client_id and argocd_oidc_admin_group must be set together."
     }
 
     precondition {
