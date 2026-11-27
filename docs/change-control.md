@@ -14,19 +14,23 @@
 
 À la date de rédaction :
 
-- `main` n'est pas encore protégée par un ruleset actif.
-- `allow_merge_commit` et `allow_rebase_merge` sont encore autorisés.
-- `allow_auto_merge` est désactivé.
-- Les branches ne sont pas supprimées après merge.
+- `allow_merge_commit: false`
+- `allow_rebase_merge: false`
+- `allow_squash_merge: true`
+- titre de squash : `PR_TITLE`
+- message de squash : `PR_BODY`
+- `allow_auto_merge: false`
+- les branches ne sont pas supprimées après merge (choix assumé)
+- `main` n'est pas encore protégée par un ruleset actif
 
-Cible :
+Cible (après merge de la PR CI qui ajoute `all-kustomize`) :
 
 - ruleset actif sur `main`,
 - PR obligatoire,
-- checks requis,
+- checks requis : `YAML lint`, `SOPS check`, `Detect secrets`,
+  `all-kustomize`, `Terraform validate`,
 - pas de force push ni suppression,
 - historique linéaire,
-- merge commit et rebase désactivés,
 - squash avec titre de PR.
 
 ## Apps à risque
