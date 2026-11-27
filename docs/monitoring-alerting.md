@@ -62,6 +62,12 @@ alertmanager:
 Le Secret est monté par l'opérateur dans
 `/etc/alertmanager/secrets/alertmanager-telegram/`.
 
+`externalUrl` est renseigné pour Prometheus
+(`https://prometheus.streamixs.com`) et Alertmanager
+(`https://alertmanager.streamixs.com`) : les liens « Source » des notifications
+pointent donc vers les URLs publiques, derrière `forward-auth`, au lieu du
+service interne `*.monitoring.svc`.
+
 ### Tester
 
 L'alerte `Watchdog` est envoyée en permanence. Après sync, vérifier :

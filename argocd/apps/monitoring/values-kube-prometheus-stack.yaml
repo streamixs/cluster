@@ -32,6 +32,8 @@ alertmanager:
             parse_mode: HTML
             send_resolved: true
   alertmanagerSpec:
+    # Liens publics dans les notifications (au lieu du service interne).
+    externalUrl: https://alertmanager.streamixs.com
     # Monte le secret alertmanager-telegram dans
     # /etc/alertmanager/secrets/alertmanager-telegram/
     secrets:
@@ -65,6 +67,10 @@ grafana:
     existingSecret: grafana-admin
   defaultDashboardsEnabled: true
   defaultDashboardsTimezone: Europe/Paris
+  grafana.ini:
+    server:
+      # Liens publics dans Grafana (alertes, partages, redirections OAuth).
+      root_url: https://grafana.streamixs.com
   persistence:
     enabled: true
     type: pvc
@@ -108,6 +114,8 @@ prometheus:
   ingress:
     enabled: false
   prometheusSpec:
+    # Utilise l'URL publique dans les alertes (champ Source des notifications).
+    externalUrl: https://prometheus.streamixs.com
     replicas: 1
     retention: 30d
     retentionSize: "45GB"
