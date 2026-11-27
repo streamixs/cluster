@@ -9,6 +9,11 @@ defaultSettings:
   storageMinimalAvailablePercentage: 10
   nodeDownPodDeletionPolicy: delete-both-statefulset-and-deployment-pod
 
+metrics:
+  serviceMonitor:
+    # Permet a kube-prometheus-stack de scraper Longhorn.
+    enabled: true
+
 persistence:
   defaultClass: true
   defaultClassReplicaCount: 2
