@@ -8,7 +8,30 @@ alertmanager:
   enabled: true
   ingress:
     enabled: false
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      receiver: discord
+      # Le chart ajoute sinon une route Watchdog -> receiver "null".
+      # On route tout vers Discord pour que le Watchdog teste le webhook.
+      routes: []
+      group_by:
+        - alertname
+        - namespace
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 4h
+    receivers:
+      - name: discord
+        discord_configs:
+          - webhook_url_file: /etc/alertmanager/secrets/alertmanager-discord/webhook-url
+            send_resolved: true
   alertmanagerSpec:
+    # Monte le secret alertmanager-discord dans
+    # /etc/alertmanager/secrets/alertmanager-discord/
+    secrets:
+      - alertmanager-discord
     replicas: 1
     retention: 120h
     storage:
@@ -29,7 +52,9 @@ alertmanager:
 
 grafana:
   enabled: true
-  adminPassword: changeme
+  admin:
+    # Secret SOPS : grafana-admin (admin-user/admin-password)
+    existingSecret: grafana-admin
   defaultDashboardsEnabled: true
   defaultDashboardsTimezone: Europe/Paris
   persistence:
