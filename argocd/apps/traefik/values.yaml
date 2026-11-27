@@ -49,11 +49,11 @@ tlsStore:
     defaultCertificate:
       secretName: streamixs-com-tls
 
-logs:
-  general:
-    level: INFO
-  access:
-    enabled: true
+# Chart 42 : `logs` a ete remplace par `log` + `accessLog`.
+log:
+  level: INFO
+accessLog:
+  enabled: true
 
 metrics:
   prometheus:
