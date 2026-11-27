@@ -23,7 +23,7 @@
 - les branches ne sont pas supprimées après merge (choix assumé)
 - `main` n'est pas encore protégée par un ruleset actif
 
-Cible (après merge de la PR CI qui ajoute `all-kustomize`) :
+Cible (la PR CI #224 est mergée ; il reste à activer le ruleset) :
 
 - ruleset actif sur `main`,
 - PR obligatoire,

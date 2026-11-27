@@ -49,11 +49,13 @@ tourne en un seul replica sans probe.
 NetworkPolicies uniquement sur Securo et Hermes. Media, Immich, ArgoCD, auth,
 monitoring et external-services ne sont pas cloisonnés.
 
-### 4. CI incomplète
+### 4. CI partielle
 
-Les apps KSOPS sont sautées, donc `media` en entier n'est pas validée. Les CRDs
-ne sont pas validées, Terraform/Talos ne sont pas validés, et la version K8s de
-la CI est en retard.
+Depuis #224, toutes les apps sont rendues (KSOPS inclus), les CRDs sont
+validées via le catalogue Datree, Terraform et les secrets SOPS sont vérifiés,
+et le job agrégé `all-kustomize` existe. Il reste : Pluto, `actionlint`,
+`shellcheck`, validation Talos, test d'admission kind/k3d, et l'activation
+effective de la branch protection.
 
 ## Plan d'amélioration
 
@@ -71,13 +73,13 @@ la CI est en retard.
 
 ### Phase 2 — CI de validation complète
 
-- [ ] Rendre toutes les apps, y compris KSOPS.
-- [ ] Kubeconform avec schémas CRD.
+- [x] Rendre toutes les apps, y compris KSOPS.
+- [x] Kubeconform avec schémas CRD.
 - [ ] Pluto.
-- [ ] Terraform fmt/validate.
+- [x] Terraform fmt/validate.
 - [ ] Actionlint, shellcheck, renovate-config-validator.
 - [ ] Actions GitHub épinglées par SHA.
-- [ ] Job CI agrégé `all-validations`.
+- [x] Job CI agrégé `all-kustomize`.
 - [ ] Branch protection sur `main` (PR + checks requis + squash only + pas de
       force push).
 - [ ] `make validate` local.

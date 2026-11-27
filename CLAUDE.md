@@ -150,13 +150,15 @@ Exceptions assumées :
 ## CI
 
 GitHub Actions :
-- `validate-manifests.yml` : `yamllint` sur les PRs
-- `validate-kustomize.yml` : `kustomize build` + `kubeconform` par app
+- `validate-manifests.yml` : `yamllint` + `SOPS check`
+- `validate-kustomize.yml` : rendu de toutes les apps, KSOPS inclus,
+  `kubeconform` avec schémas CRD, job agrégé `all-kustomize`
+- `validate-terraform.yml` : `terraform fmt/init/validate`
 - `secret-scan.yml` : detection de secrets en clair
 
-Limites connues : les apps KSOPS sont sautées, les CRDs ne sont pas validées,
-la version K8s de la CI est en retard, Terraform/Talos ne sont pas validés.
-Voir `docs/testing.md` et `TODO.md`.
+Limites restantes : Pluto, `actionlint`/`shellcheck`, validation Talos, test
+d'admission kind/k3d, branch protection encore à activer. Voir
+`docs/testing.md` et `TODO.md`.
 
 Config yamllint dans `.yamllint.yaml`. Le fichier `argocd/base/cert-manager/issuers/secret-cf-token.yaml` est exclu (SOPS-encrypted).
 

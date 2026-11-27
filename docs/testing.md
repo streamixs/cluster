@@ -6,20 +6,25 @@ maintenir un second cluster permanent.
 ## Ce que la CI vérifie aujourd'hui
 
 - `yamllint` sur le repo.
-- `kustomize build --enable-helm` par app (avec un angle mort KSOPS).
-- `kubeconform` sur les manifests rendus, avec `-ignore-missing-schemas`.
+- `SOPS check` : les fichiers de secrets suivis sont bien chiffrés.
+- Rendu de **toutes** les apps via `scripts/ci/render-app.sh` :
+  `media`, `cert-manager`, `hermes`, `securo`, `traefik-forward-auth` inclus.
+- `kubeconform` sur les manifests rendus, avec les schémas core + CRD Datree.
+  Certains CRDs restent `skipped` faute de schéma, mais les types core et la
+  majorité des CRDs sont validés.
+- `terraform fmt -check`, `terraform init -backend=false`, `terraform validate`.
 - `gitleaks` sur l'historique.
+- Job agrégé `all-kustomize`, utilisable comme check requis.
 
 ## Angles morts connus
 
-- Les apps KSOPS (`media`, `cert-manager`, `hermes`, `securo`,
-  `traefik-forward-auth`) sont **sautées** par `validate-kustomize`.
-  `media` en entier n'est donc pas validée.
-- `KUBERNETES_VERSION` de la CI est encore `1.32.0` alors que la prod est en
-  `1.35.3`.
-- Les CRDs ne sont pas validées (`-ignore-missing-schemas`).
-- Terraform, Talos, `actionlint` et `shellcheck` ne sont pas validés.
+- `Pluto` n'est pas encore exécuté.
+- `actionlint`, `shellcheck` et `renovate-config-validator` ne sont pas dans la CI.
+- Talos n'est pas validé en CI.
 - Aucun test d'admission réel (kind/k3d) n'est exécuté.
+- La branch protection n'est pas encore active : les checks ne bloquent pas
+  encore un merge.
+- Les actions GitHub ne sont pas encore épinglées par SHA.
 
 Ces points sont suivis dans `TODO.md`.
 
@@ -33,22 +38,28 @@ yamllint -c .yamllint.yaml .
 
 ### Rendu Kustomize
 
-Pour une app sans KSOPS :
+Le script CI rend n'importe quelle app sans déchiffrer les secrets (il retire
+les générateurs KSOPS dans une copie temporaire) :
+
+```bash
+# nécessite PyYAML : python3 -m pip install --user pyyaml
+./scripts/ci/render-app.sh <app> > /tmp/rendered.yaml
+```
+
+Pour une app sans KSOPS, le rendu direct fonctionne aussi :
 
 ```bash
 kustomize build --enable-helm argocd/apps/<app>
 ```
 
-Pour une app avec KSOPS, installer `ksops` et la clé age :
+Pour une app avec KSOPS et la vraie clé age :
 
 ```bash
 export SOPS_AGE_KEY_FILE="$PWD/.config/age.agekey"
 kustomize build --enable-helm argocd/apps/media
 ```
 
-Sans clé age, on peut au moins vérifier la structure en retirant temporairement
-les blocs `generators:` dans une copie de travail. Ne jamais commiter cette
-copie modifiée.
+Ne jamais commiter une copie modifiée du repo pour contourner KSOPS.
 
 ### Terraform
 

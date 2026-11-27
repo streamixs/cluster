@@ -23,26 +23,27 @@
       external-services. Securo et Hermes servent de modèle.
 - [ ] **Pod Security Standards** : baseline sur tous les namespaces
       applicatifs, restricted là où c'est possible.
-- [ ] **SOPS check en CI** : vérifier que les secrets sont bien chiffrés.
+- [x] **SOPS check en CI** : vérifier que les secrets sont bien chiffrés.
 
 ## P1 — CI et pré-merge
 
-- [ ] **Rendre toutes les apps en CI**, y compris celles qui utilisent KSOPS
+- [x] **Rendre toutes les apps en CI**, y compris celles qui utilisent KSOPS
       (`media`, `cert-manager`, `hermes`, `securo`, `traefik-forward-auth`).
-- [ ] **Kubeconform + schémas CRD** (Traefik, Cilium, CNPG, Longhorn,
-      cert-manager, monitoring).
+- [x] **Kubeconform + schémas CRD** (Traefik, Cilium, CNPG, Longhorn,
+      cert-manager, monitoring). Certains CRDs restent `skipped` faute de
+      schéma, mais les types core et la majorité des CRDs sont validés.
 - [ ] **Pluto** pour les APIs dépréciées.
-- [ ] **Kubernetes version CI** : passer de `1.32.0` à `1.35.3`.
-- [ ] **Terraform CI** : `fmt -check`, `init -backend=false`, `validate`,
-      éventuellement `tflint`.
+- [x] **Kubernetes version CI** : passée à `1.35.3`.
+- [x] **Terraform CI** : `fmt -check`, `init -backend=false`, `validate`.
 - [ ] **Actionlint + shellcheck + renovate-config-validator**.
 - [ ] **Actions GitHub épinglées par SHA**.
 - [ ] **Branch protection `main`** : PR obligatoire, checks requis,
       branche à jour, pas de force push, squash only.
-- [ ] **Job CI agrégé** `all-validations` à exiger dans la protection.
+- [x] **Job CI agrégé** `all-kustomize` à exiger dans la protection.
 - [ ] **`make validate`** : reproduire la CI en local.
 - [ ] **PR template** : checklist validation, backup, rollback.
-- [ ] **Désactiver l'auto-merge Renovate** et documenter le merge manuel.
+- [ ] **Désactiver l'auto-merge Renovate** et documenter le merge manuel
+      (PR #223 prête, à merger).
 - [ ] **Sync manuelle / sync windows** pour Cilium, Longhorn, CNPG,
       cert-manager, Traefik.
 - [ ] **Sync waves** : CNPG → Immich/Securo, cert-manager → Traefik,
@@ -90,7 +91,8 @@
 
 - [x] Monitoring : kube-prometheus-stack + Loki + Promtail.
 - [x] Renovate Bot (merges manuels, pas d'auto-merge).
-- [x] CI `kustomize build` + kubeconform (partielle).
+- [x] CI : rendu de toutes les apps (KSOPS inclus), kubeconform + schémas CRD,
+      Terraform, SOPS check, job agrégé `all-kustomize`.
 - [x] Images épinglées (sauf quelques cas suivis).
 - [x] SOPS + Age + KSOPS + gitleaks.
 - [x] Traefik 2 replicas + PDB, Cilium L2 + IP pool.

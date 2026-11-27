@@ -93,12 +93,14 @@ mot de passe admin initial ; voir [`terraform/STATE.md`](terraform/STATE.md).
 
 ### Testing avant merge
 
-- La CI valide les manifests sur chaque PR (`yamllint`, `kustomize build`,
-  `kubeconform`, `gitleaks`).
+- La CI valide sur chaque PR : `yamllint`, rendu de **toutes** les apps
+  (KSOPS inclus), `kubeconform` avec schémas CRD, Terraform, check SOPS,
+  `gitleaks`.
+- Le job agrégé `all-kustomize` sert de gate global pour la branch protection.
 - Un lab `kind`/`k3d` peut être créé à la demande pour un test applicatif ;
   il n'est pas un environnement permanent.
-- Les limites actuelles (apps KSOPS sautées, CRDs non validées, Terraform/Talos
-  non validés) et la checklist sont dans [`docs/testing.md`](docs/testing.md).
+- Les limites restantes (Pluto, Talos, test d'admission kind) et la checklist
+  sont dans [`docs/testing.md`](docs/testing.md).
 
 ### Releases (automatique)
 
