@@ -1,6 +1,6 @@
 # Privacy Policy — hermes-agent
 
-_Last updated: 2026-09-19_
+_Last updated: 2026-11-27_
 
 This document exists because Google requires a privacy policy URL before an
 OAuth application can be moved to production. It describes, accurately, what
@@ -12,11 +12,12 @@ A **personal, single-user** deployment of [Hermes Agent](https://github.com/Nous
 (Nous Research), self-hosted on a private Kubernetes cluster owned and operated
 by the owner of this repository.
 
-It is not a commercial service. There is no sign-up, no public endpoint, and no
-user base: the only person who authorizes it and the only person whose data it
-touches are the same individual. The OAuth client is configured as *External*
-solely because the underlying Google account is a personal one, which makes the
-*Internal* audience type unavailable.
+It is not a commercial service. There is no sign-up and no user base: the only
+person who authorizes it and the only person whose data it touches are the same
+individual. The dashboard is exposed at `hermes.streamixs.com` behind
+Pocket-ID/OIDC, but there is no public registration. The OAuth client is
+configured as *External* solely because the underlying Google account is a
+personal one, which makes the *Internal* audience type unavailable.
 
 ## What data is accessed
 
@@ -37,22 +38,21 @@ is not enabled on the Cloud project is inert.
 
 ## Where the data goes
 
-- **Processing happens on hardware operated by the repository owner.** There is
-  no intermediate server, no hosted backend, and no analytics of any kind.
+- **The Hermes agent runs on hardware operated by the repository owner.** There
+  is no intermediate server, no hosted backend, and no analytics of any kind.
 - **OAuth credentials** (the client secret and the refresh token) are stored on a
   persistent volume inside that cluster. They are not present in this repository,
   in any form, encrypted or otherwise.
-- **Message and calendar content is sent to the configured language model
-  provider** in order to generate a response. This is the one case where data
-  leaves the owner's infrastructure. At the time of writing that provider is a
-  third-party API; the deployment is being migrated to a self-hosted model running
-  on the owner's own network, after which no content leaves the premises. This
-  section will be updated when that migration completes.
+- **Message and calendar content is sent to Ollama Cloud** (`ollama.com`) for
+  language-model inference. This is the one case where data leaves the owner's
+  infrastructure. Ollama Cloud is a third-party service and processes the
+  content according to its own terms and privacy policy. No self-hosted model is
+  used for this deployment at the time of writing.
 
 ## What is not done
 
 - No data is sold, rented, shared, or otherwise disclosed to any party other than
-  the language model provider named above.
+  Ollama Cloud, the language model provider named above.
 - No advertising, profiling, or tracking.
 - No access is granted to anyone other than the account owner.
 - Data is not used to train any model.

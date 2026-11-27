@@ -1,16 +1,16 @@
-ENV ?= dev
+ENV ?= prod
 TALOS_DIR := talos/$(ENV)
 TF_DIR := terraform
-CLUSTER_NAME := streamixs-$(ENV)
 TALOS_VERSION ?= v1.12.6
-K8S_VERSION   ?= v1.32.0
+K8S_VERSION   ?= v1.35.3
 
-# Kubeconfig par environnement
-ifeq ($(ENV),dev)
-  KUBECONFIG := $(HOME)/.talos/kubeconfig-dev
-else
-  KUBECONFIG := $(HOME)/.talos/kubeconfig-prod
+# Un seul environnement permanent: la prod. Le lab de test est jetable
+# (kind/k3d) et ne passe jamais par ce Makefile.
+ifneq ($(ENV),prod)
+$(error ENV=$(ENV) non supporte: seul ENV=prod existe)
 endif
+KUBECONFIG := $(HOME)/.talos/kubeconfig-prod
+AGE_KEY := .config/age.agekey
 
 
 # ============================================================
@@ -30,49 +30,26 @@ CILIUM_KUSTOMIZATION := argocd/apps/cilium/kustomization.yaml
 CILIUM_VERSION       := $(shell yq -r '.helmCharts[] | select(.name == "cilium") | .version' $(CILIUM_KUSTOMIZATION) 2>/dev/null)
 
 # ============================================================
-# Bootstrap complet
+# Bootstrap prod (manuel)
 # ============================================================
 
-bootstrap: cluster cilium argocd ## Bootstrap complet (cluster + cilium + argocd)
-
-# ============================================================
-# Cluster Talos
-# ============================================================
-
-cluster: ## Creer le cluster Talos
-ifeq ($(ENV),dev)
-	@echo "==> Creation du cluster dev (Docker)..."
-	talosctl cluster create docker \
-		--name $(CLUSTER_NAME) \
-		--workers 2 \
-		--kubernetes-version v1.35.0 \
-		--image ghcr.io/siderolabs/talos:v1.12.0 \
-		--memory-controlplanes 4096 \
-		--memory-workers 4096 \
-		--config-patch @$(TALOS_DIR)/patch.yaml
-	@echo "==> Recuperation du kubeconfig..."
-	@API_PORT=$$(docker port $(CLUSTER_NAME)-controlplane-1 6443/tcp | cut -d: -f2) && \
-		talosctl kubeconfig $(KUBECONFIG) --nodes 10.5.0.2 --force && \
-		kubectl config set-cluster $(CLUSTER_NAME) \
-			--server=https://127.0.0.1:$$API_PORT \
-			--kubeconfig=$(KUBECONFIG)
-	@echo "==> Attente que tous les nodes soient Ready..."
-	@kubectl --kubeconfig $(KUBECONFIG) wait --for=condition=Ready nodes --all --timeout=300s
-	@echo "==> Cluster dev pret."
-else
-	@echo "==> Application des configs Talos (prod)..."
-	@echo "    1. make talos-gen-secret ENV=prod"
-	@echo "    2. make talos-gen ENV=prod"
-	@echo "    3. talosctl apply-config sur chaque node"
-	@echo "    4. talosctl bootstrap sur le premier CP"
-	@exit 1
-endif
+bootstrap: ## Afficher la procedure de bootstrap prod (manuel)
+	@echo "==> Bootstrap prod: procedure manuelle"
+	@echo "    1. make talos-gen-secret"
+	@echo "    2. make talos-gen"
+	@echo "    3. talosctl apply-config --nodes <IP> --file $(TALOS_DIR)/clusterconfig/<host>.yaml"
+	@echo "    4. talosctl bootstrap --nodes $(FIRST_CP)"
+	@echo "    5. make cilium"
+	@echo "    6. make argocd"
+	@echo "    7. make gitops"
+	@echo ""
+	@echo "    Voir README.md > Bootstrap prod pour le detail."
 
 # ============================================================
 # Cilium (CNI)
 # ============================================================
 
-cilium: ## Installer Cilium via Helm (remplace flannel en dev)
+cilium: ## Installer Cilium via Helm
 ifeq ($(CILIUM_VERSION),)
 	@echo "ERREUR: version Cilium illisible dans $(CILIUM_KUSTOMIZATION)"
 	@echo "        (yq installe ? champ .helmCharts[].version present ?)"
@@ -81,14 +58,6 @@ endif
 	@echo "==> Installation de Cilium $(CILIUM_VERSION)..."
 	helm repo add cilium https://helm.cilium.io/ 2>/dev/null || true
 	helm repo update cilium
-ifeq ($(ENV),dev)
-	@echo "==> Suppression de flannel (CNI par defaut)..."
-	-kubectl --kubeconfig $(KUBECONFIG) delete daemonset -n kube-system kube-flannel 2>/dev/null
-	-kubectl --kubeconfig $(KUBECONFIG) delete configmap -n kube-system kube-flannel-cfg 2>/dev/null
-	-kubectl --kubeconfig $(KUBECONFIG) delete serviceaccount -n kube-system flannel 2>/dev/null
-	-kubectl --kubeconfig $(KUBECONFIG) delete clusterrole flannel 2>/dev/null
-	-kubectl --kubeconfig $(KUBECONFIG) delete clusterrolebinding flannel 2>/dev/null
-endif
 	helm upgrade --install cilium cilium/cilium \
 		--namespace kube-system \
 		--kubeconfig $(KUBECONFIG) \
@@ -112,6 +81,9 @@ argocd: ## Deployer ArgoCD via Terraform
 	@echo "Mot de passe admin ArgoCD :"
 	cd $(TF_DIR) && terraform output argocd_admin_password
 
+gitops: ## Appliquer AppProject + ApplicationSet sur le cluster prod
+	kubectl --kubeconfig $(KUBECONFIG) apply -k argocd
+
 # ============================================================
 # Talos config generation (talhelper) - prod
 # ============================================================
@@ -121,10 +93,18 @@ talos-gen: ## Generer les machine configs avec talhelper
 	cd $(TALOS_DIR) && talhelper genconfig
 	@echo "==> Configs generees dans $(TALOS_DIR)/clusterconfig/"
 
-talos-gen-secret: ## Generer et chiffrer les secrets Talos
+talos-gen-secret: ## Generer et chiffrer les secrets Talos (atomique)
 	@echo "==> Generation des secrets Talos..."
-	cd $(TALOS_DIR) && talhelper gensecret > talsecret.sops.yaml
-	cd $(TALOS_DIR) && sops -e -i talsecret.sops.yaml
+	@test -f $(AGE_KEY) || { echo "ERREUR: cle age absente ($(AGE_KEY))"; exit 1; }
+	@set -euo pipefail; \
+		cd $(TALOS_DIR); \
+		tmp=$$(mktemp ./talsecret.XXXXXX); \
+		out="$$tmp.sops"; \
+		trap 'rm -f "$$tmp" "$$out"' EXIT; \
+		talhelper gensecret > "$$tmp"; \
+		SOPS_AGE_KEY_FILE="$(CURDIR)/$(AGE_KEY)" sops -e "$$tmp" > "$$out"; \
+		grep -q 'ENC\[AES256_GCM' "$$out" || { echo "ERREUR: chiffrement SOPS invalide"; exit 1; }; \
+		mv "$$out" talsecret.sops.yaml
 	@echo "==> Secrets generes et chiffres dans $(TALOS_DIR)/talsecret.sops.yaml"
 
 # ============================================================
@@ -133,7 +113,6 @@ talos-gen-secret: ## Generer et chiffrer les secrets Talos
 # La cle age n'est jamais exportee dans le shell: elle est passee a sops par
 # invocation, pour qu'elle ne fuite pas dans l'environnement d'un autre
 # process ni dans l'historique.
-AGE_KEY := .config/age.agekey
 
 secret-edit: ## Editer un secret SOPS en place (FILE=chemin/vers/secret.yaml)
 ifndef FILE
@@ -173,60 +152,33 @@ status: ## Afficher le statut du cluster
 	@echo ""
 	kubectl --kubeconfig $(KUBECONFIG) get pods -A
 
-destroy: ## Detruire le cluster
-ifeq ($(ENV),dev)
-	@echo "==> Destruction du cluster dev..."
-	talosctl cluster destroy --name $(CLUSTER_NAME)
-	@talosctl config remove $(CLUSTER_NAME) --noconfirm 2>/dev/null || true
-	@rm -f $(KUBECONFIG)
-else
-	@echo "ERREUR: Destruction du cluster prod non supportee via Makefile"
-	@exit 1
-endif
-
 destroy-argocd: ## Detruire uniquement ArgoCD (Terraform)
 	@echo "==> Destruction d'ArgoCD..."
 	cd $(TF_DIR) && terraform destroy -auto-approve -var="kubeconfig=$(KUBECONFIG)"
 
 help: ## Afficher cette aide
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 # ============================================================
 # Upgrades
 # ============================================================
 
 k8s-upgrade-check: ## Dry-run upgrade Kubernetes (K8S_VERSION=v1.x.x)
-ifeq ($(ENV),dev)
-	@echo "ERREUR: upgrade K8s non supporte sur cluster dev (Docker)"
-	@exit 1
-endif
 	@echo "==> Dry-run upgrade Kubernetes vers $(K8S_VERSION)..."
 	talosctl upgrade-k8s --nodes $(FIRST_CP) --to $(subst v,,$(K8S_VERSION)) --dry-run
 
 k8s-upgrade: ## Upgrade Kubernetes (faire k8s-upgrade-check avant)
-ifeq ($(ENV),dev)
-	@echo "ERREUR: upgrade K8s non supporte sur cluster dev (Docker)"
-	@exit 1
-endif
 	@echo "==> Upgrade Kubernetes vers $(K8S_VERSION) (CP: $(FIRST_CP))..."
 	@read -p "As-tu lance 'make k8s-upgrade-check' avant ? Continuer ? [y/N] " ok && [ "$$ok" = "y" ] || exit 1
 	talosctl upgrade-k8s --nodes $(FIRST_CP) --to $(subst v,,$(K8S_VERSION))
 
 talos-upgrade-check: ## Dry-run upgrade Talos sur le premier CP (TALOS_VERSION=v1.x.x)
-ifeq ($(ENV),dev)
-	@echo "ERREUR: upgrade Talos non supporte sur cluster dev (Docker)"
-	@exit 1
-endif
 	@echo "==> Dry-run upgrade Talos vers $(TALOS_VERSION) sur $(FIRST_CP)..."
 	talosctl upgrade --nodes $(FIRST_CP) \
 		--image ghcr.io/siderolabs/installer:$(TALOS_VERSION) \
 		--preserve=true --dry-run
 
 talos-upgrade: ## Upgrade Talos node par node (faire talos-upgrade-check avant)
-ifeq ($(ENV),dev)
-	@echo "ERREUR: upgrade Talos non supporte sur cluster dev (Docker)"
-	@exit 1
-endif
 	@echo "==> Upgrade Talos vers $(TALOS_VERSION) sur : $(ALL_NODES)"
 	@echo "    N'oublie pas: talosVersion a $(TALOS_VERSION) dans $(TALCONFIG) + make talos-gen"
 	@read -p "Continuer ? [y/N] " ok && [ "$$ok" = "y" ] || exit 1
@@ -239,15 +191,11 @@ endif
 	@echo "==> Upgrade Talos termine."
 
 etcd-backup: ## Snapshot etcd (a faire avant tout upgrade)
-ifeq ($(ENV),dev)
-	@echo "ERREUR: etcd-backup non supporte sur cluster dev"
-	@exit 1
-endif
 	@mkdir -p backups
 	@SNAP=backups/etcd-$(ENV)-$$(date +%Y%m%d-%H%M%S).snapshot && \
 		talosctl etcd snapshot $$SNAP --nodes $(FIRST_CP) && \
 		echo "==> Snapshot: $$SNAP"
 
 
-.PHONY: bootstrap cluster cilium argocd talos-gen talos-gen-secret status destroy destroy-argocd help \
+.PHONY: bootstrap cilium argocd gitops talos-gen talos-gen-secret status destroy-argocd help \
         k8s-upgrade-check k8s-upgrade talos-upgrade-check talos-upgrade etcd-backup

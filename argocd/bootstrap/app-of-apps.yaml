@@ -4,7 +4,7 @@ metadata:
   name: argocd-app-of-apps
   namespace: argocd
   labels:
-    env: dev
+    env: prod
 spec:
   # Sans ceci, l'ApplicationSet reecrit le spec des Applications qu'il genere
   # et un passage en sync manuelle est annule en quelques secondes.

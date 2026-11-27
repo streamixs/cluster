@@ -1,6 +1,5 @@
 # Terraform — local state files contain secrets in plaintext, use remote backend in prod
 **/.terraform
-**/.terraform.lock.hcl
 **/*.tfvars
 **/*.tfstate
 **/*.tfstate.backup
@@ -12,6 +11,10 @@ terraform/terraform.tfvars
 
 # Secrets
 .config
+
+# Etcd snapshots (contiennent des secrets)
+backups/
+*.snapshot
 
 # Talos generated configs (contain secrets in plain text)
 talos/*/clusterconfig/

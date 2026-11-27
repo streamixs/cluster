@@ -1,41 +1,53 @@
 ## Argo CD manifests
 
-Bootstrap et projets Argo CD pour l’environnement `dev`.
+Bootstrap et projets Argo CD pour l’environnement `prod`.
 
 ### Contenu
-- `bootstrap/app-of-apps.yaml`: Application Argo CD "app-of-apps" pointant vers `argocd/apps` sur la branche `main`.
-- `projects/platform.yaml`: Projet `platform` autorisant les sources Helm/repos nécessaires.
-- `apps/`: dossiers/fichiers d’applications synchronisées (référencés par le bootstrap).
+- `bootstrap/app-of-apps.yaml`: ApplicationSet pointant vers `argocd/apps` sur la branche `main`.
+- `projects/platform.yaml`: projet `platform` autorisant les sources Helm/repos nécessaires.
+- `apps/`: dossiers d’applications synchronisées (référencés par le bootstrap).
 
 ### Bootstrapping
-1) Installer Argo CD (via Terraform: `cluster/terraform`)
-2) Appliquer le projet et l’app de bootstrap:
+1) Installer Argo CD (via Terraform) :
 ```bash
-kubectl apply -f projects/platform.yaml
-kubectl apply -f bootstrap/app-of-apps.yaml
+make argocd
 ```
+2) Appliquer le projet et l’ApplicationSet :
+```bash
+kubectl apply -k argocd
+# ou
+make gitops
+```
+
+`make argocd` seul ne crée **aucune** Application : il faut `make gitops`.
 
 Argo CD synchronise le contenu de `argocd/apps/*`. Chaque sous-dossier devient une `Application`.
 
+Les secrets sont déchiffrés par KSOPS dans le repo-server ArgoCD. La clé age
+est montée depuis le secret `sops-age`, créé par Terraform.
+
 ### Paramètres clés
 - Repo: `https://github.com/streamixs/cluster`
-- Branch (targetRevision): voir `bootstrap/app-of-apps.yaml` (actuellement la branche de feature)
+- Branche (`targetRevision`): `main`
 - Chemin: `argocd/apps/*` via ApplicationSet
 - Options de sync: `automated: { prune, selfHeal }`, `CreateNamespace=true`, `PruneLast=true`, `ServerSideApply=true`, `ApplyOutOfSyncOnly=true`
 
-### Promotion / Multi-envs
-- Dupliquer `bootstrap/app-of-apps-<env>.yaml` et `projects/platform-<env>.yaml` en ajustant labels/env, `targetRevision`, `path`.
-- Utiliser des branches par environnement (`main`, `staging`) ou des overlays Kustomize/valeurs Helm.
-
 ### Applications gérées
-- `argo-rollouts`: installé via manifest upstream, namespace = `argo-rollouts`
-- `cert-manager`: helm chart Jetstack, namespace = `kube-system`, inclut Issuers/Certs/SecretGenerator
-- `ingress-nginx`: helm chart, namespace = `kube-system`
+Voir `argocd/apps/README.md`.
+
+### Sync manuelle
+
+Les composants d'infrastructure (Cilium, Longhorn, CNPG, cert-manager, Traefik)
+doivent être synchronisés manuellement ou dans une sync window. Voir
+`docs/change-control.md`.
 
 ### Troubleshooting
 - L’app reste OutOfSync:
   - Vérifie les droits du `AppProject` (`sourceRepos`, `destinations`).
   - Vérifie que la branche/chemin existent.
 - Erreurs de création de namespaces/CRDs: assure `CreateNamespace=true` et que les CRDs nécessaires sont déjà installées.
-
-
+- Erreur KSOPS / `sops-age` : vérifier que le secret `sops-age` existe dans
+  `argocd` et que `.config/age.agekey` correspond au destinataire SOPS.
+- Namespace vide inattendu : l’ApplicationSet utilise `{{path.basename}}` comme
+  namespace de destination ; une app qui déploie ailleurs peut laisser un
+  namespace vide.

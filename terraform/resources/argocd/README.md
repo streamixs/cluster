@@ -12,11 +12,28 @@ Installs Argo CD into a Kubernetes cluster via the official Helm chart.
 - `values_file` (string, default `resources/argocd/argocd-values.yaml`)
 
 ### Install
-From the root `terraform` directory:
+Depuis la racine du repo :
+
+```bash
+make argocd
+```
+
+Ou manuellement, depuis `terraform/` :
+
 ```bash
 terraform init
-cp terraform.tfvars.example terraform.tfvars  # edit kubeconfig path if needed
+cp terraform.tfvars.example terraform.tfvars  # kubeconfig prod par défaut
 terraform apply
+```
+
+Terraform crée aussi le secret `sops-age` dans le namespace ArgoCD à partir de
+`.config/age.agekey`. Le state local contient ce secret et le mot de passe admin
+initial : voir `terraform/STATE.md`.
+
+Après l'installation, appliquer l'AppProject et l'ApplicationSet :
+
+```bash
+make gitops
 ```
 
 ### Outputs
@@ -27,10 +44,11 @@ terraform output -raw argocd_admin_password
 ```
 
 ### Access UI
-Port-forward:
+Port-forward (le serveur est en HTTP interne car `server.insecure: true`) :
+
 ```bash
-kubectl -n argocd port-forward svc/argocd-server 8080:443
-open https://localhost:8080
+kubectl -n argocd port-forward svc/argocd-server 8080:80
+open http://localhost:8080
 ```
 
 ### Customize

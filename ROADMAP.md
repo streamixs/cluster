@@ -1,101 +1,138 @@
 # Roadmap & Retrospective
 
-> Revue du 2026-05-15
+> Revue 2026-11-27 — passage à un seul environnement permanent.
 
-Etat des lieux du cluster et plan d'amelioration. Pour les actions tres ponctuelles, voir `TODO.md`.
+## Décision
+
+Le cluster `dev` Docker est abandonné. Il ne permettait pas de reproduire la
+stack prod (Talos, Cilium L2, Longhorn, GPU, NFS, données réelles) et il créait
+un risque de toucher aux données de prod.
+
+La cible est :
+
+```
+Prod (Talos bare metal)  — seul cluster permanent
+CI (GitHub Actions)      — validation avant merge
+Lab (kind/k3d)           — jetable, à la demande
+Backups + restore        — filet de sécurité
+```
+
+Pas de staging permanent, pas de second ArgoCD, pas de données de prod dans un
+cluster de test.
 
 ## Ce qui fonctionne bien
 
-- **GitOps clean** : Talos + Cilium + ArgoCD ApplicationSet, auto-discovery des apps
-- **Sep dev/prod** : Docker local + bare-metal, Makefile factorise
-- **Secrets** : SOPS + Age + KSOPS, secret-scan en CI
-- **Auth centralisee** : Pocket-ID + traefik-forward-auth sur ingresses sensibles
-- **Upgrades** : `make k8s-upgrade-check` + `etcd-backup` avant action
-- **Storage** : migration NFS hardcode -> democratic-csi + TrueNAS
+- **GitOps** : Talos + Cilium + ArgoCD ApplicationSet, auto-discovery des apps.
+- **Un seul environnement** : moins de maintenance, moins de risques.
+- **Secrets** : SOPS + Age + KSOPS, secret-scan en CI.
+- **Auth centralisée** : Pocket-ID + traefik-forward-auth sur la majorité des UI.
+- **Observabilité** : Prometheus, Grafana, Loki, Promtail, Alertmanager.
+- **Stockage** : Longhorn pour les PVC RWO, NFS TrueNAS pour les médias/photos.
+- **Réseau** : Cilium kube-proxy replacement, L2 announcements, IP pool.
+- **Upgrades** : `etcd-backup`, `k8s-upgrade-check`, `talos-upgrade-check`.
 
-## Defauts critiques (a traiter en priorite)
+## Risques critiques restants
 
-### 1. Aucun monitoring
-Pas de Prometheus, Grafana, Loki, Alertmanager. Cluster 4 nodes en prod sans observabilite.
-Action : deployer `kube-prometheus-stack` + `loki-stack` + `promtail`.
+### 1. Aucun backup
 
-### 2. Aucun backup
-- Pas de Velero
-- Pas de snapshot automatique des PV Longhorn
-- Pas de backup CNPG
-- Seul `etcd-backup` manuel via Makefile
-Action : Velero + S3 (MinIO sur TrueNAS) + verif crons.
+Pas de backup CNPG, Longhorn, etcd automatisé, ni de copie offline de la clé
+age. C'est le risque numéro un pour Immich, Securo, Hermes et les configs.
 
-### 3. App-of-apps pointe sur branche feature
-`argocd/bootstrap/app-of-apps.yaml` : `revision: feat/media-music-stack`.
-Le TODO disait pourtant "develop -> main". A fixer immediatement.
+### 2. ArgoCD et l'auth trop exposés
 
-### 4. ~~Tags d'images flottants~~ (fix avec Renovate)
-- ~~`ghcr.io/autobrr/qui:latest`~~ -> `v1.18.0`
-- ~~`thomseddon/traefik-forward-auth:2`~~ -> `2.3.0`
+ArgoCD n'a ni OIDC ni forward-auth, l'AppProject est quasi cluster-admin, le
+repo-server détient la clé age et exécute des plugins, et `traefik-forward-auth`
+tourne en un seul replica sans probe.
 
-### 5. Probes manquantes
-Manque liveness/readiness sur : `prowlarr`, `sonarr`, `lidarr`, `tautulli`, `traefik-forward-auth`.
+### 3. Segmentation réseau insuffisante
 
-### 6. SecurityContext incomplet
-Seulement `fsGroup` au pod level. Manque partout :
-```yaml
-runAsNonRoot: true
-allowPrivilegeEscalation: false
-capabilities: { drop: [ALL] }
-seccompProfile: { type: RuntimeDefault }
-```
+NetworkPolicies uniquement sur Securo et Hermes. Media, Immich, ArgoCD, auth,
+monitoring et external-services ne sont pas cloisonnés.
 
-### 7. Control-plane non-HA en prod
-1 seul CP + `allowSchedulingOnControlPlanes: false` = SPOF + ressources gaspillees.
-Options : passer a 3 CP, ou autoriser le scheduling sur le CP unique.
+### 4. CI partielle
 
-### 8. NetworkPolicies = 0
-Cilium installe mais aucune segmentation. Un pod compromis peut taper partout.
+Depuis #224, toutes les apps sont rendues (KSOPS inclus), les CRDs sont
+validées via le catalogue Datree, Terraform et les secrets SOPS sont vérifiés,
+et le job agrégé `all-kustomize` existe. Il reste : Pluto, `actionlint`,
+`shellcheck`, validation Talos et test d'admission kind/k3d.
 
-## Incoherences a corriger
+## Plan d'amélioration
 
-| Endroit | Probleme |
-|---|---|
-| `app-of-apps.yaml` L43-44 | `--enable-helm` et `--load-restrictor` sont des flags kustomize CLI, pas des syncOptions ArgoCD valides |
-| Cilium values | `l2announcements.enabled: true` mais aucun `CiliumL2AnnouncementPolicy` / `CiliumLoadBalancerIPPool` dans le repo |
-| Hubble | UI activee dans values mais pas d'IngressRoute -> inaccessible |
-| Versions K8s | dev v1.35.0 vs prod v1.35.3 |
-| Resources | qbittorrent : `limits.memory` sans `limits.cpu`. Sonarr : les deux. Pas de standard |
+### Phase 1 — Finaliser la suppression du dev
 
-## A ajouter (par ROI decroissant)
+- [x] Supprimer `talos/dev/`.
+- [x] Makefile prod-only, `make gitops`.
+- [x] Terraform par défaut sur `kubeconfig-prod`.
+- [x] Labels ArgoCD `env: prod`.
+- [x] Documentation alignée sur un seul environnement.
+- [x] Runbooks dans `docs/`.
+- [ ] Nettoyer les ressources runtime dev (cluster Docker, kubeconfig, state).
+- [ ] La branche `develop` n'est plus utilisée ; sa suppression remote est laissée
+      à ta main (pas de suppression automatique).
 
-### Priorite haute
-1. ~~**Stack monitoring** : kube-prometheus-stack + loki-stack + promtail~~ (fait #87)
-2. ~~**Renovate Bot** : auto-PR pour images + Helm charts (auto-merge patches)~~ (config `.github/renovate.json5`)
-3. ~~**CI validation** : `kustomize build` + `kubeconform` sur chaque app~~ (`validate-kustomize.yml`)
-4. **Velero** + S3 (MinIO TrueNAS) pour backup manifests + PV snapshots
-5. **NetworkPolicies de base** : deny-all par namespace + allow explicit
+### Phase 2 — CI de validation complète
 
-### Priorite moyenne
-6. **Homepage / Homer** : dashboard liens vers toutes les UI
-7. **Kustomize overlays dev/prod** (deja dans TODO P4)
-8. **External-DNS + Cloudflare** : auto-creer les records `*.streamixs.com`
-9. **ArgoCD sync waves** : ordonner cert-manager -> traefik -> reste
-10. **Notifications Discord/Slack** ArgoCD
+- [x] Rendre toutes les apps, y compris KSOPS.
+- [x] Kubeconform avec schémas CRD.
+- [ ] Pluto.
+- [x] Terraform fmt/validate.
+- [ ] Actionlint, shellcheck, renovate-config-validator.
+- [ ] Actions GitHub épinglées par SHA.
+- [x] Job CI agrégé `all-kustomize`.
+- [x] Branch protection sur `main` (PR + checks requis + squash only + pas de
+      force push).
+- [ ] `make validate` local.
+- [ ] Auto-merge Renovate désactivé et merges manuels documentés.
 
-### Nice-to-have
-11. Pocket-ID en HA (replicas: 2)
-12. Gatus pour monitoring externe public
-13. Tailscale operator pour acces hors LAN
-14. Crowdsec pour traefik
+### Phase 3 — Backups et restore
 
-## Ameliorations structurelles
+- [ ] CNPG → MinIO/S3.
+- [ ] Longhorn backup target + RecurringJob.
+- [ ] etcd snapshot automatisé + chiffré + hors cluster.
+- [ ] Snapshots ZFS/réplication TrueNAS.
+- [ ] Clé age offline.
+- [ ] Test de restore documenté.
 
-- **Factoriser qbittorrent + qbittorrent-seed** : une seule base parametree via Kustomize overlays (instance, port BT, subPath)
-- **"common" patch Kustomize** : securityContext, resources, probes appliques via `patches:` global
-- **Decouper `argocd/apps/media/`** : 12 apps deviennent lourdes. ApplicationSet imbrique par categorie (downloaders, *arr, ui)
-- **Standardiser les Helm values** : tous dans `apps/*/values.yaml` (cert-manager pas encore aligne)
+### Phase 4 — Change control
 
-## Top 5 actions immediates
+- [ ] Sync manuelle ou sync windows pour l'infra.
+- [ ] `Prune=false` sur CRDs/PVC/Clusters CNPG.
+- [ ] Retirer le hook PreDelete Longhorn.
+- [ ] Sync waves.
+- [ ] Notifications ArgoCD.
 
-1. ~~Fixer `app-of-apps.yaml` -> `revision: main`~~ (#83, develop pour l'instant)
-2. ~~Deployer kube-prometheus-stack~~ (#87)
-3. ~~Pin `qui:latest` -> version concrete~~ (v1.18.0)
-4. ~~Renovate Bot~~ (`.github/renovate.json5`)
-5. Strategie de backup (Velero ou cron Longhorn snapshots minimum)
+### Phase 5 — Robustesse
+
+- [ ] Probes, PDB, resources, priorityClass.
+- [ ] Anti-affinité Traefik/forward-auth.
+- [ ] NetworkPolicies et PSS.
+- [ ] Découper l'app media.
+- [ ] Renovate : `minimumReleaseAge`, managers manquants.
+
+### Phase 6 — Exploitation
+
+- [x] Runbooks bootstrap/testing/upgrade/backup/change-control/inventaire.
+- [ ] Décision 1 CP vs 3 CP, RTO/RPO.
+- [ ] Chiffrement des disques Talos.
+- [ ] ExternalDNS, Gatus, Crowdsec.
+- [ ] Promtail → Grafana Alloy.
+
+## Non-objectifs
+
+- Maintenir un cluster `dev` ou `staging` permanent.
+- Reproduire la stack prod à l'identique sur un laptop.
+- Tester les données réelles dans un cluster de test.
+- Déployer automatiquement les composants d'infrastructure sans revue.
+
+## Règle de merge
+
+- `main` protégée par un ruleset actif.
+- Toute modification passe par une PR.
+- Squash-merge uniquement.
+- Checks CI obligatoires.
+- Pas d'auto-merge : merge manuel après validation.
+- Les composants d'infrastructure se synchronisent manuellement, avec backup
+  et plan de rollback.
+
+L'état exact des réglages GitHub et la procédure sont dans
+`docs/change-control.md`.

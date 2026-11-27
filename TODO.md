@@ -1,65 +1,104 @@
 # TODO
 
-> Review 2026-03-25
+> Revue 2026-11-27 — un seul environnement permanent : `prod`.
+> Le lab de test est jetable (`kind`/`k3d`), jamais synchronisé avec la prod.
 
-## P0 — Securite
+## P0 — Sécurité et données
 
-- [x] ~~Auth sur les ingress media~~ — Pocket-ID + traefik-forward-auth (PR #69)
-- [x] Fixer les tags d'images containers (CRITIQUE)
-  - [x] qbittorrent : `:latest` → version fixe (ex: `release-5.0.4`)
-  - [x] sonarr : `:release` → version fixe (ex: `release-4.0.14.2939`)
-  - [x] radarr : `:release` → version fixe (ex: `release-5.22.4.9896`)
-  - [x] prowlarr : `:release` → version fixe (ex: `release-1.33.3.5048`)
-  - [x] pocket-id : `:v2` → version fixe (ex: `v2.4.0`)
-  - [-] traefik-forward-auth : `:2` → version fixe (ex: `2.2.0`)
-- [ ] SecurityContext container-level sur tous les deployments
-  - [ ] pocket-id : aucun securityContext defini
-  - [ ] radarr, sonarr, prowlarr, qbittorrent : seulement fsGroup, manque `runAsNonRoot`, `allowPrivilegeEscalation: false`, `capabilities.drop`
-- [ ] NetworkPolicies : deny-all + allow-specific par namespace (Cilium)
-- [ ] SOPS check en CI : empecher les commits de secrets en clair
-- [ ] Gitleaks en CI : scanner les diffs pour tokens/cles API
+- [ ] **Backups CNPG** : Immich et Securo vers MinIO/S3 (barmanObjectStore),
+      rétention + test de restore.
+- [ ] **Backups Longhorn** : backup target + RecurringJob pour les PVC de config,
+      test de restore.
+- [ ] **Backups etcd** : snapshot automatisé, chiffré, stocké hors cluster.
+- [ ] **Clé age** : copie offline dans un gestionnaire de mots de passe.
+- [ ] **Snapshots TrueNAS** : ZFS + réplication pour `/mnt/data/photos` et
+      `/mnt/data/media`.
+- [ ] **Alertmanager** : receiver Telegram/Discord + Watchdog (actuellement
+      receiver `null`, les alertes sont jetées).
+- [ ] **Grafana** : supprimer `adminPassword: changeme`, utiliser un Secret.
+- [ ] **ArgoCD** : OIDC Pocket-ID + RBAC, ou forward-auth + restriction IP.
+- [ ] **ArgoCD AppProject** : least privilege (sourceRepos, destinations,
+      clusterResourceWhitelist).
+- [ ] **NetworkPolicies** : media, immich, argocd, auth, monitoring,
+      external-services. Securo et Hermes servent de modèle.
+- [ ] **Pod Security Standards** : baseline sur tous les namespaces
+      applicatifs, restricted là où c'est possible.
+- [x] **SOPS check en CI** : vérifier que les secrets sont bien chiffrés.
 
-## P1 — CI / Automatisation
+## P1 — CI et pré-merge
 
-### Phase 1 — Validation (prioritaire)
-
-- [ ] Kustomize build : `kustomize build` sur chaque app pour valider les refs et la structure
-- [ ] Kubeconform : validation des manifests contre les schemas K8s (champs invalides, types, CRDs)
-- [ ] Helm template : valider que les values produisent des manifests valides
-
-### Phase 2 — Versions et securite images
-
-- [ ] Renovate Bot : auto-PR pour charts Helm et images Docker
-- [ ] Renovate auto-merge : merge automatique des patches (ex: v2.4.0 → v2.4.1) apres CI verte
-- [ ] Trivy : scan CVE des images containers referencees dans les manifests
-
-### Phase 3 — Deploiement et visibilite
-
-- [ ] Checkov / Kubesec : audit securite des manifests K8s
-- [ ] ArgoCD diff preview : commenter les PRs avec le diff ArgoCD
-- [ ] Notifications Discord/Slack : alerter quand ArgoCD sync ou fail
+- [x] **Rendre toutes les apps en CI**, y compris celles qui utilisent KSOPS
+      (`media`, `cert-manager`, `hermes`, `securo`, `traefik-forward-auth`).
+- [x] **Kubeconform + schémas CRD** (Traefik, Cilium, CNPG, Longhorn,
+      cert-manager, monitoring). Certains CRDs restent `skipped` faute de
+      schéma, mais les types core et la majorité des CRDs sont validés.
+- [ ] **Pluto** pour les APIs dépréciées.
+- [x] **Kubernetes version CI** : passée à `1.35.3`.
+- [x] **Terraform CI** : `fmt -check`, `init -backend=false`, `validate`.
+- [ ] **Actionlint + shellcheck + renovate-config-validator**.
+- [ ] **Actions GitHub épinglées par SHA**.
+- [x] **Branch protection `main`** : PR obligatoire, checks requis,
+      branche à jour, pas de force push, squash only.
+- [x] **Job CI agrégé** `all-kustomize` à exiger dans la protection.
+- [ ] **`make validate`** : reproduire la CI en local.
+- [ ] **PR template** : checklist validation, backup, rollback.
+- [x] **Désactiver l'auto-merge Renovate** et documenter le merge manuel.
+- [ ] **Sync manuelle / sync windows** pour Cilium, Longhorn, CNPG,
+      cert-manager, Traefik.
+- [ ] **Sync waves** : CNPG → Immich/Securo, cert-manager → Traefik,
+      monitoring → ServiceMonitors.
+- [ ] **`Prune=false`** sur les CRDs, PVC/PV, clusters CNPG.
+- [ ] **Retirer le hook PreDelete Longhorn** ou le sécuriser.
 
 ## P2 — Robustesse
 
-- [ ] Health checks manquants
-  - [ ] sonarr : aucun livenessProbe / readinessProbe
-  - [ ] prowlarr : aucun livenessProbe / readinessProbe
-  - [ ] traefik-forward-auth : aucun probe (ajouter tcpSocket:4181)
-- [ ] PodDisruptionBudgets : definir des PDB pour les services critiques (auth, media)
-- [ ] Replicas : augmenter pocket-id et traefik-forward-auth a 2 replicas (prod)
-- [ ] Resource limits Helm charts : definir les resources dans les values (traefik, cert-manager, monitoring, loki, cilium)
+- [ ] Probes manquantes : sonarr, lidarr, prowlarr, tautulli,
+      traefik-forward-auth, liveness Hermes.
+- [ ] PDB : traefik-forward-auth, cert-manager, ArgoCD, CNPG, monitoring.
+- [ ] `traefik-forward-auth` : 2 replicas + anti-affinité + NetworkPolicy +
+      `WHITELIST`.
+- [ ] Traefik : anti-affinité required ou topologySpreadConstraints.
+- [ ] Resources + priorityClass : Traefik, Cilium, cert-manager, ArgoCD,
+      Longhorn.
+- [ ] Longhorn : réactiver `preUpgradeChecker` ou documenter le contournement.
+- [ ] Talos : retirer `vm.nr_hugepages: 1024` si inutile, ajouter les limites
+      inotify pour Plex/*arr.
+- [ ] Renovate : `minimumReleaseAge`, managers `imageName` et
+      `intel-gpu-plugin`, politique charts vs images.
+- [ ] Découper l'app `media` en plusieurs Applications et factoriser
+      qbittorrent/qbittorrent-seed.
+- [ ] `argocd` : notifications ArgoCD.
+- [ ] `argocd` : corriger les namespaces vides créés par `destination.namespace`.
+- [ ] Vérifier `CiliumLoadBalancerIPPool` / `CiliumL2AnnouncementPolicy` :
+      Kustomize ajoute un namespace à des ressources cluster-scoped.
 
-## P3 — Amelioration
+## P3 — Exploitation et documentation
 
-- [x] ArgoCD targetRevision : passer de `develop` a `main`
-- [ ] Grafana persistence : PVC pour dashboards
-- [x] ~~NFS IP en variable~~ — remplace par democratic-csi + TrueNAS
-- [x] ~~Evaluer Cilium IngressController pour remplacer ingress-nginx~~ — migre vers Traefik (PR #67)
+- [x] Mettre à jour `PRIVACY.md` pour Ollama Cloud, en gardant le fichier à la
+      racine (URL Google OAuth).
+- [ ] Supprimer `scripts/hermes-migrate-pod.yaml` (migration terminée).
+- [ ] Décider 1 CP + backup/restore ou 3 CP ; documenter le RTO/RPO.
+- [ ] Chiffrement des disques Talos (LUKS2/TPM) pour les données au repos.
+- [ ] ExternalDNS + Cloudflare, Gatus, Crowdsec/rate limiting Traefik.
+- [ ] Migration Promtail → Grafana Alloy.
+- [ ] State Terraform : garder local + backup pour l'instant ; étudier un
+      backend chiffré plus tard.
+- [ ] Politique de release des bumps Renovate (fix(deps) vs chore(deps)) —
+      décision reportée.
 
-## P4 — Prod ready
+## Fait
 
-- [ ] Certificat Let's Encrypt production (remplacer staging)
-- [ ] Promotion dev → prod : workflow PR de promotion apres validation en dev
-- [ ] Backup verification : cron pour verifier les backups CNPG + PV snapshots
-- [ ] Uptime monitoring : healthcheck externe (UptimeRobot, Gatus)
-- [ ] Kustomize overlays dev/prod pour les valeurs specifiques a l'environnement
+- [x] Monitoring : kube-prometheus-stack + Loki + Promtail.
+- [x] Renovate Bot (merges manuels, pas d'auto-merge).
+- [x] Ruleset `main` actif : PR + checks requis + squash only + pas de force push.
+- [x] CI : rendu de toutes les apps (KSOPS inclus), kubeconform + schémas CRD,
+      Terraform, SOPS check, job agrégé `all-kustomize`.
+- [x] Images épinglées (sauf quelques cas suivis).
+- [x] SOPS + Age + KSOPS + gitleaks.
+- [x] Traefik 2 replicas + PDB, Cilium L2 + IP pool.
+- [x] NetworkPolicies Securo et Hermes.
+- [x] Suppression de l'environnement dev dans le code (Makefile, docs, `talos/dev/`).
+- [x] `.gitignore` : `backups/` et `*.snapshot`.
+- [x] `.yamllint.yaml` : chemins obsolètes retirés.
+- [x] Docs : bootstrap, testing, backup/restore, upgrade, change control,
+      inventaire, scripts.
