@@ -1,0 +1,203 @@
+# Regles d'alerte specifiques. Les alertes generiques KubePodCrashLooping et
+# NodeFilesystemAlmostOutOfSpace restent fournies par kube-prometheus-stack :
+# pas de doublon ici.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: monitoring-alerts
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/part-of: monitoring
+spec:
+  groups:
+    - name: cert-manager
+      interval: 1m
+      rules:
+        - alert: CertManagerCertificateExpiringSoon
+          expr: |
+            (certmanager_certificate_expiration_timestamp_seconds - time()) > 0
+            and
+            (certmanager_certificate_expiration_timestamp_seconds - time()) < 21 * 24 * 3600
+          for: 1h
+          labels:
+            severity: warning
+            component: cert-manager
+          annotations:
+            summary: "Certificat cert-manager bientot expire"
+            description: >-
+              Le certificat {{ $labels.exported_namespace }}/{{ $labels.name }}
+              (issuer {{ $labels.issuer_name }}) expire dans
+              {{ $value | humanizeDuration }}.
+            runbook_url: "https://github.com/streamixs/cluster/blob/main/docs/monitoring-alerting.md#certificats-cert-manager"
+
+        - alert: CertManagerCertificateExpired
+          expr: |
+            (certmanager_certificate_expiration_timestamp_seconds - time()) < 0
+          for: 5m
+          labels:
+            severity: critical
+            component: cert-manager
+          annotations:
+            summary: "Certificat cert-manager expire"
+            description: >-
+              Le certificat {{ $labels.exported_namespace }}/{{ $labels.name }}
+              (issuer {{ $labels.issuer_name }}) a depasse sa date d'expiration
+              ({{ $value | humanizeDuration }}).
+            runbook_url: "https://github.com/streamixs/cluster/blob/main/docs/monitoring-alerting.md#certificats-cert-manager"
+
+        - alert: CertManagerCertificateNotReady
+          expr: |
+            certmanager_certificate_ready_status{condition="False"} == 1
+          for: 15m
+          labels:
+            severity: critical
+            component: cert-manager
+          annotations:
+            summary: "Certificat cert-manager non pret"
+            description: >-
+              Le certificat {{ $labels.exported_namespace }}/{{ $labels.name }}
+              (issuer {{ $labels.issuer_name }}) est en condition False depuis
+              15 min.
+            runbook_url: "https://github.com/streamixs/cluster/blob/main/docs/monitoring-alerting.md#certificats-cert-manager"
+
+    - name: longhorn
+      interval: 1m
+      rules:
+        - alert: LonghornVolumeDegraded
+          expr: |
+            max by (pvc, pvc_namespace, volume) (longhorn_volume_robustness) == 2
+            or
+            max by (pvc, pvc_namespace, volume) (longhorn_volume_robustness{state="degraded"} == 1)
+          for: 15m
+          labels:
+            severity: warning
+            component: longhorn
+          annotations:
+            summary: "Volume Longhorn degrade"
+            description: >-
+              Le volume {{ $labels.volume }}
+              (PVC {{ $labels.pvc_namespace }}/{{ $labels.pvc }}) est degrade
+              depuis 15 min.
+            runbook_url: "https://github.com/streamixs/cluster/blob/main/docs/monitoring-alerting.md#longhorn"
+
+        - alert: LonghornVolumeFaulted
+          expr: |
+            max by (pvc, pvc_namespace, volume) (longhorn_volume_robustness) == 3
+            or
+            max by (pvc, pvc_namespace, volume) (longhorn_volume_robustness{state="faulted"} == 1)
+          for: 5m
+          labels:
+            severity: critical
+            component: longhorn
+          annotations:
+            summary: "Volume Longhorn en faute"
+            description: >-
+              Le volume {{ $labels.volume }}
+              (PVC {{ $labels.pvc_namespace }}/{{ $labels.pvc }}) est en faute
+              depuis 5 min.
+            runbook_url: "https://github.com/streamixs/cluster/blob/main/docs/monitoring-alerting.md#longhorn"
+
+        - alert: LonghornNodeStorageLow
+          expr: |
+            max by (node) (longhorn_node_storage_usage_bytes / longhorn_node_storage_capacity_bytes) > 0.85
+          for: 30m
+          labels:
+            severity: warning
+            component: longhorn
+          annotations:
+            summary: "Stockage Longhorn faible sur {{ $labels.node }}"
+            description: >-
+              {{ $value | humanizePercentage }} de stockage Longhorn utilise
+              sur {{ $labels.node }} (seuil 85%).
+            runbook_url: "https://github.com/streamixs/cluster/blob/main/docs/monitoring-alerting.md#longhorn"
+
+        - alert: LonghornNodeStorageCritical
+          expr: |
+            max by (node) (longhorn_node_storage_usage_bytes / longhorn_node_storage_capacity_bytes) > 0.95
+          for: 15m
+          labels:
+            severity: critical
+            component: longhorn
+          annotations:
+            summary: "Stockage Longhorn critique sur {{ $labels.node }}"
+            description: >-
+              {{ $value | humanizePercentage }} de stockage Longhorn utilise
+              sur {{ $labels.node }} (seuil 95%).
+            runbook_url: "https://github.com/streamixs/cluster/blob/main/docs/monitoring-alerting.md#longhorn"
+
+    - name: node-disk
+      interval: 1m
+      rules:
+        - alert: NodeFilesystemFreeSpaceLow
+          expr: |
+            (node_filesystem_avail_bytes{
+              fstype!~"tmpfs|overlay|squashfs",
+              job="node-exporter",
+              mountpoint!~"/var/lib/kubelet/.+|/run/.+|/sys/.+|/proc/.+"
+            }
+             / node_filesystem_size_bytes{
+              fstype!~"tmpfs|overlay|squashfs",
+              job="node-exporter",
+              mountpoint!~"/var/lib/kubelet/.+|/run/.+|/sys/.+|/proc/.+"
+            } * 100 < 15)
+            and
+            node_filesystem_readonly{
+              fstype!~"tmpfs|overlay|squashfs",
+              job="node-exporter",
+              mountpoint!~"/var/lib/kubelet/.+|/run/.+|/sys/.+|/proc/.+"
+            } == 0
+          for: 30m
+          labels:
+            severity: warning
+            component: node
+          annotations:
+            summary: "Espace disque faible sur {{ $labels.instance }}:{{ $labels.mountpoint }}"
+            description: >-
+              {{ $value | humanize }}% d'espace libre restant
+              (seuil 15%, les alertes 5%/3% par defaut restent actives).
+            runbook_url: "https://github.com/streamixs/cluster/blob/main/docs/monitoring-alerting.md#disque-node"
+
+    - name: cnpg
+      interval: 1m
+      rules:
+        - alert: CNPGCollectorDown
+          expr: |
+            cnpg_collector_up{cluster!=""} == 0
+          for: 10m
+          labels:
+            severity: critical
+            component: cnpg
+          annotations:
+            summary: "Collector CNPG down"
+            description: >-
+              Le collector CNPG de {{ $labels.namespace }}/{{ $labels.cluster }}
+              est down depuis 10 min.
+            runbook_url: "https://github.com/streamixs/cluster/blob/main/docs/monitoring-alerting.md#cnpg"
+
+        - alert: CNPGReplicationLag
+          expr: |
+            cnpg_pg_replication_lag{namespace!=""} > 30
+          for: 10m
+          labels:
+            severity: warning
+            component: cnpg
+          annotations:
+            summary: "Lag de replication CNPG"
+            description: >-
+              Le lag de replication de {{ $labels.namespace }}/{{ $labels.pod }}
+              est de {{ $value }}s (seuil 30s).
+            runbook_url: "https://github.com/streamixs/cluster/blob/main/docs/monitoring-alerting.md#cnpg"
+
+        - alert: CNPGWaitingBackends
+          expr: |
+            cnpg_backends_waiting_total{namespace!=""} > 0
+          for: 15m
+          labels:
+            severity: warning
+            component: cnpg
+          annotations:
+            summary: "Backends en attente CNPG"
+            description: >-
+              {{ $value }} backend(s) en attente sur
+              {{ $labels.namespace }}/{{ $labels.pod }} depuis 15 min.
+            runbook_url: "https://github.com/streamixs/cluster/blob/main/docs/monitoring-alerting.md#cnpg"

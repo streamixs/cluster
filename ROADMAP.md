@@ -28,7 +28,8 @@ cluster de test.
 - **Auth centralisée** : Pocket-ID + oauth2-proxy sur la majorité des UI.
 - **ArgoCD** : OIDC Pocket-ID + RBAC groupe `admin`, AppProject limité aux
   namespaces et kinds utilisés.
-- **Observabilité** : Prometheus, Grafana, Loki, Promtail, Alertmanager.
+- **Observabilité** : Prometheus, Grafana, Loki, Promtail, Alertmanager →
+  Telegram et règles cert-manager/Longhorn/disque/CNPG.
 - **Stockage** : Longhorn pour les PVC RWO, NFS TrueNAS pour les médias/photos.
 - **Réseau** : Cilium kube-proxy replacement, L2 announcements, IP pool.
 - **Upgrades** : `etcd-backup`, `k8s-upgrade-check`, `talos-upgrade-check`.

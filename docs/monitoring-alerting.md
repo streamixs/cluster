@@ -126,13 +126,111 @@ volume tant que le nouveau n'est pas prêt. `rollingUpdate: null` est nécessair
 pour retirer le champ default côté API, sinon l'apply est refusé. Attendre
 quelques secondes d'indisponibilité pendant un redémarrage est normal.
 
-## Alertes de base
+## Alertes
 
-Les règles par défaut de kube-prometheus-stack sont activées. Les alertes
-spécifiques à ajouter ensuite :
+Les règles par défaut de kube-prometheus-stack restent actives, notamment :
 
-- expiration des certificats,
-- volumes Longhorn dégradés,
-- backups CNPG en échec (quand les backups seront possibles),
-- disque faible,
-- pods en CrashLoopBackOff.
+- `KubePodCrashLooping` (warning, 15 min) pour les CrashLoopBackOff ;
+- `NodeFilesystemAlmostOutOfSpace` (warning 5 %, critical 3 %) ;
+- `NodeFilesystemSpaceFillingUp` (prédictif).
+
+Les règles spécifiques sont dans `argocd/base/monitoring/alerts.yaml` :
+
+| Alerte | Sévérité | Seuil |
+|---|---|---|
+| `CertManagerCertificateExpiringSoon` | warning | expire < 21 j |
+| `CertManagerCertificateExpired` | critical | expiré |
+| `CertManagerCertificateNotReady` | critical | condition False > 15 min |
+| `LonghornVolumeDegraded` | warning | robustness 2 > 15 min |
+| `LonghornVolumeFaulted` | critical | robustness 3 > 5 min |
+| `LonghornNodeStorageLow` | warning | > 85 % utilisé > 30 min |
+| `LonghornNodeStorageCritical` | critical | > 95 % utilisé > 15 min |
+| `NodeFilesystemFreeSpaceLow` | warning | < 15 % libre > 30 min |
+| `CNPGCollectorDown` | critical | collector down > 10 min |
+| `CNPGReplicationLag` | warning | lag > 30 s > 10 min |
+| `CNPGWaitingBackends` | warning | backends en attente > 15 min |
+
+Pas de règle custom pour CrashLoopBackOff : `KubePodCrashLooping` couvre déjà
+le cas, avec un `for` de 15 min.
+
+### Certificats cert-manager
+
+```bash
+kubectl --kubeconfig ~/.talos/kubeconfig-prod get certificates -A
+kubectl --kubeconfig ~/.talos/kubeconfig-prod -n <namespace> \
+  describe certificate <name>
+kubectl --kubeconfig ~/.talos/kubeconfig-prod get certificaterequests,orders,challenges -A
+kubectl --kubeconfig ~/.talos/kubeconfig-prod -n kube-system \
+  logs deploy/cert-manager --tail=100
+```
+
+Vérifier l'issuer, le DNS01 Cloudflare et les événements du `Certificate`.
+Un certificat expiré peut être forcé par la suppression du Secret TLS associé
+(le Certificate le recrée).
+
+### Longhorn
+
+```bash
+kubectl --kubeconfig ~/.talos/kubeconfig-prod -n longhorn-system \
+  get volumes.longhorn.io
+kubectl --kubeconfig ~/.talos/kubeconfig-prod -n longhorn-system \
+  describe volume <volume>
+kubectl --kubeconfig ~/.talos/kubeconfig-prod -n longhorn-system get nodes.longhorn.io
+```
+
+Vérifier les réplicas, les nœuds disponibles et l'espace disque. Un volume
+`degraded` peut être transitoire pendant un rebuild ; un volume `faulted`
+nécessite une intervention. Ne pas supprimer un volume ou un PVC pour résoudre
+une alerte sans backup.
+
+### Disque node
+
+```bash
+talosctl -n 192.168.1.30 get mounts
+talosctl -n 192.168.1.40 get mounts
+talosctl -n 192.168.1.41 get mounts
+talosctl -n 192.168.1.42 get mounts
+```
+
+Dans Prometheus/Grafana, vérifier l'espace libre par nœud et mountpoint :
+
+```promql
+(node_filesystem_avail_bytes{job="node-exporter",fstype!~"tmpfs|overlay|squashfs"}
+ / node_filesystem_size_bytes{job="node-exporter",fstype!~"tmpfs|overlay|squashfs"}) * 100
+```
+
+Les alertes par défaut restent actives à 5 %/3 %. La règle custom sert
+d'alerte précoce à 15 %. Vérifier les images inutilisées, les logs et les
+volumes Longhorn avant de nettoyer.
+
+### CNPG
+
+```bash
+kubectl --kubeconfig ~/.talos/kubeconfig-prod -n immich get cluster immich-db
+kubectl --kubeconfig ~/.talos/kubeconfig-prod -n securo get cluster securo-db
+kubectl --kubeconfig ~/.talos/kubeconfig-prod -n immich \
+  get pods -l cnpg.io/cluster=immich-db
+kubectl --kubeconfig ~/.talos/kubeconfig-prod -n securo \
+  get pods -l cnpg.io/cluster=securo-db
+```
+
+Vérifier `cnpg_collector_up`, les logs du pod PostgreSQL et l'état du cluster.
+Les backups ne sont pas encore configurés : ne pas compter sur
+`cnpg_pg_stat_archiver_failed_count` pour le moment.
+
+### CrashLoopBackOff
+
+```bash
+kubectl --kubeconfig ~/.talos/kubeconfig-prod get pods -A \
+  | rg 'CrashLoopBackOff|Error'
+kubectl --kubeconfig ~/.talos/kubeconfig-prod -n <namespace> \
+  describe pod <pod>
+kubectl --kubeconfig ~/.talos/kubeconfig-prod -n <namespace> \
+  logs <pod> --previous
+```
+
+### Silence
+
+Pour une maintenance planifiée, créer un silence dans
+`https://alertmanager.streamixs.com` plutôt que de désactiver la règle.
+Documenter la raison et la durée dans la PR ou le runbook.

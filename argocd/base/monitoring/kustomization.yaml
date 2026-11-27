@@ -5,6 +5,7 @@ resources:
   - ingressroute-grafana.yaml
   - ingressroute-prometheus.yaml
   - ingressroute-alertmanager.yaml
+  - alerts.yaml
 
 generators:
   - generators/secret-generator.yaml
