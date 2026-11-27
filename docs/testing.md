@@ -22,9 +22,10 @@ maintenir un second cluster permanent.
 - `actionlint`, `shellcheck` et `renovate-config-validator` ne sont pas dans la CI.
 - Talos n'est pas validé en CI.
 - Aucun test d'admission réel (kind/k3d) n'est exécuté.
-- La branch protection n'est pas encore active : les checks ne bloquent pas
-  encore un merge.
 - Les actions GitHub ne sont pas encore épinglées par SHA.
+
+La branch protection est active : les checks requis bloquent un merge sur
+`main`.
 
 Ces points sont suivis dans `TODO.md`.
 

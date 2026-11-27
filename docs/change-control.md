@@ -21,17 +21,13 @@
 - message de squash : `PR_BODY`
 - `allow_auto_merge: false`
 - les branches ne sont pas supprimées après merge (choix assumé)
-- `main` n'est pas encore protégée par un ruleset actif
-
-Cible (la PR CI #224 est mergée ; il reste à activer le ruleset) :
-
-- ruleset actif sur `main`,
-- PR obligatoire,
-- checks requis : `YAML lint`, `SOPS check`, `Detect secrets`,
-  `all-kustomize`, `Terraform validate`,
-- pas de force push ni suppression,
-- historique linéaire,
-- squash avec titre de PR.
+- ruleset `main` **actif** :
+  - PR obligatoire,
+  - checks requis : `YAML lint`, `SOPS check`, `Detect secrets`,
+    `all-kustomize`, `Terraform validate`,
+  - pas de force push ni suppression,
+  - historique linéaire,
+  - squash uniquement, avec titre de PR.
 
 ## Apps à risque
 

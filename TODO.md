@@ -37,13 +37,12 @@
 - [x] **Terraform CI** : `fmt -check`, `init -backend=false`, `validate`.
 - [ ] **Actionlint + shellcheck + renovate-config-validator**.
 - [ ] **Actions GitHub épinglées par SHA**.
-- [ ] **Branch protection `main`** : PR obligatoire, checks requis,
+- [x] **Branch protection `main`** : PR obligatoire, checks requis,
       branche à jour, pas de force push, squash only.
 - [x] **Job CI agrégé** `all-kustomize` à exiger dans la protection.
 - [ ] **`make validate`** : reproduire la CI en local.
 - [ ] **PR template** : checklist validation, backup, rollback.
-- [ ] **Désactiver l'auto-merge Renovate** et documenter le merge manuel
-      (PR #223 prête, à merger).
+- [x] **Désactiver l'auto-merge Renovate** et documenter le merge manuel.
 - [ ] **Sync manuelle / sync windows** pour Cilium, Longhorn, CNPG,
       cert-manager, Traefik.
 - [ ] **Sync waves** : CNPG → Immich/Securo, cert-manager → Traefik,
@@ -90,7 +89,8 @@
 ## Fait
 
 - [x] Monitoring : kube-prometheus-stack + Loki + Promtail.
-- [x] Renovate Bot (politique : merges manuels, pas d'auto-merge).
+- [x] Renovate Bot (merges manuels, pas d'auto-merge).
+- [x] Ruleset `main` actif : PR + checks requis + squash only + pas de force push.
 - [x] CI : rendu de toutes les apps (KSOPS inclus), kubeconform + schémas CRD,
       Terraform, SOPS check, job agrégé `all-kustomize`.
 - [x] Images épinglées (sauf quelques cas suivis).

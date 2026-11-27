@@ -54,8 +54,7 @@ monitoring et external-services ne sont pas cloisonnés.
 Depuis #224, toutes les apps sont rendues (KSOPS inclus), les CRDs sont
 validées via le catalogue Datree, Terraform et les secrets SOPS sont vérifiés,
 et le job agrégé `all-kustomize` existe. Il reste : Pluto, `actionlint`,
-`shellcheck`, validation Talos, test d'admission kind/k3d, et l'activation
-effective de la branch protection.
+`shellcheck`, validation Talos et test d'admission kind/k3d.
 
 ## Plan d'amélioration
 
@@ -80,7 +79,7 @@ effective de la branch protection.
 - [ ] Actionlint, shellcheck, renovate-config-validator.
 - [ ] Actions GitHub épinglées par SHA.
 - [x] Job CI agrégé `all-kustomize`.
-- [ ] Branch protection sur `main` (PR + checks requis + squash only + pas de
+- [x] Branch protection sur `main` (PR + checks requis + squash only + pas de
       force push).
 - [ ] `make validate` local.
 - [ ] Auto-merge Renovate désactivé et merges manuels documentés.
@@ -125,9 +124,9 @@ effective de la branch protection.
 - Tester les données réelles dans un cluster de test.
 - Déployer automatiquement les composants d'infrastructure sans revue.
 
-## Règle de merge (cible)
+## Règle de merge
 
-- `main` protégée par un ruleset.
+- `main` protégée par un ruleset actif.
 - Toute modification passe par une PR.
 - Squash-merge uniquement.
 - Checks CI obligatoires.
