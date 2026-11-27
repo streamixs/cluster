@@ -84,7 +84,9 @@ spec:
               value: "true"
             - name: OAUTH2_PROXY_PASS_USER_HEADERS
               value: "true"
-            - name: OAUTH2_PROXY_COOKIE_DOMAIN
+            # Pluriel : le champ oauth2-proxy est `cookie_domains` (string
+            # slice). `COOKIE_DOMAIN` est ignore silencieusement.
+            - name: OAUTH2_PROXY_COOKIE_DOMAINS
               value: .streamixs.com
             - name: OAUTH2_PROXY_WHITELIST_DOMAINS
               value: .streamixs.com

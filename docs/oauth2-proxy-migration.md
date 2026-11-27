@@ -133,6 +133,24 @@ Une alternative est d'utiliser un middleware `errors` avec
 `query: "/oauth2/start?rd={url}"` et `statusRewrites: "401": 302`, mais elle
 oblige à ajouter ce middleware sur chaque IngressRoute.
 
+### `403 Forbidden` après le callback Pocket-ID
+
+Vérifier les logs au démarrage :
+
+```text
+Cookie settings: ... domains: path:/
+```
+
+Si `domains:` est vide, le cookie n'est valable que pour
+`oauth.streamixs.com` et n'est pas envoyé à `tautulli.streamixs.com`.
+La variable d'environnement doit être **`OAUTH2_PROXY_COOKIE_DOMAINS`**
+(pluriel), pas `OAUTH2_PROXY_COOKIE_DOMAIN` :
+
+```yaml
+- name: OAUTH2_PROXY_COOKIE_DOMAINS
+  value: .streamixs.com
+```
+
 ### `cookie_secret must be 16, 24, or 32 bytes`
 
 Le secret a été généré en base64 (44 caractères). oauth2-proxy attend une
