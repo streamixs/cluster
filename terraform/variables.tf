@@ -3,3 +3,22 @@ variable "kubeconfig" {
   type        = string
   default     = "~/.talos/kubeconfig-prod"
 }
+
+variable "argocd_oidc_client_id" {
+  description = "Pocket-ID OIDC client ID for ArgoCD (empty disables OIDC)"
+  type        = string
+  default     = ""
+}
+
+variable "argocd_oidc_client_secret" {
+  description = "Pocket-ID OIDC client secret for ArgoCD"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "argocd_oidc_admin_email" {
+  description = "Pocket-ID email mapped to the ArgoCD admin role"
+  type        = string
+  default     = ""
+}
