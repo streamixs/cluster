@@ -1,7 +1,8 @@
 replicaCount: 1
 
 monitoring:
-  podMonitorEnabled: false
+  # PodMonitor pour l'operateur CNPG.
+  podMonitorEnabled: true
   grafanaDashboard:
     create: false
 
