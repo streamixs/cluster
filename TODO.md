@@ -1,6 +1,6 @@
 # TODO
 
-> Revue 2026-11-27 — un seul environnement permanent : `prod`.
+> Revue 2026-11-28 — un seul environnement permanent : `prod`.
 > Le lab de test est jetable (`kind`/`k3d`), jamais synchronisé avec la prod.
 
 ## P0 — Sécurité et données
@@ -17,11 +17,12 @@
       renseignés, URLs publiques via `externalUrl`. Vérifié par alerte de test.
 - [x] **Grafana** : `adminPassword: changeme` supprimé, Secret SOPS
       `grafana-admin`.
-- [ ] **ArgoCD** : OIDC Pocket-ID + RBAC, ou forward-auth + restriction IP.
+- [x] **ArgoCD** : OIDC Pocket-ID + RBAC sur le groupe `admin`, admin local
+      conservé en break-glass. Voir `docs/argocd-oidc.md`.
 - [x] **Remplacer `traefik-forward-auth` par `oauth2-proxy`** : cutover global
       terminé. Voir `docs/oauth2-proxy-migration.md`.
-- [ ] **ArgoCD AppProject** : least privilege (sourceRepos, destinations,
-      clusterResourceWhitelist).
+- [x] **ArgoCD AppProject** : `destinations` et
+      `clusterResourceWhitelist` explicites. Voir `argocd/README.md`.
 - [ ] **NetworkPolicies** : media, immich, argocd, auth, monitoring,
       external-services. Securo et Hermes servent de modèle.
 - [ ] **Pod Security Standards** : baseline sur tous les namespaces
