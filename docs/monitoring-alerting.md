@@ -107,6 +107,12 @@ kubectl --kubeconfig ~/.talos/kubeconfig-prod -n monitoring \
   rollout restart deploy/kps-grafana
 ```
 
+Le PVC Grafana est en `ReadWriteOnce` sur Longhorn. Le Deployment utilise donc
+`deploymentStrategy: Recreate` : un `RollingUpdate` resterait bloqué en
+`Multi-Attach error` puisque l'ancien pod conserve le volume tant que le
+nouveau n'est pas prêt. Attendre quelques secondes d'indisponibilité pendant un
+redémarrage est normal.
+
 ## Alertes de base
 
 Les règles par défaut de kube-prometheus-stack sont activées. Les alertes
