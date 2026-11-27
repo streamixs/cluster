@@ -106,18 +106,25 @@ L'utilisateur est `admin`.
 make secret-edit FILE=argocd/base/monitoring/secrets/grafana-admin-secret.yaml
 ```
 
-Puis sync ArgoCD et redémarrer Grafana si nécessaire :
+Le Secret n'est appliqué qu'à la création de l'utilisateur `admin`. Pour un
+Grafana existant, le redémarrage ne change pas le mot de passe en base. Après
+sync ArgoCD, réinitialiser explicitement avec le CLI (le mot de passe est lu
+depuis l'environnement du pod, il n'apparaît pas dans la commande) :
 
 ```bash
 kubectl --kubeconfig ~/.talos/kubeconfig-prod -n monitoring \
-  rollout restart deploy/kps-grafana
+  exec deploy/kps-grafana -c grafana -- \
+  sh -c 'grafana cli --homepath /usr/share/grafana admin reset-admin-password "$GF_SECURITY_ADMIN_PASSWORD"'
 ```
 
+Puis se connecter à Grafana avec `admin` et le mot de passe SOPS.
+
 Le PVC Grafana est en `ReadWriteOnce` sur Longhorn. Le Deployment utilise donc
-`deploymentStrategy: Recreate` : un `RollingUpdate` resterait bloqué en
-`Multi-Attach error` puisque l'ancien pod conserve le volume tant que le
-nouveau n'est pas prêt. Attendre quelques secondes d'indisponibilité pendant un
-redémarrage est normal.
+`deploymentStrategy: Recreate` avec `rollingUpdate: null` : un `RollingUpdate`
+resterait bloqué en `Multi-Attach error` puisque l'ancien pod conserve le
+volume tant que le nouveau n'est pas prêt. `rollingUpdate: null` est nécessaire
+pour retirer le champ default côté API, sinon l'apply est refusé. Attendre
+quelques secondes d'indisponibilité pendant un redémarrage est normal.
 
 ## Alertes de base
 

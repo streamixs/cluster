@@ -60,8 +60,10 @@ grafana:
   enabled: true
   # PVC RWO Longhorn : un RollingUpdate reste bloque (Multi-Attach) car
   # l'ancien pod garde le volume tant que le nouveau n'est pas ready.
+  # rollingUpdate: null est requis pour retirer le champ default cote API.
   deploymentStrategy:
     type: Recreate
+    rollingUpdate: null
   admin:
     # Secret SOPS : grafana-admin (admin-user/admin-password)
     existingSecret: grafana-admin
