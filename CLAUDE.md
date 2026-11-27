@@ -172,6 +172,7 @@ Config yamllint dans `.yamllint.yaml`. Le fichier `argocd/base/cert-manager/issu
 - `docs/upgrade-runbook.md` — Upgrades Talos/K8s/Cilium/Longhorn/CNPG
 - `docs/change-control.md` — PR, squash, sync manuelle
 - `docs/oauth2-proxy-migration.md` — Migration forward-auth → oauth2-proxy (terminée)
+- `docs/monitoring-alerting.md` — Alertmanager → Discord et accès Grafana
 - `docs/inventory.md` — Nœuds, IPs, domaines, ports
 - `docs/scripts.md` — Rotation ArgoCD/SOPS
 - `TODO.md` — Backlog priorisé

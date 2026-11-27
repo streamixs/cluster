@@ -13,9 +13,11 @@
 - [ ] **Clé age** : copie offline dans un gestionnaire de mots de passe.
 - [ ] **Snapshots TrueNAS** : ZFS + réplication pour `/mnt/data/photos` et
       `/mnt/data/media`.
-- [ ] **Alertmanager** : receiver Telegram/Discord + Watchdog (actuellement
-      receiver `null`, les alertes sont jetées).
-- [ ] **Grafana** : supprimer `adminPassword: changeme`, utiliser un Secret.
+- [ ] **Alertmanager** : receiver Telegram + Watchdog configurés. Le secret
+      SOPS `alertmanager-telegram` doit encore être rempli avec le token du
+      bot, et `chat_id` renseigné dans les values.
+- [x] **Grafana** : `adminPassword: changeme` supprimé, Secret SOPS
+      `grafana-admin`.
 - [ ] **ArgoCD** : OIDC Pocket-ID + RBAC, ou forward-auth + restriction IP.
 - [x] **Remplacer `traefik-forward-auth` par `oauth2-proxy`** : cutover global
       terminé. Voir `docs/oauth2-proxy-migration.md`.

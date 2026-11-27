@@ -14,6 +14,8 @@ ignore: |
   argocd/base/cert-manager/issuers/secret-cf-token.yaml
   argocd/base/plex/secrets/plex-secret.yaml
   argocd/base/oauth2-proxy/secrets/oauth2-proxy-secret.yaml
+  argocd/base/monitoring/secrets/grafana-admin-secret.yaml
+  argocd/base/monitoring/secrets/alertmanager-telegram-secret.yaml
   argocd/base/mixarr/secrets/mixarr-secret.yaml
   argocd/base/securo/secrets/securo-secret.yaml
   argocd/base/hermes/secrets/hermes-secret.yaml

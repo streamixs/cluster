@@ -8,7 +8,34 @@ alertmanager:
   enabled: true
   ingress:
     enabled: false
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      receiver: telegram
+      # Le chart ajoute sinon une route Watchdog -> receiver "null".
+      # On route tout vers Telegram pour que le Watchdog teste le bot.
+      routes: []
+      group_by:
+        - alertname
+        - namespace
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 4h
+    receivers:
+      - name: telegram
+        telegram_configs:
+          - bot_token_file: /etc/alertmanager/secrets/alertmanager-telegram/bot-token
+            # A REMPLACER par le chat_id Telegram (voir docs/monitoring-alerting.md).
+            # 123456789 est un placeholder valide pour amtool, pas un vrai chat.
+            chat_id: -5447575468
+            parse_mode: HTML
+            send_resolved: true
   alertmanagerSpec:
+    # Monte le secret alertmanager-telegram dans
+    # /etc/alertmanager/secrets/alertmanager-telegram/
+    secrets:
+      - alertmanager-telegram
     replicas: 1
     retention: 120h
     storage:
@@ -29,7 +56,9 @@ alertmanager:
 
 grafana:
   enabled: true
-  adminPassword: changeme
+  admin:
+    # Secret SOPS : grafana-admin (admin-user/admin-password)
+    existingSecret: grafana-admin
   defaultDashboardsEnabled: true
   defaultDashboardsTimezone: Europe/Paris
   persistence:
