@@ -16,7 +16,8 @@ La migration se fait en deux temps :
 Cette PR ajoute :
 
 - le Deployment/Service `oauth2-proxy` (2 replicas, PDB, probes) ;
-- un middleware temporaire `forward-auth-oauth2` ;
+- un middleware temporaire `forward-auth-oauth2` (adresse `/`, pas
+  `/oauth2/auth`) ;
 - la route callback `oauth2-callback` ;
 - la NetworkPolicy (Traefik → oauth2-proxy, oauth2-proxy → Pocket-ID) ;
 - le secret SOPS `oauth2-proxy-secret` ;
@@ -96,7 +97,9 @@ Ou modifier `argocd/base/tautulli/ingressroute.yaml` pour remettre
 
 Après validation :
 
-- changer l'adresse du middleware `forward-auth` vers oauth2-proxy ;
+- changer l'adresse du middleware `forward-auth` vers
+  `http://oauth2-proxy.auth.svc.cluster.local:4180/` (racine, pas
+  `/oauth2/auth`) ;
 - mettre à jour la route callback vers `/oauth2/` ;
 - supprimer l'ancien callback `/_oauth` ;
 - supprimer l'ancien Deployment/Service `traefik-forward-auth` ;
@@ -110,6 +113,25 @@ Les utilisateurs devront se reconnecter une fois : le cookie change de
 `_forward_auth` à `_oauth2_proxy`.
 
 ## Troubleshooting
+
+### `Unauthorized` au lieu d'une redirection vers Pocket-ID
+
+Traefik `forwardAuth` doit pointer vers la **racine** d'oauth2-proxy, pas vers
+`/oauth2/auth` :
+
+```yaml
+forwardAuth:
+  address: http://oauth2-proxy.auth.svc.cluster.local:4180/
+```
+
+Avec `/oauth2/auth`, oauth2-proxy renvoie `401` sans cookie et Traefik le
+transmet tel quel. Avec `/`, il renvoie `302` vers Pocket-ID. Le paramètre
+`OAUTH2_PROXY_UPSTREAMS=static://202` fait renvoyer `202` quand la session est
+valide, ce que Traefik ForwardAuth accepte.
+
+Une alternative est d'utiliser un middleware `errors` avec
+`query: "/oauth2/start?rd={url}"` et `statusRewrites: "401": 302`, mais elle
+oblige à ajouter ce middleware sur chaque IngressRoute.
 
 ### `cookie_secret must be 16, 24, or 32 bytes`
 
