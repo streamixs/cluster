@@ -25,6 +25,12 @@ spec:
     - name: securo
       jsonPointers:
         - /spec/syncPolicy/automated
+    # Traefik: upgrade chart avec CRDs. On doit pouvoir couper l'auto-sync
+    # avant de merger la PR d'upgrade, puis sync manuellement pendant la
+    # fenetre de maintenance.
+    - name: traefik
+      jsonPointers:
+        - /spec/syncPolicy/automated
   generators:
     - git:
         repoURL: https://github.com/streamixs/cluster
