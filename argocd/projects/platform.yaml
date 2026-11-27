@@ -4,7 +4,7 @@ metadata:
   name: platform
   namespace: argocd
   labels:
-    env: dev
+    env: prod
 spec:
   description: Platform components managed by Argo CD
   sourceRepos:

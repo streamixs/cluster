@@ -1,8 +1,8 @@
 # Terraform State Management
 
-## Current setup (local state — dev/bootstrap only)
+## Current setup (local state — prod bootstrap only)
 
-The Terraform state is stored **locally** in `terraform.tfstate`. This file is gitignored and must **never** be committed.
+The Terraform state is stored **locally** in `terraform.tfstate`. This file is gitignored and must **never** be committed. It now targets the single permanent `prod` cluster; there is no `dev` environment.
 
 The state contains sensitive data in plaintext:
 - ArgoCD admin password (retrieved from the `argocd-initial-admin-secret` K8s secret)
@@ -10,7 +10,11 @@ The state contains sensitive data in plaintext:
 
 ## Why local state is acceptable here
 
-This Terraform code is a **one-shot bootstrap** tool. It runs once to install ArgoCD into a fresh cluster. After bootstrap, cluster state is managed entirely by ArgoCD/GitOps. Terraform is not used for day-to-day operations.
+This Terraform code is a **one-shot bootstrap** tool. It runs once to install ArgoCD into the prod cluster. After bootstrap, cluster state is managed entirely by ArgoCD/GitOps. Terraform is not used for day-to-day operations.
+
+Avant toute suppression ou migration du state, vérifier qu'il cible bien le
+cluster prod (`terraform state list`, `terraform plan`) et en faire une copie
+de sauvegarde.
 
 ## Risks and mitigations
 

@@ -8,61 +8,55 @@ Kubernetes cluster powered by **Talos Linux** + **ArgoCD** GitOps.
 Talos Linux (OS) → Cilium (CNI) → ArgoCD (GitOps) → Apps
 ```
 
-| Env | Infra | Control Planes | Workers |
-|-----|-------|---------------|---------|
-| dev | Docker (talosctl) | 1 | 1 |
-| prod | Mini PCs (bare metal) | 3 | N |
+Un seul environnement permanent : **prod**. Le lab de test est jetable
+(`kind`/`k3d`) et n'est jamais synchronisé avec les apps de prod.
+
+| Env | Infra | Control planes | Workers |
+|-----|-------|----------------|---------|
+| prod | Mini PCs (bare metal) | 1 | 3 |
 
 ### Prerequisites
 
 ```bash
-brew install siderolabs/tap/talosctl budimanjojo/tap/talhelper helm
+brew install siderolabs/tap/talosctl budimanjojo/tap/talhelper helm \
+  kubernetes-cli terraform sops age yq jq
 ```
 
-### Quick start (dev)
+### Bootstrap prod (manuel)
 
 ```bash
-make bootstrap        # cluster + cilium + argocd
-make status           # nodes + pods
-make destroy          # teardown
+make bootstrap                    # affiche la procédure
+make talos-gen-secret             # génère + chiffre les secrets Talos
+make talos-gen                    # génère les machine configs
+# appliquer les configs avec talosctl apply-config sur chaque node
+# puis talosctl bootstrap sur le premier control plane
+
+make cilium                       # CNI Cilium
+make argocd                       # ArgoCD via Terraform
+make gitops                       # AppProject + ApplicationSet
+make status                       # nodes + pods
 ```
 
-### Prod
-
-```bash
-make talos-gen-secret ENV=prod   # generate + encrypt secrets
-make talos-gen ENV=prod          # generate machine configs
-# Then apply configs manually with talosctl
-make cilium ENV=prod
-make argocd ENV=prod
-```
+Sans `make gitops`, ArgoCD est installé mais aucune Application n'est créée.
 
 ### Structure
 
-- `talos/` — Talos machine configs (dev + prod)
-- `terraform/` — ArgoCD Helm install
-- `argocd/apps/` — Applications managed by ArgoCD
-- `argocd/base/` — Kustomize bases (media, cert-manager, etc.)
-- `argocd/bootstrap/` — App-of-Apps + projects
+- `talos/prod/` — configs Talos prod (talhelper)
+- `terraform/` — installation ArgoCD + secret age
+- `argocd/apps/` — Applications gérées par ArgoCD
+- `argocd/base/` — bases Kustomize (media, cert-manager, etc.)
+- `argocd/bootstrap/` — ApplicationSet + projets
 
 ### Storage (TrueNAS)
 
-NFS storage via **democratic-csi** + TrueNAS (192.168.1.10).
+- **NFS statique** sur TrueNAS `192.168.1.10` :
+  - `/mnt/data/media` → `media-pv` (9 Ti, RWX) pour films/séries/musique,
+  - `/mnt/data/photos` → `immich-library-pv` (2 Ti, RWX) pour Immich.
+- **Longhorn** pour les PVC RWO de configuration (2 réplicas sur les workers).
 
-Datasets a creer sur TrueNAS :
-
-```
-main/{dev,prod}/media        # films, series (PV statique, ReadWriteMany)
-main/{dev,prod}/downloads    # telechargements (PV statique, ReadWriteMany)
-applications/{dev,prod}      # parent pour democratic-csi (datasets auto par PVC)
-```
-
-Setup TrueNAS :
-1. Creer les datasets ci-dessus
-2. Activer le service NFS (Network > NFS)
-3. Creer les shares NFS pour `main/dev/media` et `main/dev/downloads`
-4. Creer une API key (Credentials > API Keys > Add)
-5. Mettre la cle dans `argocd/apps/democratic-csi/values.yaml` (`driver.config.httpConnection.apiKey`)
+Les PV NFS sont déclarés dans `argocd/base/media-pvc/media-pv.yaml` et
+`argocd/base/immich/immich-library-pv.yaml`. Il n'y a plus de democratic-csi
+dans le repo.
 
 ### Secrets
 
@@ -73,6 +67,16 @@ Managed with SOPS + Age. Key at `.config/age.agekey` (gitignored).
 - **`main`** est la seule branche long-running. ArgoCD lit `main`.
 - Tout passe par PR (feature, fix, chore, Renovate) → squash-merge sur `main`.
 - **Conventional Commits requis** dans les titres de PR : `feat:`, `fix:`, `chore:`, `feat!:` (breaking), etc.
+- Aucun merge direct sur `main`; les checks CI sont obligatoires.
+
+### Testing avant merge
+
+- La CI valide les manifests sur chaque PR (`yamllint`, `kustomize build`,
+  `kubeconform`, `gitleaks`).
+- Un lab `kind`/`k3d` peut être créé à la demande pour un test applicatif ;
+  il n'est pas un environnement permanent.
+- Le durcissement de la CI (KSOPS, schemas CRD, Terraform, Pluto) est suivi
+  dans `TODO.md`.
 
 ### Releases (automatique)
 
@@ -92,7 +96,7 @@ Quand tu merges la Release PR, release-please crée automatiquement le tag `vX.Y
 - **Minor / major** : PR a valider manuellement.
 - **Talos / Kubernetes / installer Sidero** : exclus, upgrade pilote via `make k8s-upgrade-check` + `make etcd-backup`.
 - **Schedule** : nuits de semaine (apres 22h) + weekends, fuseau Europe/Paris.
-- Les bumps Renovate sont prefixes `chore(deps):` donc masques du CHANGELOG (volonte deliberee pour pas le polluer).
+- La politique de commit des bumps est définie dans `.github/renovate.json5`.
 
 Une *Dependency Dashboard* (issue auto-creee par Renovate) liste les PRs en cours et les bumps en attente.
 
