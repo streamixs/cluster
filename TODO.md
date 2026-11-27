@@ -63,9 +63,11 @@
 - [ ] Resources + priorityClass : Traefik, Cilium, cert-manager, ArgoCD,
       Longhorn.
 - [ ] Longhorn : réactiver `preUpgradeChecker` ou documenter le contournement.
-- [ ] Traefik : chart `40.3.0` → `42.4.3` (Traefik 3.7.20), puis `43.0.0`
-      (Traefik 3.8.0) après une période de cooling. PR B1 prête ; sync
-      manuelle requise avant merge.
+- [x] Traefik : chart `40.3.0` → `42.4.3` (Traefik `v3.7.20`), fait le
+      2026-11-27. App en sync manuelle.
+- [ ] Traefik `43.0.0` (Traefik 3.8.0) après une période de cooling.
+- [x] Traefik ForwardAuth : `maxResponseBodySize: 1 MiB` ajouté (protection
+      mémoire/DoS sur la réponse du serveur d'auth).
 - [ ] Talos : retirer `vm.nr_hugepages: 1024` si inutile, ajouter les limites
       inotify pour Plex/*arr.
 - [ ] Renovate : `minimumReleaseAge`, managers `imageName` et

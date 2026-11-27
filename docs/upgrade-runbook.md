@@ -100,23 +100,26 @@ minor.
 4. Sync manuelle de l'opérateur.
 5. Vérifier les clusters CNPG et les backups.
 
-## Traefik 42.4.3
+## Traefik 42.4.3 (fait le 2026-11-27)
 
-Cible actuelle : chart `40.3.0` (Traefik `v3.7.4`) → chart `42.4.3`
-(Traefik `v3.7.20`). Ne pas sauter directement en `43.0.0` (Traefik 3.8.0)
-sans période de cooling.
+État actuel : chart `42.4.3`, Traefik `v3.7.20`.
+
+L'upgrade `40.3.0` → `42.4.3` a été effectué le 2026-11-27. Les CRDs 42.4.3
+ont été appliquées avant le sync, puis l'app a été synchronisée manuellement.
+
+Prochain palier : `43.0.0` (Traefik 3.8.0), après une période de cooling. Ne
+pas sauter directement sans relire les release notes et appliquer les CRDs
+correspondantes.
 
 ### Pré-requis
 
 - Traefik doit être en **sync manuelle** ou dans une sync window. L'app est
-  actuellement en auto-sync ; la merger sans pause applique l'upgrade
-  immédiatement.
+  désormais en sync manuelle via l'exception `traefik` de l'ApplicationSet.
 - Exporter les CRDs :
 
 ```bash
 kubectl --kubeconfig ~/.talos/kubeconfig-prod \
-  get crd -l app.kubernetes.io/name=traefik -o yaml \
-  > /tmp/traefik-crds-backup.yaml
+  get crd -o yaml > /tmp/all-crds-backup.yaml
 ```
 
 ### Migration des values
@@ -132,7 +135,8 @@ accessLog:
 
 ### Upgrade
 
-1. Appliquer les CRDs avant le chart :
+1. Appliquer les CRDs avant le chart (pour le prochain upgrade, remplacer
+   `42.4.3` par `43.0.0`) :
 
 ```bash
 helm show crds traefik/traefik --version 42.4.3 \
@@ -160,7 +164,7 @@ kubectl --kubeconfig ~/.talos/kubeconfig-prod get certificates -A
 ```
 
 - Deployment `traefik` 2/2 ;
-- image `traefik:v3.7.20` ;
+- image `traefik:v3.7.20` (ou `v3.8.0` pour le palier 43) ;
 - PDB présent ;
 - IP LoadBalancer `192.168.1.210` conservée ;
 - toutes les IngressRoutes répondent ;
@@ -170,7 +174,7 @@ kubectl --kubeconfig ~/.talos/kubeconfig-prod get certificates -A
 
 - `git revert` de la version du chart et sync.
 - Les CRDs Traefik sont généralement rétrocompatibles, mais conserver
-  `/tmp/traefik-crds-backup.yaml`.
+  `/tmp/all-crds-backup.yaml`.
 - Si le rollback de chart ne suffit pas, restaurer les CRDs puis resynchroniser.
 
 ## Traefik / cert-manager / ArgoCD
