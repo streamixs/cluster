@@ -9,8 +9,14 @@ configs:
   params:
     server.insecure: true
   cm:
+    # URL publique utilisee par OIDC et les liens ArgoCD.
+    url: https://argocd.streamixs.com
     kustomize.buildOptions: "--enable-alpha-plugins --enable-exec --enable-helm --load-restrictor LoadRestrictionsNone"
     application.instanceLabelKey: "argocd.argoproj.io/instance"
+  rbac:
+    # Les utilisateurs OIDC non listes explicitement restent en lecture seule.
+    # L'admin local reste disponible comme acces de secours.
+    policy.default: role:readonly
 
 repoServer:
   # Use init containers to configure custom tooling

@@ -125,8 +125,9 @@ Prometheus, Alertmanager, etc.) passent par le middleware Traefik `forward-auth`
 **Pocket-ID** (OIDC). L'ancien `traefik-forward-auth` a été supprimé.
 
 Exceptions assumées :
-- ArgoCD n'est pas encore derrière `forward-auth` ni OIDC : accès par compte
-  admin local (à traiter).
+- ArgoCD : OIDC Pocket-ID + RBAC préparé dans Terraform
+  (`docs/argocd-oidc.md`) ; l'activation dépend des variables Terraform.
+  L'admin local reste le break-glass.
 - Immich, Home Assistant, Plex, Securo et Hermes ont leur propre auth/OIDC.
 - Pocket-ID est externe au cluster (`192.168.1.4`).
 
@@ -172,7 +173,8 @@ Config yamllint dans `.yamllint.yaml`. Le fichier `argocd/base/cert-manager/issu
 - `docs/upgrade-runbook.md` — Upgrades Talos/K8s/Cilium/Longhorn/CNPG
 - `docs/change-control.md` — PR, squash, sync manuelle
 - `docs/oauth2-proxy-migration.md` — Migration forward-auth → oauth2-proxy (terminée)
-- `docs/monitoring-alerting.md` — Alertmanager → Discord et accès Grafana
+- `docs/monitoring-alerting.md` — Alertmanager → Telegram et accès Grafana
+- `docs/argocd-oidc.md` — OIDC Pocket-ID et RBAC ArgoCD
 - `docs/inventory.md` — Nœuds, IPs, domaines, ports
 - `docs/scripts.md` — Rotation ArgoCD/SOPS
 - `TODO.md` — Backlog priorisé

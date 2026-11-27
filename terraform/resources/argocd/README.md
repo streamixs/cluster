@@ -36,6 +36,18 @@ Après l'installation, appliquer l'AppProject et l'ApplicationSet :
 make gitops
 ```
 
+### OIDC Pocket-ID
+
+OIDC est optionnel et desactive tant que ces variables sont vides :
+
+- `argocd_oidc_client_id`
+- `argocd_oidc_client_secret` (sensible)
+- `argocd_oidc_admin_email`
+
+Quand elles sont renseignees, Terraform cree le Secret `argocd-oidc` et ajoute
+la config OIDC + RBAC au release Helm. Procedure complete :
+`docs/argocd-oidc.md`.
+
 ### Outputs
 - `argocd_admin_password`: initial admin password from the Secret (plain text).
 
