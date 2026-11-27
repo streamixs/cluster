@@ -13,9 +13,9 @@
 - [ ] **Clé age** : copie offline dans un gestionnaire de mots de passe.
 - [ ] **Snapshots TrueNAS** : ZFS + réplication pour `/mnt/data/photos` et
       `/mnt/data/media`.
-- [ ] **Alertmanager** : receiver Discord + Watchdog configurés. Le secret
-      SOPS `alertmanager-discord` doit encore être rempli avec l'URL du
-      webhook Discord.
+- [ ] **Alertmanager** : receiver Telegram + Watchdog configurés. Le secret
+      SOPS `alertmanager-telegram` doit encore être rempli avec le token du
+      bot, et `chat_id` renseigné dans les values.
 - [x] **Grafana** : `adminPassword: changeme` supprimé, Secret SOPS
       `grafana-admin`.
 - [ ] **ArgoCD** : OIDC Pocket-ID + RBAC, ou forward-auth + restriction IP.

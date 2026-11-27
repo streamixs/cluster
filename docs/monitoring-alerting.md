@@ -1,50 +1,66 @@
 # Monitoring et alerting
 
-## Alertmanager → Discord
+## Alertmanager → Telegram
 
-Alertmanager envoie les alertes vers un webhook Discord stocké en SOPS.
+Alertmanager envoie les alertes via un bot Telegram. Le token du bot est stocké
+en SOPS ; le `chat_id` reste dans les values (ce n'est pas un secret).
 
-### Créer le webhook Discord
+### Créer le bot Telegram
 
-Dans Discord : **Server Settings → Integrations → Webhooks → New Webhook**.
-Copier l'URL du webhook.
-
-### Renseigner le secret
+1. Créer un bot dédié via **@BotFather** : `/newbot`.
+2. Récupérer le token.
+3. Envoyer un message au bot (ou l'ajouter à un groupe).
+4. Récupérer le `chat_id` :
 
 ```bash
-make secret-edit FILE=argocd/base/monitoring/secrets/alertmanager-discord-secret.yaml
+curl -s "https://api.telegram.org/bot<TOKEN>/getUpdates" \
+  | jq '.result[].message.chat | {id, title, username}'
 ```
 
-Remplacer `webhook-url` par l'URL Discord.
+Pour un chat privé, on peut aussi utiliser `@userinfobot`.
+Pour un groupe, le `chat_id` est négatif.
+
+Éviter de réutiliser le bot Hermes : garder un bot dédié à l'alerting évite de
+mélanger les messages de l'agent et les alertes.
+
+### Renseigner le token
+
+```bash
+make secret-edit FILE=argocd/base/monitoring/secrets/alertmanager-telegram-secret.yaml
+```
+
+Remplacer `bot-token`.
 
 Vérifier :
 
 ```bash
-make secret-keys FILE=argocd/base/monitoring/secrets/alertmanager-discord-secret.yaml
+make secret-keys FILE=argocd/base/monitoring/secrets/alertmanager-telegram-secret.yaml
 ```
 
-### Config Alertmanager
+### Renseigner le chat_id
 
-`argocd/apps/monitoring/values-kube-prometheus-stack.yaml` :
+Dans `argocd/apps/monitoring/values-kube-prometheus-stack.yaml` :
 
 ```yaml
 alertmanager:
   config:
     route:
-      receiver: discord
+      receiver: telegram
       routes: []
     receivers:
-      - name: discord
-        discord_configs:
-          - webhook_url_file: /etc/alertmanager/secrets/alertmanager-discord/webhook-url
+      - name: telegram
+        telegram_configs:
+          - bot_token_file: /etc/alertmanager/secrets/alertmanager-telegram/bot-token
+            chat_id: 123456789  # remplacer par le vrai chat_id
+            parse_mode: HTML
             send_resolved: true
   alertmanagerSpec:
     secrets:
-      - alertmanager-discord
+      - alertmanager-telegram
 ```
 
 Le Secret est monté par l'opérateur dans
-`/etc/alertmanager/secrets/alertmanager-discord/`.
+`/etc/alertmanager/secrets/alertmanager-telegram/`.
 
 ### Tester
 
@@ -56,7 +72,7 @@ kubectl --kubeconfig ~/.talos/kubeconfig-prod -n monitoring \
   -o jsonpath='{.data.alertmanager\.yaml}' | base64 -d
 ```
 
-Puis vérifier la réception dans Discord. Si rien n'arrive :
+Puis vérifier la réception dans Telegram. Si rien n'arrive :
 
 ```bash
 kubectl --kubeconfig ~/.talos/kubeconfig-prod -n monitoring \
