@@ -20,7 +20,7 @@ spec:
         fsGroupChangePolicy: "OnRootMismatch"
       containers:
         - name: tautulli
-          image: lscr.io/linuxserver/tautulli:v2.18.2-ls245
+          image: lscr.io/linuxserver/tautulli:v2.19.1-ls253
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8181
