@@ -10,7 +10,9 @@ spec:
     - match: Host(`tautulli.streamixs.com`)
       kind: Rule
       middlewares:
-        - name: forward-auth
+        # Test de migration oauth2-proxy (PR A1). Revenir a forward-auth
+        # si le test echoue ; le cutover global se fera dans la PR A2.
+        - name: forward-auth-oauth2
           namespace: auth
       services:
         - name: tautulli
