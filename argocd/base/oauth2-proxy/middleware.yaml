@@ -7,7 +7,11 @@ metadata:
   namespace: auth
 spec:
   forwardAuth:
-    address: http://oauth2-proxy.auth.svc.cluster.local:4180/oauth2/auth
+    # Ne PAS utiliser /oauth2/auth : cet endpoint renvoie 401 sans cookie et
+    # Traefik le transmet tel quel au navigateur ("Unauthorized"). Sur /,
+    # oauth2-proxy renvoie 302 vers Pocket-ID si non authentifie, et 202 si
+    # authentifie (OAUTH2_PROXY_UPSTREAMS=static://202).
+    address: http://oauth2-proxy.auth.svc.cluster.local:4180/
     trustForwardHeader: true
     authResponseHeaders:
       - X-Auth-Request-User
