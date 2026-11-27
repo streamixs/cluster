@@ -32,6 +32,28 @@ est montée depuis le secret `sops-age`, créé par Terraform.
 - Chemin: `argocd/apps/*` via ApplicationSet
 - Options de sync: `automated: { prune, selfHeal }`, `CreateNamespace=true`, `PruneLast=true`, `ServerSideApply=true`, `ApplyOutOfSyncOnly=true`
 
+### AppProject `platform`
+
+Le projet `platform` n'autorise plus `destinations: "*"` : chaque namespace de
+destination est liste explicitement, ainsi que les kinds cluster-scoped
+réellement rendus par les apps.
+
+L'ApplicationSet utilise le nom du dossier comme namespace de destination
+(`argocd/apps/<app>`). Une app qui déploie ailleurs via sa `kustomization`
+utilise les deux namespaces : ajouter les deux à `destinations`.
+
+Lors de l'ajout d'une app :
+
+1. Ajouter le nom du dossier à `destinations`.
+2. Si la `kustomization` force un autre namespace, l'ajouter aussi.
+3. Si l'app crée un kind cluster-scoped (CRD, ClusterRole, webhook,
+   StorageClass, etc.), l'ajouter à `clusterResourceWhitelist`.
+4. Appliquer avec `make gitops`.
+
+`namespaceResourceWhitelist` reste `"*"` : le périmètre est déjà limité par les
+namespaces de destination. Une restriction par type pourra être faite app par
+app si nécessaire.
+
 ### Applications gérées
 Voir `argocd/apps/README.md`.
 
