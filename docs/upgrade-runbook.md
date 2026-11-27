@@ -177,12 +177,69 @@ kubectl --kubeconfig ~/.talos/kubeconfig-prod get certificates -A
   `/tmp/all-crds-backup.yaml`.
 - Si le rollback de chart ne suffit pas, restaurer les CRDs puis resynchroniser.
 
-## Traefik / cert-manager / ArgoCD
+## ArgoCD (Terraform)
+
+ArgoCD est installé par Terraform (`terraform/resources/argocd`), pas par
+ArgoCD lui-même. L'upgrade se fait donc par `terraform apply`, pas par un sync
+ArgoCD.
+
+### Préflight
+
+- Lire les notes d'upgrade ArgoCD de chaque minor traversée.
+- Vérifier la PR Renovate (chart `argo-cd`) et l'`appVersion`.
+- Sauvegarder `terraform.tfstate` et son `.backup`.
+- Vérifier que `.config/argocd-oidc-secret` existe.
+
+### Plan
+
+Depuis `terraform/` :
+
+```bash
+export TF_VAR_kubeconfig=~/.talos/kubeconfig-prod
+export TF_VAR_argocd_oidc_client_id='<client_id>'
+export TF_VAR_argocd_oidc_client_secret="$(cat ../.config/argocd-oidc-secret)"
+export TF_VAR_argocd_oidc_admin_group='admin'
+
+terraform plan -out=tfplan-argocd
+```
+
+Les variables OIDC sont **obligatoires** : sans elles, le plan supprime la
+config OIDC. Le plan attendu est `0 to add, 1 to change, 0 to destroy` (seul le
+release Helm). Si autre chose bouge, arrêter.
+
+### Apply
+
+```bash
+terraform apply tfplan-argocd
+```
+
+### Vérifier
+
+```bash
+helm -n argocd list
+kubectl --kubeconfig ~/.talos/kubeconfig-prod -n argocd get pods
+kubectl --kubeconfig ~/.talos/kubeconfig-prod -n argocd \
+  get cm argocd-cm -o jsonpath='{.data.oidc\.config}'
+curl -s https://argocd.streamixs.com/api/v1/settings | jq .oidcConfig
+```
+
+- Redirection `argocd.streamixs.com/auth/login` vers Pocket-ID.
+- Sync d'une app KSOPS (`monitoring`) pour valider le repo-server.
+- Applications `Synced` / `Healthy`.
+
+### Rollback
+
+- Revenir à la version précédente du chart dans Terraform, puis plan/apply avec
+  les variables OIDC.
+- Les CRDs ArgoCD sont normalement rétrocompatibles ; conserver une sauvegarde
+  des CRDs avant un saut majeur.
+- Le state est sauvegardé avant l'apply.
+
+## Traefik / cert-manager
 
 - Lire les breaking changes.
 - Sync manuelle.
 - Vérifier les certificats et les IngressRoutes.
-- Pour ArgoCD, attention au self-management et au repo-server.
 
 ## Rollback
 

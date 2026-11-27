@@ -15,6 +15,7 @@
 - Talos : `v1.12.6`
 - Kubernetes : `v1.35.3`
 - Traefik : chart `42.4.3`, image `v3.7.20`
+- ArgoCD : chart `9.7.1`, image `v3.4.4`
 - Endpoint API : `https://192.168.1.30:6443`
 - Control plane unique : pas de HA. Voir `docs/backup-restore.md`.
 
@@ -49,7 +50,7 @@
 
 | Host | App | Auth |
 |---|---|---|
-| `argocd.streamixs.com` | ArgoCD | admin local (OIDC à venir) |
+| `argocd.streamixs.com` | ArgoCD | OIDC Pocket-ID + RBAC groupe `admin` (admin local en secours) |
 | `auth.streamixs.com` | Pocket-ID | native |
 | `oauth.streamixs.com` | oauth2-proxy callback (`/oauth2/`) | native |
 | `grafana.streamixs.com` | Grafana | forward-auth |
@@ -89,6 +90,7 @@
 | Clé age | `.config/age.agekey` (gitignored, à sauvegarder offline) |
 | Secrets SOPS | fichiers `*.sops.yaml` et `*/secrets/*.yaml` |
 | State Terraform | `terraform/terraform.tfstate` (local, contient des secrets) |
+| Client secret OIDC ArgoCD | `.config/argocd-oidc-secret` (gitignored) + state Terraform |
 | Secrets Talos | `talos/prod/talsecret.sops.yaml` (chiffré) |
 
 ## Vérifications

@@ -26,6 +26,8 @@ cluster de test.
 - **Un seul environnement** : moins de maintenance, moins de risques.
 - **Secrets** : SOPS + Age + KSOPS, secret-scan en CI.
 - **Auth centralisée** : Pocket-ID + oauth2-proxy sur la majorité des UI.
+- **ArgoCD** : OIDC Pocket-ID + RBAC groupe `admin`, AppProject limité aux
+  namespaces et kinds utilisés.
 - **Observabilité** : Prometheus, Grafana, Loki, Promtail, Alertmanager.
 - **Stockage** : Longhorn pour les PVC RWO, NFS TrueNAS pour les médias/photos.
 - **Réseau** : Cilium kube-proxy replacement, L2 announcements, IP pool.
@@ -38,11 +40,12 @@ cluster de test.
 Pas de backup CNPG, Longhorn, etcd automatisé, ni de copie offline de la clé
 age. C'est le risque numéro un pour Immich, Securo, Hermes et les configs.
 
-### 2. ArgoCD et l'auth trop exposés
+### 2. ArgoCD : surface réduite mais critique
 
-ArgoCD n'a ni OIDC ni forward-auth, et l'AppProject est quasi cluster-admin. Le
-repo-server détient aussi la clé age et exécute des plugins. En revanche,
-`oauth2-proxy` est maintenant en 2 replicas avec PDB, probes et NetworkPolicy.
+ArgoCD est derrière OIDC Pocket-ID + RBAC (groupe `admin`) et l'AppProject est
+limité aux namespaces et kinds réellement utilisés. Le repo-server détient
+toujours la clé age et exécute des plugins, et il n'y a pas encore de
+NetworkPolicy dédiée à ArgoCD.
 
 ### 3. Segmentation réseau insuffisante
 

@@ -125,9 +125,8 @@ Prometheus, Alertmanager, etc.) passent par le middleware Traefik `forward-auth`
 **Pocket-ID** (OIDC). L'ancien `traefik-forward-auth` a été supprimé.
 
 Exceptions assumées :
-- ArgoCD : OIDC Pocket-ID + RBAC préparé dans Terraform
-  (`docs/argocd-oidc.md`) ; l'activation dépend des variables Terraform.
-  L'admin local reste le break-glass.
+- ArgoCD : OIDC Pocket-ID + RBAC actif sur le groupe `admin`, admin local
+  conservé en break-glass. Voir `docs/argocd-oidc.md`.
 - Immich, Home Assistant, Plex, Securo et Hermes ont leur propre auth/OIDC.
 - Pocket-ID est externe au cluster (`192.168.1.4`).
 
@@ -147,6 +146,7 @@ Exceptions assumées :
 - State Terraform local pour l'instant : voir `terraform/STATE.md`
 - Tous les ingresses utilisent le wildcard `*.streamixs.com` (cert-manager + Cloudflare DNS01)
 - Talos : `v1.12.6`, Kubernetes : `v1.35.3`
+- ArgoCD : chart `9.7.1`, image `v3.4.4`
 - YAML style : 2-space indent, max 140 char lines, no document-start markers
 - Documentation : `docs/`, en français
 

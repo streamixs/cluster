@@ -3,6 +3,8 @@
 ArgoCD peut déléguer l'authentification à Pocket-ID. Le compte `admin` local
 reste disponible comme accès de secours.
 
+> Statut : actif depuis le 2026-11-28 (ArgoCD `v3.4.4`), groupe admin `admin`.
+
 ## Fonctionnement
 
 - Provider : Pocket-ID (`https://auth.streamixs.com`).
