@@ -16,26 +16,13 @@
   prConcurrentLimit: 10,
   rebaseWhen: "behind-base-branch",
 
-  // GitHub native auto-merge — exige "Allow auto-merge" activé dans la
-  // branch protection de main. Sinon Renovate fait un merge classique.
-  platformAutomerge: true,
+  // Pas d'auto-merge : chaque PR Renovate est relue et mergée manuellement,
+  // même si la CI est verte. On ne veut pas qu'un patch upstream parte en prod
+  // sans validation humaine.
+  platformAutomerge: false,
+  automerge: false,
 
   packageRules: [
-    {
-      // Auto-merge patch / pin / digest pour Docker, Helm, GHA et custom regex.
-      // Minor et major restent manuels.
-      matchUpdateTypes: ["patch", "pin", "digest"],
-      matchManagers: [
-        "dockerfile",
-        "kubernetes",
-        "kustomize",
-        "helmv3",
-        "helm-values",
-        "github-actions",
-        "custom.regex",
-      ],
-      automerge: true,
-    },
     {
       // Stack LinuxServer.io: une seule PR par cycle (sonarr/radarr/lidarr/...).
       matchDatasources: ["docker"],
@@ -213,7 +200,7 @@
   vulnerabilityAlerts: {
     enabled: true,
     labels: ["security", "renovate"],
-    automerge: true,
+    automerge: false,
   },
 
   // Heures off-peak (Europe/Paris) pour ne pas saturer ArgoCD en journee.
