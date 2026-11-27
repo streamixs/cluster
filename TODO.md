@@ -17,6 +17,8 @@
       renseignés, URLs publiques via `externalUrl`. Vérifié par alerte de test.
 - [x] **Grafana** : `adminPassword: changeme` supprimé, Secret SOPS
       `grafana-admin`.
+- [x] **Alertes monitoring** : certificats cert-manager, Longhorn, disque node
+      et CNPG. Voir `docs/monitoring-alerting.md`.
 - [x] **ArgoCD** : OIDC Pocket-ID + RBAC sur le groupe `admin`, admin local
       conservé en break-glass. Voir `docs/argocd-oidc.md`.
 - [x] **Remplacer `traefik-forward-auth` par `oauth2-proxy`** : cutover global
