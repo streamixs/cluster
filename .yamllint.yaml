@@ -12,6 +12,7 @@ rules:
 ignore: |
   argocd/base/cert-manager/issuers/secret-cf-token.yaml
   argocd/base/plex/secrets/plex-secret.yaml
+  argocd/base/oauth2-proxy/secrets/oauth2-proxy-secret.yaml
   argocd/base/mixarr/secrets/mixarr-secret.yaml
   argocd/base/traefik-forward-auth/secrets/forward-auth-secret.yaml
   argocd/base/securo/secrets/securo-secret.yaml

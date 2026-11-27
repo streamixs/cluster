@@ -1,0 +1,43 @@
+# oauth2-proxy est un composant d'auth expose via Traefik. On limite :
+# - l'ingress au seul Traefik (pas d'appel direct depuis un autre pod) ;
+# - l'egress au DNS et a Pocket-ID (auth.streamixs.com:443).
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: oauth2-proxy
+  namespace: auth
+spec:
+  endpointSelector:
+    matchLabels:
+      app: oauth2-proxy
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: traefik
+            app.kubernetes.io/name: traefik
+      toPorts:
+        - ports:
+            - port: "4180"
+              protocol: TCP
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: kube-system
+            k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              # Autorise la resolution, mais l'egress reste limite a
+              # auth.streamixs.com:443 par la regle toFQDNs ci-dessous.
+              - matchPattern: "*"
+    - toFQDNs:
+        - matchPattern: "auth.streamixs.com"
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP

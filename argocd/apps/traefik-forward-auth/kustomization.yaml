@@ -6,3 +6,6 @@ namespace: auth
 resources:
   - namespace.yaml
   - ../../base/traefik-forward-auth
+  # PR A1 : oauth2-proxy est deploye en parallele. Il n'est utilise que par
+  # l'IngressRoute de test (tautulli) jusqu'au cutover de la PR A2.
+  - ../../base/oauth2-proxy

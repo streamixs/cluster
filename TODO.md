@@ -17,6 +17,8 @@
       receiver `null`, les alertes sont jetées).
 - [ ] **Grafana** : supprimer `adminPassword: changeme`, utiliser un Secret.
 - [ ] **ArgoCD** : OIDC Pocket-ID + RBAC, ou forward-auth + restriction IP.
+- [ ] **Remplacer `traefik-forward-auth` par `oauth2-proxy`** : A1 déployé en
+      parallèle, A2 cutover global. Voir `docs/oauth2-proxy-migration.md`.
 - [ ] **ArgoCD AppProject** : least privilege (sourceRepos, destinations,
       clusterResourceWhitelist).
 - [ ] **NetworkPolicies** : media, immich, argocd, auth, monitoring,
@@ -61,6 +63,8 @@
 - [ ] Resources + priorityClass : Traefik, Cilium, cert-manager, ArgoCD,
       Longhorn.
 - [ ] Longhorn : réactiver `preUpgradeChecker` ou documenter le contournement.
+- [ ] Traefik : chart `40.3.0` → `42.4.3` (Traefik 3.7.20), puis `43.0.0`
+      (Traefik 3.8.0) après une période de cooling.
 - [ ] Talos : retirer `vm.nr_hugepages: 1024` si inutile, ajouter les limites
       inotify pour Plex/*arr.
 - [ ] Renovate : `minimumReleaseAge`, managers `imageName` et
