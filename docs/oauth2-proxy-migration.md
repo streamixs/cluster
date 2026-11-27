@@ -47,6 +47,8 @@ Remplacer :
 - `client-secret`
 
 Le `cookie-secret` a déjà été généré aléatoirement et chiffré ; le conserver.
+Il doit faire exactement **16, 24 ou 32 caractères** (pas 44). Pour le
+régénérer : `openssl rand -hex 16` (32 caractères hex).
 
 Vérifier les clés sans afficher les valeurs :
 
@@ -106,6 +108,26 @@ Après validation :
 
 Les utilisateurs devront se reconnecter une fois : le cookie change de
 `_forward_auth` à `_oauth2_proxy`.
+
+## Troubleshooting
+
+### `cookie_secret must be 16, 24, or 32 bytes`
+
+Le secret a été généré en base64 (44 caractères). oauth2-proxy attend une
+chaîne de 16, 24 ou 32 caractères. Régénérer avec :
+
+```bash
+cookie=$(openssl rand -hex 16)
+SOPS_AGE_KEY_FILE=.config/age.agekey \
+  sops set argocd/base/oauth2-proxy/secrets/oauth2-proxy-secret.yaml \
+  '["stringData"]["cookie-secret"]' "\"$cookie\""
+```
+
+Puis redémarrer le deployment après sync :
+
+```bash
+kubectl --kubeconfig ~/.talos/kubeconfig-prod rollout restart deploy/oauth2-proxy -n auth
+```
 
 ## Notes de sécurité
 
