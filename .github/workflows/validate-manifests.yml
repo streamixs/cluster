@@ -1,20 +1,38 @@
 name: Lint and validate Kubernetes/Argo CD manifests
 
 on:
-  pull_request
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-manifests-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   yamllint:
     name: YAML lint
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: "3.x"
       - name: Install yamllint
         run: pip install --disable-pip-version-check --no-cache-dir yamllint
       - name: Run yamllint on cluster
         run: yamllint -c .yamllint.yaml .
+
+  sops:
+    name: SOPS check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Check tracked secret files are encrypted
+        run: ./scripts/ci/check-sops.sh
