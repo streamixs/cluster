@@ -6,6 +6,9 @@ metadata:
   namespace: securo
 spec:
   instances: 1
+  monitoring:
+    # PodMonitor cree par l'operateur pour les metriques PostgreSQL.
+    enablePodMonitor: true
   # Meme image que immich: elle embarque pgvector 0.8.2 (extension `vector`),
   # dont securo a besoin. Le chart amont utilise pgvector/pgvector:pg16, mais
   # introduire une seconde image Postgres dans le cluster pour la meme

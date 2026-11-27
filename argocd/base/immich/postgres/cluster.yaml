@@ -6,6 +6,9 @@ metadata:
   namespace: immich
 spec:
   instances: 1
+  monitoring:
+    # PodMonitor cree par l'operateur pour les metriques PostgreSQL.
+    enablePodMonitor: true
   imageName: tensorchord/cloudnative-vectorchord:17
   postgresql:
     shared_preload_libraries:
