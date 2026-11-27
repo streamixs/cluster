@@ -63,10 +63,14 @@ make secret-keys FILE=argocd/base/oauth2-proxy/secrets/oauth2-proxy-secret.yaml
 forwardAuth:
   address: http://oauth2-proxy.auth.svc.cluster.local:4180/
   trustForwardHeader: true
+  maxResponseBodySize: 1048576
   authResponseHeaders:
     - X-Auth-Request-User
     - X-Auth-Request-Email
 ```
+
+`maxResponseBodySize` limite la taille de la réponse du serveur d'auth
+bufferisée par Traefik. Ce n'est pas un rate limit des tentatives de login.
 
 `OAUTH2_PROXY_UPSTREAMS=static://202` fait renvoyer `202` quand la session est
 valide.

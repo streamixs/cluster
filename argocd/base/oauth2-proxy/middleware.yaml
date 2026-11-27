@@ -11,6 +11,10 @@ spec:
     # authentifie (OAUTH2_PROXY_UPSTREAMS=static://202).
     address: http://oauth2-proxy.auth.svc.cluster.local:4180/
     trustForwardHeader: true
+    # Limite la taille de la reponse du serveur d'auth bufferisee par Traefik
+    # (1 MiB). Ce n'est PAS un rate limit des tentatives de login : cela evite
+    # seulement une reponse geante qui consommerait de la memoire.
+    maxResponseBodySize: 1048576
     authResponseHeaders:
       - X-Auth-Request-User
       - X-Auth-Request-Email
