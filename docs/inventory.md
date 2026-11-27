@@ -14,6 +14,7 @@
 
 - Talos : `v1.12.6`
 - Kubernetes : `v1.35.3`
+- Traefik : chart `42.4.3`, image `v3.7.20`
 - Endpoint API : `https://192.168.1.30:6443`
 - Control plane unique : pas de HA. Voir `docs/backup-restore.md`.
 
