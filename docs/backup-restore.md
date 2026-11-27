@@ -3,7 +3,9 @@
 ## État actuel
 
 - `make etcd-backup` fait un snapshot etcd manuel dans `backups/` (gitignored).
-- Il n'y a **pas** de backup automatisé CNPG, Longhorn ou NFS.
+- Le repo ne contient **pas** de backup automatisé CNPG, Longhorn ou NFS.
+  Des snapshots TrueNAS peuvent exister hors repo, mais ils ne sont pas
+  documentés ici.
 - La clé age n'a pas de copie offline documentée.
 
 C'est le risque principal du cluster : les données d'Immich, Securo, Hermes et
