@@ -17,7 +17,8 @@ Arborescence des applications gérées par Argo CD (ApplicationSet). Chaque sous
 - `monitoring/`: kube-prometheus-stack + Loki + Promtail (namespace `monitoring`)
 - `securo/`: gestionnaire de finances + PostgreSQL CNPG (namespace `securo`)
 - `traefik/`: ingress controller (namespace `traefik`)
-- `traefik-forward-auth/`: auth Pocket-ID (namespace `auth`)
+- `traefik-forward-auth/`: app historiquement nommée ainsi ; déploie
+  `oauth2-proxy` pour l'auth Pocket-ID (namespace `auth`)
 
 ### Ajouter une nouvelle application
 1) Créer un dossier `argocd/apps/<app-name>` avec l’un des modèles:

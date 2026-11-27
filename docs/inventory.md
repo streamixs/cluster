@@ -50,7 +50,7 @@
 |---|---|---|
 | `argocd.streamixs.com` | ArgoCD | admin local (OIDC à venir) |
 | `auth.streamixs.com` | Pocket-ID | native |
-| `oauth.streamixs.com` | traefik-forward-auth callback | native |
+| `oauth.streamixs.com` | oauth2-proxy callback (`/oauth2/`) | native |
 | `grafana.streamixs.com` | Grafana | forward-auth |
 | `prometheus.streamixs.com` | Prometheus | forward-auth |
 | `alertmanager.streamixs.com` | Alertmanager | forward-auth |
@@ -79,7 +79,7 @@
 - qBittorrent seed BT : 30882 TCP/UDP.
 - Plex : 32400 (NodePort, bypass Traefik).
 - ArgoCD server : 80/443 (HTTP interne, `server.insecure: true`).
-- Traefik-forward-auth : 4181.
+- oauth2-proxy : 4180 (auth), 44180 (metrics).
 
 ## Secrets
 
