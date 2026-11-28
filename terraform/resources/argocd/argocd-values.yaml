@@ -21,7 +21,8 @@ configs:
 controller:
   extraArgs:
     # Le rendu Helm/Kustomize de monitoring depasse 60 s.
-    - --repo-server-timeout-seconds=180
+    # Doit rester superieur a ARGOCD_EXEC_TIMEOUT du repo-server.
+    - --repo-server-timeout-seconds=360
     # Evite de lancer tous les rendus lourds en meme temps.
     - --status-processors=10
     - --operation-processors=5
@@ -71,3 +72,6 @@ repoServer:
   env:
     - name: SOPS_AGE_KEY_FILE
       value: /etc/sops/age/keys.txt
+    # Le rendu kustomize/Helm de monitoring depasse le defaut de 90 s.
+    - name: ARGOCD_EXEC_TIMEOUT
+      value: "300s"
