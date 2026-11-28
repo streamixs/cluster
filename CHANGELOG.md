@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.9.0](https://github.com/streamixs/cluster/compare/v0.8.0...v0.9.0) (2026-11-28)
+
+
+### Features
+
+* **argocd:** add Pocket-ID OIDC and RBAC ([#239](https://github.com/streamixs/cluster/issues/239)) ([4c48a91](https://github.com/streamixs/cluster/commit/4c48a913a39a92475b41e96ada3832d8c4cd8860))
+* **argocd:** restrict platform AppProject scope ([#238](https://github.com/streamixs/cluster/issues/238)) ([380d24b](https://github.com/streamixs/cluster/commit/380d24b3b6c8a1a1946ee55b4f16b5b53cf2ad95))
+* **monitoring:** add actionable alert rules ([#245](https://github.com/streamixs/cluster/issues/245)) ([8408dec](https://github.com/streamixs/cluster/commit/8408deca22b3e2e1f75d6d5f599dd340555bbcaf))
+* **monitoring:** enable Telegram alerting and secure Grafana admin ([#234](https://github.com/streamixs/cluster/issues/234)) ([9114367](https://github.com/streamixs/cluster/commit/91143675f1164932b1ac55c17b4f6155eeaebd79))
+* **monitoring:** scrape cert-manager, Longhorn and CNPG ([#242](https://github.com/streamixs/cluster/issues/242)) ([692d3d5](https://github.com/streamixs/cluster/commit/692d3d52c18ccf177837525873965f874705b82c))
+* **network:** isolate argocd/auth and enforce PSS ([#247](https://github.com/streamixs/cluster/issues/247)) ([72ed42a](https://github.com/streamixs/cluster/commit/72ed42ae38239c0459478264dadca49f544902cb))
+
+
+### Bug Fixes
+
+* **argocd:** unblock monitoring manifest generation ([#249](https://github.com/streamixs/cluster/issues/249)) ([c417b91](https://github.com/streamixs/cluster/commit/c417b91dd0055b9398dd6ca7939a3c4011fe4177))
+* **auth:** use 32-char oauth2-proxy cookie secret ([#226](https://github.com/streamixs/cluster/issues/226)) ([0e0934c](https://github.com/streamixs/cluster/commit/0e0934cf460e50b8cb2b0c2c5c62ccfadc3fa2a2))
+* **auth:** use oauth2-proxy root endpoint for forward-auth ([#227](https://github.com/streamixs/cluster/issues/227)) ([d57e719](https://github.com/streamixs/cluster/commit/d57e71969abb6cc980649a55675e77d1127cf379))
+* **auth:** use plural cookie domains for oauth2-proxy ([#228](https://github.com/streamixs/cluster/issues/228)) ([46822b4](https://github.com/streamixs/cluster/commit/46822b44370fd1f0055e6583a2dd89ce3e26ee92))
+* **ci:** retry and checksum-verify CI tool downloads ([#217](https://github.com/streamixs/cluster/issues/217)) ([7c467b9](https://github.com/streamixs/cluster/commit/7c467b9ec3a4ee26d6d14b3c824530c1b9a9f14c))
+* **monitoring:** drop Grafana rollingUpdate for Recreate ([#236](https://github.com/streamixs/cluster/issues/236)) ([6e64057](https://github.com/streamixs/cluster/commit/6e64057bce0d2c682ee6197296d8fd8046dbfa41))
+* **monitoring:** route InfoInhibitor to null ([#248](https://github.com/streamixs/cluster/issues/248)) ([4b85590](https://github.com/streamixs/cluster/commit/4b8559019b249c59f8dfc57eeb2ac65b315e7af1))
+* **monitoring:** unblock Grafana rollout and use public alert URLs ([#235](https://github.com/streamixs/cluster/issues/235)) ([e0faec3](https://github.com/streamixs/cluster/commit/e0faec33cf279962c0532fc6b4930d1119c689a6))
+
 ## [0.8.0](https://github.com/streamixs/cluster/compare/v0.7.0...v0.8.0) (2026-10-21)
 
 
