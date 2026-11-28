@@ -63,6 +63,7 @@ La procédure détaillée et les commandes `talosctl` exactes sont dans
 - [`docs/oauth2-proxy-migration.md`](docs/oauth2-proxy-migration.md) — migration forward-auth → oauth2-proxy (terminée).
 - [`docs/monitoring-alerting.md`](docs/monitoring-alerting.md) — Alertmanager → Telegram et accès Grafana.
 - [`docs/argocd-oidc.md`](docs/argocd-oidc.md) — OIDC Pocket-ID et RBAC ArgoCD.
+- [`docs/network-policies.md`](docs/network-policies.md) — CiliumNetworkPolicy et PSS.
 - [`docs/inventory.md`](docs/inventory.md) — nœuds, IPs, domaines, ports.
 - [`docs/scripts.md`](docs/scripts.md) — rotation ArgoCD/SOPS.
 

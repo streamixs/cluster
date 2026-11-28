@@ -175,6 +175,7 @@ Config yamllint dans `.yamllint.yaml`. Le fichier `argocd/base/cert-manager/issu
 - `docs/oauth2-proxy-migration.md` — Migration forward-auth → oauth2-proxy (terminée)
 - `docs/monitoring-alerting.md` — Alertmanager → Telegram et accès Grafana
 - `docs/argocd-oidc.md` — OIDC Pocket-ID et RBAC ArgoCD
+- `docs/network-policies.md` — CiliumNetworkPolicy et PSS
 - `docs/inventory.md` — Nœuds, IPs, domaines, ports
 - `docs/scripts.md` — Rotation ArgoCD/SOPS
 - `TODO.md` — Backlog priorisé
