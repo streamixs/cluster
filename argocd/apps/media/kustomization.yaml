@@ -4,6 +4,7 @@ kind: Kustomization
 namespace: media
 
 resources:
+  - namespace.yaml
   - ../../base/media-pvc
   - ../../base/prowlarr
   - ../../base/sonarr

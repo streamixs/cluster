@@ -5,6 +5,11 @@ terraform {
 resource "kubernetes_namespace" "argocd" {
   metadata {
     name = var.namespace
+    labels = {
+      "pod-security.kubernetes.io/enforce" = "baseline"
+      "pod-security.kubernetes.io/audit"   = "baseline"
+      "pod-security.kubernetes.io/warn"    = "baseline"
+    }
   }
 }
 
