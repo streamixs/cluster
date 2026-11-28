@@ -14,6 +14,8 @@ Pour ne pas casser les flux internes, tout le trafic entre pods du namespace
 - `argocd-server` → `auth.streamixs.com:443` (OIDC Pocket-ID) ;
 - `argocd-notifications-controller` → `api.telegram.org:443` ;
 - `argocd-repo-server` → GitHub, releases GitHub, dépôts Helm et `ghcr.io`.
+  GitHub redirige les téléchargements de charts vers
+  `release-assets.githubusercontent.com` : ce domaine doit rester autorisé.
 
 ### Ajouter un dépôt Helm/OCI
 

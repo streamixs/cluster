@@ -102,6 +102,8 @@ spec:
         - matchName: "raw.githubusercontent.com"
         - matchName: "objects.githubusercontent.com"
         - matchName: "pkg-containers.githubusercontent.com"
+        # CDN utilise par GitHub pour les assets de release (charts Helm).
+        - matchName: "release-assets.githubusercontent.com"
         - matchName: "ghcr.io"
         - matchName: "traefik.github.io"
         - matchName: "charts.jetstack.io"
