@@ -13,9 +13,12 @@ alertmanager:
       resolve_timeout: 5m
     route:
       receiver: telegram
-      # Le chart ajoute sinon une route Watchdog -> receiver "null".
-      # On route tout vers Telegram pour que le Watchdog teste le bot.
-      routes: []
+      # Watchdog reste route vers Telegram pour tester le bot.
+      # InfoInhibitor est un meta-alert : il ne doit jamais notifier.
+      routes:
+        - matchers:
+            - alertname = "InfoInhibitor"
+          receiver: "null"
       group_by:
         - alertname
         - namespace
@@ -26,11 +29,10 @@ alertmanager:
       - name: telegram
         telegram_configs:
           - bot_token_file: /etc/alertmanager/secrets/alertmanager-telegram/bot-token
-            # A REMPLACER par le chat_id Telegram (voir docs/monitoring-alerting.md).
-            # 123456789 est un placeholder valide pour amtool, pas un vrai chat.
             chat_id: -5447575468
             parse_mode: HTML
             send_resolved: true
+      - name: "null"
   alertmanagerSpec:
     # Liens publics dans les notifications (au lieu du service interne).
     externalUrl: https://alertmanager.streamixs.com
